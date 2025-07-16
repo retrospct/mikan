@@ -1,6 +1,6 @@
-# Turborepo Tailwind CSS starter
+# Mikan
 
-This Turborepo starter is maintained by the Turborepo core team.
+A minimalist daily to do AI assistant that proactively helps you get things done.
 
 ## Using this example
 

@@ -3,7 +3,10 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=apps/web... --filter=apps/desktop...",
+    "dev:app": "turbo run dev --filter=apps/web... --filter=apps/desktop... --filter=apps/mobile...",
+    "dev:mobile": "turbo run dev --filter=apps/mobile...",
+    "dev:home": "turbo run dev --filter=apps/home...",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

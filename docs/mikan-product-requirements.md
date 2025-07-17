@@ -1,214 +1,16 @@
-**User:**
-
-<task>
-Create a PRD for a minimalist daily to do application AI assistant that proactively helps you get things done.
-</task>
-<environment_details>
-# VSCode Visible Files
-README.md
-
-# VSCode Open Tabs
-
-README.md
-RESEARCH.md
-packages/ui/README.md
-
-# Current Time
-
-7/16/2025, 5:45:56 PM (America/Los_Angeles, UTC-7:00)
-
-# Current Working Directory (/Users/leejustin/src/vibe/mikan) Files
-
-.gitignore
-.npmrc
-.prettierignore
-.prettierrc
-package.json
-pnpm-lock.yaml
-pnpm-workspace.yaml
-README.md
-RESEARCH.md
-turbo.json
-apps/
-apps/desktop/
-apps/desktop/.editorconfig
-apps/desktop/.gitignore
-apps/desktop/.npmrc
-apps/desktop/.prettierignore
-apps/desktop/dev-app-update.yml
-apps/desktop/electron-builder.yml
-apps/desktop/electron.vite.config.ts
-apps/desktop/eslint.config.mjs
-apps/desktop/package.json
-apps/desktop/README.md
-apps/desktop/tsconfig.json
-apps/desktop/tsconfig.node.json
-apps/desktop/tsconfig.web.json
-apps/desktop/build/
-apps/desktop/build/entitlements.mac.plist
-apps/desktop/build/icon.icns
-apps/desktop/build/icon.ico
-apps/desktop/build/icon.png
-apps/desktop/resources/
-apps/desktop/resources/icon.png
-apps/desktop/src/
-apps/desktop/src/main/
-apps/desktop/src/main/index.ts
-apps/desktop/src/preload/
-apps/desktop/src/preload/index.d.ts
-apps/desktop/src/preload/index.ts
-apps/desktop/src/renderer/
-apps/desktop/src/renderer/index.html
-apps/desktop/src/renderer/src/
-apps/desktop/src/renderer/src/App.tsx
-apps/desktop/src/renderer/src/env.d.ts
-apps/desktop/src/renderer/src/main.tsx
-apps/desktop/src/renderer/src/assets/
-apps/desktop/src/renderer/src/assets/base.css
-apps/desktop/src/renderer/src/assets/electron.svg
-apps/desktop/src/renderer/src/assets/main.css
-apps/desktop/src/renderer/src/assets/wavy-lines.svg
-apps/desktop/src/renderer/src/components/
-apps/desktop/src/renderer/src/components/Versions.tsx
-apps/home/
-apps/home/.gitignore
-apps/home/eslint.config.js
-apps/home/next-env.d.ts
-apps/home/next.config.ts
-apps/home/package.json
-apps/home/postcss.config.js
-apps/home/README.md
-apps/home/tsconfig.json
-apps/home/app/
-apps/home/app/favicon.ico
-apps/home/app/globals.css
-apps/home/app/layout.tsx
-apps/home/app/page.tsx
-apps/home/public/
-apps/home/public/circles.svg
-apps/home/public/next.svg
-apps/home/public/turborepo.svg
-apps/home/public/vercel.svg
-apps/mobile/
-apps/mobile/.gitignore
-apps/mobile/app.json
-apps/mobile/package.json
-apps/mobile/tsconfig.json
-apps/mobile/app/
-apps/mobile/app/\_layout.tsx
-apps/mobile/app/+html.tsx
-apps/mobile/app/+not-found.tsx
-apps/mobile/app/modal.tsx
-apps/mobile/app/(tabs)/
-apps/mobile/app/(tabs)/\_layout.tsx
-apps/mobile/app/(tabs)/index.tsx
-apps/mobile/app/(tabs)/two.tsx
-apps/mobile/assets/
-apps/mobile/assets/fonts/
-apps/mobile/assets/fonts/SpaceMono-Regular.ttf
-apps/mobile/assets/images/
-apps/mobile/assets/images/adaptive-icon.png
-apps/mobile/assets/images/favicon.png
-apps/mobile/assets/images/icon.png
-apps/mobile/assets/images/splash-icon.png
-apps/mobile/components/
-apps/mobile/components/EditScreenInfo.tsx
-apps/mobile/components/ExternalLink.tsx
-apps/mobile/components/StyledText.tsx
-apps/mobile/components/Themed.tsx
-apps/mobile/components/useClientOnlyValue.ts
-apps/mobile/components/useClientOnlyValue.web.ts
-apps/mobile/components/useColorScheme.ts
-apps/mobile/components/useColorScheme.web.ts
-apps/mobile/components/**tests**/
-apps/mobile/components/**tests**/StyledText-test.js
-apps/mobile/constants/
-apps/mobile/constants/Colors.ts
-apps/web/
-apps/web/.gitignore
-apps/web/eslint.config.js
-apps/web/next-env.d.ts
-apps/web/next.config.ts
-apps/web/package.json
-apps/web/postcss.config.js
-apps/web/README.md
-apps/web/tsconfig.json
-apps/web/app/
-apps/web/app/favicon.ico
-apps/web/app/globals.css
-apps/web/app/layout.tsx
-apps/web/app/page.tsx
-apps/web/public/
-apps/web/public/circles.svg
-apps/web/public/next.svg
-apps/web/public/turborepo.svg
-apps/web/public/vercel.svg
-packages/
-packages/eslint-config/
-packages/eslint-config/base.js
-packages/eslint-config/next.js
-packages/eslint-config/package.json
-packages/eslint-config/react-internal.js
-packages/eslint-config/README.md
-packages/eslint-config/vite.js
-packages/tailwind-config/
-packages/tailwind-config/package.json
-packages/tailwind-config/postcss.config.js
-packages/tailwind-config/shared-styles.css
-packages/typescript-config/
-packages/typescript-config/base.json
-packages/typescript-config/nextjs.json
-packages/typescript-config/package.json
-packages/typescript-config/react-app.json
-packages/typescript-config/react-library.json
-packages/typescript-config/vite.json
-packages/ui/
-packages/ui/eslint.config.mjs
-packages/ui/package.json
-packages/ui/README.md
-packages/ui/tsconfig.json
-packages/ui/turbo.json
-packages/ui/src/
-packages/ui/src/card.tsx
-packages/ui/src/gradient.tsx
-packages/ui/src/styles.css
-packages/ui/src/turborepo-logo.tsx
-
-# Git Remote URLs
-
-origin: <git@github.com>:retrospct/mikan.git
-
-# Context Window Usage
-
-0 / 200K tokens used (0%)
-
-# Current Mode
-
-PLAN MODE
-In this mode you should focus on information gathering, asking questions, and architecting a solution. Once you have a plan, use the plan_mode_respond tool to engage in a conversational back and forth with the user. Do not use the plan_mode_respond tool until you've gathered all the information you need e.g. with read_file or ask_followup_question.
-(Remember: If it seems the user wants you to use tools only available in Act Mode, you should ask the user to "toggle to Act mode" (use those words) - they will have to manually do this themselves with the Plan/Act toggle button below. You do not have the ability to switch to Act Mode yourself, and must wait for the user to do it themselves once they are satisfied with the plan. You also cannot present an option to toggle to Act mode, as this will be something you need to direct the user to do manually themselves.)
-</environment_details>
-
----
-
-**Assistant:**
-
-<plan_mode_respond>
-<response>
-
 # Product Requirements Document (PRD)
 
-## Mikan - AI-Powered Minimalist Daily Task Assistant
+Mikan - AI-Powered Minimalist Daily Task Assistant
 
-### Executive Summary
+## Executive Summary
 
 Mikan is a minimalist daily to-do application featuring an AI assistant that proactively helps users complete their tasks. Unlike traditional task managers that passively store lists, Mikan actively analyzes patterns, suggests optimal task ordering, and provides contextual assistance to maximize productivity while maintaining a clean, distraction-free interface.
 
-### Product Vision
+## Product Vision
 
 Create the most intuitive and effective daily task management system that acts as a personal productivity coach, helping users accomplish more with less effort through intelligent automation and proactive assistance.
 
-### Target Audience
+## Target Audience
 
 **Primary Users:**
 
@@ -220,13 +22,14 @@ Create the most intuitive and effective daily task management system that acts a
 
 **User Personas:**
 
-1. **Sarah, Product Manager** - Juggles multiple projects, needs help prioritizing and avoiding context switching
-2. **David, Graduate Student** - Balances research, coursework, and personal life, needs reminders and time management
-3. **Maya, Freelance Designer** - Manages client work and personal projects, needs deadline tracking and focus time
+1. **Maya, Freelance Designer** - Manages client work and personal projects, needs deadline tracking and focus time
+2. **Scott, Software Engineer** - Manages company work and personal projects, needs a companion to keep him productive
+3. **Sarah, Product Manager** - Juggles multiple projects, needs help prioritizing and avoiding context switching
+4. **David, Graduate Student** - Balances research, coursework, and personal life, needs reminders and time management
 
-### Core Features
+## Core Features
 
-#### 1. Minimalist Task Management
+### 1. Minimalist Task Management
 
 - **Single daily view** - Focus on today's tasks only
 - **Quick task entry** - Natural language input with smart parsing
@@ -234,7 +37,7 @@ Create the most intuitive and effective daily task management system that acts a
 - **Task categories** - Work, Personal, Health, Learning (auto-categorized)
 - **Time estimates** - Optional time blocks for each task
 
-#### 2. AI Assistant Capabilities
+### 2. AI Assistant Capabilities
 
 **Proactive Features:**
 
@@ -256,23 +59,23 @@ Create the most intuitive and effective daily task management system that acts a
 - **Smart Suggestions** - As user types, AI suggests similar past tasks
 - **Conflict Detection** - Warns about scheduling conflicts or unrealistic time estimates
 
-#### 3. Analytics & Insights
+### 3. Analytics & Insights
 
 - **Daily completion rate** - Visual progress indicator
 - **Weekly patterns** - Shows most productive times/days
 - **Category balance** - Ensures work-life balance
 - **Streak tracking** - Gamification for consistency
 
-#### 4. Integrations
+### 4. Integrations
 
 - **Calendar sync** - Two-way sync with Google Calendar, Outlook
 - **Voice assistants** - Siri, Google Assistant for hands-free task entry
 - **Smart home** - Trigger routines based on task completion
 - **Messaging** - Share tasks via text/email
 
-### Technical Requirements
+## Technical Requirements
 
-#### Platform Support
+### Platform Support
 
 - **iOS** - Native app (iOS 15+)
 - **Android** - Native app (Android 10+)
@@ -280,7 +83,7 @@ Create the most intuitive and effective daily task management system that acts a
 - **Desktop** - Electron app for Mac/Windows/Linux
 - **Watch** - Apple Watch, Wear OS companion apps
 
-#### Architecture
+### Architecture
 
 - **Frontend** - React Native (mobile), Next.js (web), Electron (desktop)
 - **Backend** - FastAPI (Python) with async/await
@@ -288,7 +91,7 @@ Create the most intuitive and effective daily task management system that acts a
 - **AI/ML** - OpenAI API for NLP, custom models for pattern recognition
 - **Infrastructure** - AWS/GCP with auto-scaling
 
-#### Security & Privacy
+### Security & Privacy
 
 - **End-to-end encryption** for task data
 - **Local-first architecture** - Works offline, syncs when connected
@@ -296,16 +99,16 @@ Create the most intuitive and effective daily task management system that acts a
 - **Optional AI features** - Users can disable AI analysis
 - **Data export** - Full data portability
 
-### User Experience Design
+## User Experience Design
 
-#### Design Principles
+### Design Principles
 
 1. **Clarity over features** - Every element has a purpose
 2. **Speed is essential** - Task entry < 3 seconds
 3. **Delight in simplicity** - Smooth animations, satisfying interactions
 4. **Respect user attention** - Minimal notifications, no dark patterns
 
-#### Visual Design
+### Visual Design
 
 - **Color palette** - Calming pastels with high contrast for accessibility
 - **Typography** - Clean, readable fonts (SF Pro, Inter)
@@ -313,15 +116,15 @@ Create the most intuitive and effective daily task management system that acts a
 - **Dark mode** - Full theme support
 - **Accessibility** - WCAG 2.1 AA compliant
 
-### AI Assistant Behavior
+## AI Assistant Behavior
 
-#### Personality
+### Personality
 
 - **Tone** - Friendly, encouraging, never judgmental
 - **Proactivity level** - Adjustable (Minimal, Balanced, Maximum)
 - **Learning** - Adapts to user preferences over time
 
-#### Example Interactions
+### Example Interactions
 
 1. **Morning briefing**: "Good morning! You have 8 tasks today. Based on your energy patterns, I suggest starting with 'Review project proposal' while you're fresh."
 
@@ -329,25 +132,25 @@ Create the most intuitive and effective daily task management system that acts a
 
 3. **Smart scheduling**: "I notice 'Call dentist' has been postponed 3 times. They're open now and you have 15 minutes free. Should I move this to the top?"
 
-### Success Metrics
+## Success Metrics
 
-#### User Engagement
+### User Engagement
 
 - Daily Active Users (DAU) > 60% of Monthly Active Users
 - Average session time: 2-5 minutes
 - Task completion rate > 70%
 - 7-day retention > 40%
 
-#### Business Metrics
+### Business Metrics
 
 - Monthly Recurring Revenue (MRR) growth > 15%
 - Customer Acquisition Cost (CAC) < $30
 - Net Promoter Score (NPS) > 50
 - Churn rate < 5% monthly
 
-### Monetization Strategy
+## Monetization Strategy
 
-#### Freemium Model
+### Freemium Model
 
 **Free Tier:**
 
@@ -373,32 +176,31 @@ Create the most intuitive and effective daily task management system that acts a
 - Admin controls
 - API access
 
-### Launch Strategy
+## Launch Strategy
 
-#### Phase 1: MVP (Months 1-3)
+### Phase 1: MVP (Months 1-3)
 
 - Core task management
 - Basic AI prioritization
-- iOS app launch
+- Web app
+- Desktop apps
 - 1000 beta users
 
-#### Phase 2: Enhancement (Months 4-6)
+### Phase 2: Enhancement (Months 4-6)
 
-- Android app
+- iOS app launch
 - Advanced AI features
 - Calendar integration
-- Web app
 - 10,000 users
 
-#### Phase 3: Scale (Months 7-12)
+### Phase 3: Scale (Months 7-12)
 
-- Team features
+- Android app
 - API & integrations
-- Desktop apps
 - International expansion
 - 100,000 users
 
-### Risks & Mitigation
+## Risks & Mitigation
 
 1. **AI Accuracy** - Continuous model training, user feedback loops
 2. **Privacy Concerns** - Clear data policies, local processing options
@@ -406,65 +208,19 @@ Create the most intuitive and effective daily task management system that acts a
 4. **Technical Complexity** - Phased rollout, extensive testing
 5. **User Adoption** - Strong onboarding, referral program
 
-### Conclusion
+## Conclusion
 
 Mikan represents the next evolution in task management - moving from passive lists to an active AI partner that helps users achieve their daily goals. By combining minimalist design with intelligent assistance, we create a product that is both powerful and delightful to use.
 
 ---
 
-This PRD provides a comprehensive foundation for building Mikan. Would you like me to elaborate on any specific section, such as diving deeper into the AI capabilities, technical architecture, or user interface designs?
-</response>
-</plan_mode_respond>
+## Deep Dive: AI Capabilities & Technical Architecture
 
----
+AI Capabilities - Detailed Specification
 
-**User:**
+## 1. Natural Language Understanding (NLU)
 
-[plan_mode_respond] Result:
-<user_message>
-Dive deeper into the AI capabilities and technical architecture.
-</user_message>
-<environment_details>
-
-# VSCode Visible Files
-
-README.md
-
-# VSCode Open Tabs
-
-README.md
-RESEARCH.md
-packages/ui/README.md
-
-# Current Time
-
-7/16/2025, 6:32:46 PM (America/Los_Angeles, UTC-7:00)
-
-# Context Window Usage
-
-15,737 / 200K tokens used (8%)
-
-# Current Mode
-
-PLAN MODE
-In this mode you should focus on information gathering, asking questions, and architecting a solution. Once you have a plan, use the plan_mode_respond tool to engage in a conversational back and forth with the user. Do not use the plan_mode_respond tool until you've gathered all the information you need e.g. with read_file or ask_followup_question.
-(Remember: If it seems the user wants you to use tools only available in Act Mode, you should ask the user to "toggle to Act mode" (use those words) - they will have to manually do this themselves with the Plan/Act toggle button below. You do not have the ability to switch to Act Mode yourself, and must wait for the user to do it themselves once they are satisfied with the plan. You also cannot present an option to toggle to Act mode, as this will be something you need to direct the user to do manually themselves.)
-</environment_details>
-
----
-
-**Assistant:**
-
-<plan_mode_respond>
-<response>
-
-# Deep Dive: AI Capabilities & Technical Architecture
-
-## AI Capabilities - Detailed Specification
-
-### 1. Natural Language Understanding (NLU)
-
-#### Task Parsing Engine
+### Task Parsing Engine
 
 ```python
 # Example input/output patterns
@@ -497,9 +253,9 @@ In this mode you should focus on information gathering, asking questions, and ar
   - Energy requirements (high focus vs. routine)
   - Category inference
 
-### 2. Intelligent Prioritization System
+## 2. Intelligent Prioritization System
 
-#### Multi-Factor Scoring Algorithm
+### Multi-Factor Scoring Algorithm
 
 ```typescript
 interface TaskScore {
@@ -515,16 +271,16 @@ interface TaskScore {
 finalScore = urgency * 0.3 + importance * 0.25 + energyMatch * 0.2 + context * 0.15 + dependency * 0.1
 ```
 
-#### User Energy Pattern Recognition
+### User Energy Pattern Recognition
 
 - **Data Collection**: Task completion times, success rates, task switching patterns
 - **Model**: LSTM network analyzing 30-day rolling window
 - **Output**: Hourly energy predictions (0-100 scale)
 - **Personalization**: Adapts to individual chronotypes
 
-### 3. Proactive Assistant Features
+## 3. Proactive Assistant Features
 
-#### Smart Notifications Engine
+### Smart Notifications Engine
 
 ```python
 class NotificationTrigger:
@@ -545,7 +301,7 @@ class NotificationTrigger:
         return self.prioritize_notifications(notifications)
 ```
 
-#### Task Decomposition AI
+### Task Decomposition AI
 
 **Complex Task Detection:**
 
@@ -567,9 +323,9 @@ Output:
 6. Send calendar invites (15 min)
 ```
 
-### 4. Learning & Adaptation System
+## 4. Learning & Adaptation System
 
-#### User Behavior Models
+### User Behavior Models
 
 ```python
 class UserModel:
@@ -584,7 +340,7 @@ class UserModel:
         await self.adjust_recommendations()
 ```
 
-#### Continuous Learning Pipeline
+### Continuous Learning Pipeline
 
 1. **Data Collection**: Every user interaction logged
 2. **Feature Engineering**: Extract behavioral patterns
@@ -592,21 +348,21 @@ class UserModel:
 4. **A/B Testing**: Test recommendation improvements
 5. **Rollout**: Gradual deployment of model updates
 
-### 5. Advanced AI Features
+## 5. Advanced AI Features
 
-#### Meeting Assistant
+### Meeting Assistant
 
 - Extracts action items from meeting notes
 - Suggests follow-up tasks
 - Estimates time requirements based on similar past tasks
 
-#### Goal Alignment
+### Goal Alignment
 
 - Weekly/monthly goal tracking
 - Suggests daily tasks that contribute to long-term goals
 - Progress visualization and milestone recommendations
 
-#### Collaboration Intelligence
+### Collaboration Intelligence
 
 - Detects tasks requiring collaboration
 - Suggests optimal assignment based on team member strengths
@@ -614,51 +370,102 @@ class UserModel:
 
 ## Technical Architecture - Detailed Design
 
-### System Architecture Overview
+## System Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
-│                        Client Layer                          │
+│                        Client Layer                              │
 ├─────────────┬─────────────┬─────────────┬──────────────────┤
-│   iOS App   │ Android App │   Web App   │   Desktop App    │
-│  (Swift)    │   (Kotlin)  │  (Next.js)  │   (Electron)     │
+│   iOS App    │  Android App  │   Web App   │   Desktop App      │
+│(React Native)│ (React Native)│  (Next.js)  │   (Electron)       │
 └──────┬──────┴──────┬──────┴──────┬──────┴──────┬───────────┘
-       │             │             │             │
+       │               │              │              │
        └─────────────┴─────────────┴─────────────┘
                          │ HTTPS/WSS
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    API Gateway (Kong)                        │
-│              Rate Limiting | Auth | Routing                  │
+│              API Gateway (TBD Vercel/Cloudflare/???)              │
+│                  Rate Limiting | Auth | Routing                   │
 └─────────────────────────────────────────────────────────────┘
-                         │
+                           │
        ┌─────────────────┴─────────────────┐
-       ▼                                   ▼
+       ▼                                      ▼
 ┌──────────────────┐              ┌────────────────────┐
-│  Core API        │              │   AI Service       │
-│  (FastAPI)       │              │   (FastAPI)        │
-│                  │◄────────────►│                    │
-│  - User Mgmt     │   gRPC       │  - NLU Engine      │
-│  - Task CRUD     │              │  - Prioritization  │
-│  - Sync Engine   │              │  - Recommendations │
+│  Core API          │              │   AI Service         │
+│(Express/Serverless)│              │   (FastAPI)          │
+│                    │◄───────────►│                      │
+│  - User Mgmt       │ http or gRCP │  - NLU Engine        │
+│  - Task CRUD       │              │  - Prioritization    │
+│  - Sync Engine     │              │  - Recommendations   │
 └────────┬─────────┘              └────────┬───────────┘
-         │                                 │
-         ▼                                 ▼
+         │                                   │
+         ▼                                   ▼
 ┌──────────────────┐              ┌────────────────────┐
-│   PostgreSQL     │              │   ML Pipeline      │
-│   (Primary DB)   │              │   (Kubeflow)       │
+│   PostgreSQL       │              │   ML Pipeline        │
+│   (Primary DB)     │              │   (Kubeflow)         │
 └──────────────────┘              └────────────────────┘
          │                                 │
          ▼                                 ▼
 ┌──────────────────┐              ┌────────────────────┐
-│   Redis Cache    │              │   Model Store      │
-│   (Sessions)     │              │   (S3 + DVC)       │
+│   Redis Cache      │              │   Model Store        │
+│   (Sessions)       │              │   (S3 + DVC)         │
 └──────────────────┘              └────────────────────┘
 ```
 
-### Core Services Architecture
+```mermaid
+flowchart TD
+    subgraph Client Layer
+        A1["iOS App\n(React Native)"]
+        A2["Android App\n(React Native)"]
+        A3["Web App\n(Next.js)"]
+        A4["Desktop App\n(Electron)"]
+    end
+    A1 -->|HTTPS/WSS| B["API Gateway\n(Vercel/Cloudflare?)\nRate Limiting | Auth | Routing"]
+    A2 -->|HTTPS/WSS| B
+    A3 -->|HTTPS/WSS| B
+    A4 -->|HTTPS/WSS| B
+    B --> C["Core API\n(Express/Serverless)\n- User Mgmt\n- Task CRUD\n- Sync Engine"]
+    B --> D["AI Service\n(FastAPI)\n- NLU Engine\n- Prioritization\n- Recommendations"]
+    C <-->|http or gRPC| D
+    C --> E["PostgreSQL\n(Primary DB)"]
+    C --> F["Redis Cache\n(Sessions)"]
+    D --> G["ML Pipeline\n(Kubeflow)"]
+    D --> H["Model Store\n(S3 + DVC)"]
+```
 
-#### 1. API Service (FastAPI)
+```mermaid
+flowchart TD
+    %% Nodes
+    A("fab:fa-youtube Starter Guide")
+    B("fab:fa-youtube Make Flowchart")
+    n1@{ icon: "fa:gem", pos: "b", h: 24}
+    C("fa:fa-book-open Learn More")
+    D("Use the editor")
+    n2(Many shapes)@{ shape: delay}
+    E(fa:fa-shapes Visual Editor)
+    F("fa:fa-chevron-up Add node in toolbar")
+    G("fa:fa-comment-dots AI chat")
+    H("fa:fa-arrow-left Open AI in side nenu")
+    I("fa:fa-code Text")
+    J(fa:fa-arrow-left Type Mermaid syntax)
+
+    %% Edge connections between nodes
+    A --> B --> C --> n1 & D & n2
+    D -- Build and Design --> E --> F
+    D -- Use AI --> G --> H
+    D -- Mermaid js --> I --> J
+
+    %% Individual node styline. ur che visual coltor tooloor for
+    style E color: #FFFFFF, fill: #AA00FF, stroke: #AA00FF
+    style G color: #FFFFFF, stroke: #00C853, fill: #00C853
+    style I color: #FFFFFF, stroke: #2962FF, f1ll: #2962FF
+
+    %% You can add notes with two "%" signs in a row!
+```
+
+## Core Services Architecture
+
+### 1. API Service (FastAPI)
 
 ```python
 # Core API structure
@@ -694,7 +501,7 @@ async def create_task(
     return created_task
 ```
 
-#### 2. AI Service Architecture
+### 2. AI Service Architecture
 
 ```python
 class AIService:
@@ -717,9 +524,9 @@ class AIService:
         )
 ```
 
-### Data Architecture
+## Data Architecture
 
-#### Database Schema (PostgreSQL)
+### Database Schema (PostgreSQL)
 
 ```sql
 -- Users table with preferences
@@ -760,7 +567,7 @@ CREATE TABLE task_events (
 );
 ```
 
-#### Caching Strategy (Redis)
+### Caching Strategy (Redis)
 
 ```python
 class CacheManager:
@@ -786,9 +593,9 @@ class CacheManager:
         return result
 ```
 
-### AI/ML Infrastructure
+## AI/ML Infrastructure
 
-#### Training Pipeline
+### Training Pipeline
 
 ```yaml
 # Kubeflow pipeline definition
@@ -817,7 +624,7 @@ steps:
     command: ['python', 'deploy_if_improved.py']
 ```
 
-#### Model Serving Architecture
+### Model Serving Architecture
 
 ```python
 class ModelServer:
@@ -844,9 +651,9 @@ class ModelServer:
         return prediction
 ```
 
-### Security Architecture
+## Security Architecture
 
-#### Authentication & Authorization
+### Authentication & Authorization
 
 ```python
 # JWT-based auth with refresh tokens
@@ -871,7 +678,7 @@ class AuthService:
         return TokenPair(access=access_token, refresh=refresh_token)
 ```
 
-#### Data Encryption
+### Data Encryption
 
 ```python
 # End-to-end encryption for sensitive data
@@ -893,16 +700,16 @@ class EncryptionService:
         return encrypted
 ```
 
-### Scalability Design
+## Scalability Design
 
-#### Horizontal Scaling Strategy
+### Horizontal Scaling Strategy
 
 - **API Servers**: Auto-scaling based on CPU/memory (2-20 instances)
 - **AI Services**: GPU-enabled pods with queue-based scaling
 - **Database**: Read replicas for analytics, write master
 - **Cache**: Redis Cluster with 3 masters, 3 replicas
 
-#### Performance Optimizations
+### Performance Optimizations
 
 ```python
 # Batch processing for AI operations
@@ -931,7 +738,3 @@ class BatchProcessor:
             for item, result in zip(batch, results):
                 item.future.set_result(result)
 ```
-
-This deep dive provides a comprehensive view of both the AI capabilities and technical architecture. Would you like me to elaborate further on any specific aspect, such as the ML model architectures, deployment strategies, or specific implementation details?
-</response>
-</plan_mode_respond>

@@ -10,10 +10,14 @@ function createWindow(): void {
     height: 874, // 874 | 852
     show: false,
     autoHideMenuBar: true,
+    // resizable: false,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: true,
+    // frame: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: true
+      sandbox: false
     }
   })
 

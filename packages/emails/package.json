@@ -1,0 +1,56 @@
+{
+  "name": "@mikan/emails",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "email dev --dir ./src/templates -p 3333",
+    "build": "email build",
+    "preview": "email preview",
+    "lint": "eslint .",
+    "clean": "rm -rf .turbo node_modules"
+  },
+  "dependencies": {
+    "@mikan/utils": "workspace:*",
+    "@react-email/components": "^0.3.1",
+    "lucide-react": "^0.525.0",
+    "nodemailer": "^7.0.5",
+    "react-email": "^4.2.3",
+    "resend": "^4.7.0"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@mikan/tailwind-config": "workspace:*",
+    "@mikan/typescript-config": "workspace:*",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "eslint": "^9.30.0",
+    "typescript": "^5.8.3"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./src/index.ts"
+    },
+    "./templates/*": {
+      "import": "./src/templates/*.tsx",
+      "require": "./src/templates/*.tsx"
+    },
+    "./resend": {
+      "import": "./src/resend/index.ts",
+      "require": "./src/resend/index.ts"
+    },
+    "./resend/*": {
+      "import": "./src/resend/*.ts",
+      "require": "./src/resend/*.ts"
+    },
+    "./send-via-nodemailer": {
+      "import": "./src/send-nodemailer.ts",
+      "require": "./src/send-nodemailer.ts"
+    }
+  }
+}

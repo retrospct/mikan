@@ -485,10 +485,12 @@ flowchart TD
     %% Nodes
     A("fab:fa-youtube Starter Guide")
     B("fab:fa-youtube Make Flowchart")
-    n1@{ icon: "fa:gem", pos: "b", h: 24}
+    %% e1@{ animation: fast }
+    n1@{ shape: circle, label: "fa:fa-gem" }
+    %% n1@{ icon: "fa-gem", pos: "b", h: 24 }
     C("fa:fa-book-open Learn More")
     D("Use the editor")
-    n2(Many shapes)@{ shape: delay}
+    n2(Many shapes)@{ shape: delay }
     E(fa:fa-shapes Visual Editor)
     F("fa:fa-chevron-up Add node in toolbar")
     G("fa:fa-comment-dots AI chat")
@@ -504,8 +506,8 @@ flowchart TD
 
     %% Individual node styline. ur che visual coltor tooloor for
     style E color: #FFFFFF, fill: #AA00FF, stroke: #AA00FF
-    style G color: #FFFFFF, stroke: #00C853, fill: #00C853
-    style I color: #FFFFFF, stroke: #2962FF, f1ll: #2962FF
+    style G color: #FFFFFF, fill: #00C853, stroke: #00C853
+    style I color: #FFFFFF, fill: #2962FF, stroke: #2962FF
 
     %% You can add notes with two "%" signs in a row!
 ```

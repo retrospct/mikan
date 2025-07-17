@@ -4,6 +4,68 @@ A minimalist daily to do AI assistant that proactively helps you get things done
 
 > This README is a WIP of raw content. It'll be cleaned up in later commits once the project is out of early concept and ideation.
 
+## Project Structure
+
+```text
+/
+├── apps
+│   ├── desktop
+│   ├── docs
+│   ├── mobile
+│   └── web
+├── docs
+├── packages
+│   ├── eslint-config
+│   ├── tailwind-config
+│   ├── typescript-config
+│   └── ui
+└── scripts
+```
+
+## To Do
+
+- [ ] Finish monorepo configuration and setup
+  - [ ] TailwindCSS
+  - [ ] ESLint + Prettier + TypeScript
+- [ ] AI & APIs
+  - [ ] Architect the AI & App APIs
+  - [ ] Prioritize speed over perfect
+    - [ ] Add AI capabilities through AI SDK
+  - [ ] Keep privacy in mind
+  - [ ] Vector DB research on local or how to secure it if not
+- [ ] Desktop
+  - [ ] Configure to use shared packages (where it makes sense)
+  - [ ] Set sandbox, node integration, dev, and build configs
+  - [ ] Working correctly with monorepo and shared packages
+  - [ ] Add and configure vitest
+  - [ ] Add and configure playwright E2E
+- [ ] Web
+  - [ ] Configure to use shared packages
+  - [ ] Add and configure vitest
+  - [ ] Add and configure playwright E2E
+- [ ] Mobile
+  - [ ] Configure to use shared packages
+  - [ ] Configure and setup react native and expo
+  - [ ] Working correctly with monorepo and shared packages
+  - [ ] Add and configure vitest
+  - [ ] Add and configure playwright E2E
+- [ ] Docs
+  - [ ] Create a landing page
+    - [ ] Add my x profile and project github
+  - [ ] Add basic email wait list signup
+  - [ ] Decide on how and when to send updates to wait listers
+- [ ] Packages
+  - [ ] @mikan/utils - finish setup and configuration
+  - [ ] @mikan/ui - Shared UI react components. finish setup and configuration (decide on naming convention)
+  - [ ] @mikan/ui-rn - react native versions of UI components
+    - [ ] Plan for how React Native components will be built
+  - [ ] @mikan/emails - create this email templates and sending package
+  - [ ] @mikan/api - shared fetchers or api calling between nextjs + RN + electron-vite
+  - [ ] @mikan/drizzle? or prisma?
+  - [ ] @mikan/tailwind-config - finish configuring and setup
+  - [ ] @mikan/vitest - shared configs and react-testing-library setups
+- [ ] Add referrals embed from [dub.co referrals embed](https://dub.co/docs/sdks/embed/referrals)
+
 ## Views & Pages
 
 - Home
@@ -57,7 +119,7 @@ This Turborepo includes the following packages/apps:
 ### Apps
 
 - `desktop`: a [Electron.js](https://electronjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
-- `home`: a public marketing & landing website [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
+- `docs`: Help and support guides/docs [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
 - `mobile`: a [React Native](https://reactnative.dev/) app with [Expo](https://expo.dev/)
 - `web`: a [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
 

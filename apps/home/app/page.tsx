@@ -41,15 +41,7 @@ export default function Page() {
             rel="noopener noreferrer"
             target="_blank"
           >
-            By{' '}
-            <Image
-              alt="Vercel Logo"
-              className="dark:invert"
-              height={24}
-              priority
-              src="/vercel.svg"
-              width={100}
-            />
+            By <Image alt="Vercel Logo" className="dark:invert" height={24} priority src="/vercel.svg" width={100} />
           </a>
         </div>
       </div>

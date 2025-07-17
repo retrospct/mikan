@@ -9,12 +9,7 @@ export interface TaskStatusSelectorProps {
   position: { x: number; y: number }
 }
 
-export const TaskStatusSelector = ({
-  currentStatus,
-  onSelect,
-  isVisible,
-  position
-}: TaskStatusSelectorProps) => {
+export const TaskStatusSelector = ({ currentStatus, onSelect, isVisible, position }: TaskStatusSelectorProps) => {
   if (!isVisible) return null
 
   return (

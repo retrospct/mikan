@@ -269,9 +269,7 @@ export default function TodoApp(): JSX.Element {
                   <div className="flex items-center gap-4">
                     <TaskIcon
                       status={task.status}
-                      onStatusChange={(newStatus: TaskStatus) =>
-                        updateTaskStatus(task.id, newStatus)
-                      }
+                      onStatusChange={(newStatus: TaskStatus) => updateTaskStatus(task.id, newStatus)}
                       onShowSelector={() => {
                         const element = document.getElementById(`task-${task.id}`)
                         if (element) {
@@ -368,9 +366,7 @@ export default function TodoApp(): JSX.Element {
         {/* Task Status Selector */}
         <TaskStatusSelector
           currentStatus={
-            selectorState.taskId
-              ? tasks.find((t) => t.id === selectorState.taskId)?.status || 'todo'
-              : 'todo'
+            selectorState.taskId ? tasks.find((t) => t.id === selectorState.taskId)?.status || 'todo' : 'todo'
           }
           onSelect={(status: TaskStatus) => {
             if (selectorState.taskId) {

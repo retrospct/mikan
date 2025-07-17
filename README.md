@@ -2,53 +2,73 @@
 
 A minimalist daily to do AI assistant that proactively helps you get things done.
 
-## Using this example
+## Views & Pages
 
-Run the following command:
+- Home
+  - Default view: Minimalist to do list using @today-card.png as inspiration with to do tasks and minimal indicators of associated context and AI drafts.
+  - To Do - expanded view: clicking on a To Do item expands a UI with added UI/UX for managing currently associated context, options to add more context, view AI drafts AI input.
+- Next: Same style as Home but using @next-card.png as inspiration with added UI/UX for managing associated context and AI input.
+- Capture: A quick capture input similar to the [lazy.so](https://lazy.so) UI but more focus an intuitive and easy UI to add links, screenshots, files, @context-from-integration, and/or @context-from-mcp.
+- Sign up/Login
+- Settings
+  - Personal Context
+    - Permissions
+    - Manage local context
+    - Manage vector DB context (TBD, if needed)
+    - Manage MCP integrations
+    - Manage other integrations
+  - Selfs: user writing styles and personalizations generated from personal context or user created.
+    - Professional
+    - Friends
+    - Family
+    - My Boss (style used to generate content from me to my boss)
+    - {{ insert more examples here }}
+  - Preferences
+    - Profile
+    - Security
+    - Advanced
 
-```sh
-npx create-turbo@latest -e with-tailwind
-```
+## Key Features
+
+1. Capture context, quickly and without friction be able to:
+   1. Quickly capture/input content like links, documents, images, videos, audio, and text
+   2. Uses sources like a quick capture UI, MCP servers, files, folders, screenshots, meetings, integrations, tweets, emails, messages, and calendars
+2. Uses AI to create your personal productivity context:
+   1. Automatically associates relevant content to a to do task
+   2. Organizes associated and unassociated content
+   3. Enrich to do tasks with content data
+   4. Allow for manually adding content to a to do task
+3. Your AI productivity companion:
+   1. Drafts: proactively encourages you to start a task by getting it started for you. A draft is the AI's attempt at completing a task. It helps get the ball rolling, starting a task is often the hardest part.
+      1. When it can, it will draft email or message replies, summaries, outlines, research, web search, RAG search, meeting invites, and other content for your review and iteration.
+      2. Draft creation have two modes: autonomous and on-demand modes.
+      3. There is UI for user review and iteration of a draft through prompting and adding context with suggested prompt quick action buttons.
+      4. Drafts have version history that can be rolled back to like checkpoints.
+      5. It uses your writing style and tone based off recommended and available style/personalizations.
+      6. It does not nag and it is not annoying. It's your companion to getting things done.
+   2. Organizes your content and to do tasks so you don't have to. Make productivity apps productive and not time wasted tagging, sorting, assigning, and organizing your tasks.
 
 ## What's inside?
 
 This Turborepo includes the following packages/apps:
 
-### Apps and Packages
+### Apps
 
 - `desktop`: a [Electron.js](https://electronjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
-- `home`: a public marketing website [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
+- `home`: a public marketing & landing website [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
 - `mobile`: a [React Native](https://reactnative.dev/) app with [Expo](https://expo.dev/)
 - `web`: a [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
-- `ui`: a stub React component library with [Tailwind CSS](https://tailwindcss.com/) shared by both `web` and `electron` applications
+
+### Packages
+
+- `@mikan/ui`: a stub React component library with [Tailwind CSS](https://tailwindcss.com/) shared by both `web` and `electron` applications
+- `@mikan/tailwind-config`: shared tailwind configs for packages & apps using `@mikan/ui`
 - `@mikan/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `@mikan/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### Building Packages
 
-### Building packages/ui
-
-This example is set up to produce compiled styles for `ui` components into the `dist` directory. The component `.tsx` files are consumed by the Next.js apps directly using `transpilePackages` in `next.config.ts`. This was chosen for several reasons:
-
-- Make sharing one `tailwind.config.ts` to apps and packages as easy as possible.
-- Make package compilation simple by only depending on the Next.js Compiler and `tailwindcss`.
-- Ensure Tailwind classes do not overwrite each other. The `ui` package uses a `ui-` prefix for it's classes.
-- Maintain clear package export boundaries.
-
-Another option is to consume `packages/ui` directly from source without building. If using this option, you will need to update the `tailwind.config.ts` in your apps to be aware of your package locations, so it can find all usages of the `tailwindcss` class names for CSS compilation.
-
-For example, in [tailwind.config.ts](packages/tailwind-config/tailwind.config.ts):
-
-```js
-  content: [
-    // app content
-    `src/**/*.{js,ts,jsx,tsx}`,
-    // include packages if not transpiling
-    "../../packages/ui/*.{js,ts,jsx,tsx}",
-  ],
-```
-
-If you choose this strategy, you can remove the `tailwindcss` and `autoprefixer` dependencies from the `ui` package.
+[@mikan/ui build details](./packages/ui/README.md)
 
 ### Utilities
 

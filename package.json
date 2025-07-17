@@ -10,6 +10,7 @@
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "install:skip-postinstall": "SKIP_POSTINSTALL=1 pnpm install",
     "turbo": "turbo"
   },
   "devDependencies": {

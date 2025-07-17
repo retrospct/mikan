@@ -22,10 +22,13 @@ importers:
     dependencies:
       '@electron-toolkit/preload':
         specifier: ^3.0.1
-        version: 3.0.2(electron@35.7.2)
+        version: 3.0.2(electron@35.1.5)
       '@electron-toolkit/utils':
         specifier: ^4.0.0
-        version: 4.0.0(electron@35.7.2)
+        version: 4.0.0(electron@35.1.5)
+      '@mikan/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       electron-updater:
         specifier: ^6.3.9
         version: 6.6.2
@@ -39,6 +42,12 @@ importers:
       '@electron-toolkit/tsconfig':
         specifier: ^1.0.1
         version: 1.0.1(@types/node@22.16.4)
+      '@mikan/tailwind-config':
+        specifier: workspace:*
+        version: link:../../packages/tailwind-config
+      '@tailwindcss/postcss':
+        specifier: ^4.1.5
+        version: 4.1.11
       '@types/node':
         specifier: ^22.14.1
         version: 22.16.4
@@ -51,9 +60,12 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.6.0(vite@6.3.5(@types/node@22.16.4)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.21(postcss@8.5.6)
       electron:
         specifier: ^35.1.5
-        version: 35.7.2
+        version: 35.1.5
       electron-builder:
         specifier: ^25.1.8
         version: 25.1.8(electron-builder-squirrel-windows@25.1.8)
@@ -72,6 +84,9 @@ importers:
       eslint-plugin-react-refresh:
         specifier: ^0.4.19
         version: 0.4.20(eslint@9.31.0(jiti@2.4.2))
+      postcss:
+        specifier: ^8.5.3
+        version: 8.5.6
       prettier:
         specifier: ^3.5.3
         version: 3.6.2
@@ -81,6 +96,9 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
+      tailwindcss:
+        specifier: ^4.1.5
+        version: 4.1.11
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -3074,8 +3092,8 @@ packages:
       '@swc/core':
         optional: true
 
-  electron@35.7.2:
-    resolution: {integrity: sha512-MfAgKOs8OQJFEixUNRvuAzQQa0CciX9618JK6n7+U4aaHGS0PExoeL7bOwrI4L1rG3tH2gwcihI6tkxsSXX0iA==}
+  electron@35.1.5:
+    resolution: {integrity: sha512-LolvbKKQUSCGvEwbEQNt1cxD1t+YYClDNwBIjn4d28KM8FSqUn9zJuf6AbqNA7tVs9OFl/EQpmg/m4lZV1hH8g==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -7079,17 +7097,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@electron-toolkit/preload@3.0.2(electron@35.7.2)':
+  '@electron-toolkit/preload@3.0.2(electron@35.1.5)':
     dependencies:
-      electron: 35.7.2
+      electron: 35.1.5
 
   '@electron-toolkit/tsconfig@1.0.1(@types/node@22.16.4)':
     dependencies:
       '@types/node': 22.16.4
 
-  '@electron-toolkit/utils@4.0.0(electron@35.7.2)':
+  '@electron-toolkit/utils@4.0.0(electron@35.1.5)':
     dependencies:
-      electron: 35.7.2
+      electron: 35.1.5
 
   '@electron/asar@3.4.1':
     dependencies:
@@ -9817,7 +9835,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@35.7.2:
+  electron@35.1.5:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 22.16.4

@@ -331,8 +331,8 @@ export default function TodoApp(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-8 font-[family-name:var(--font-geist-sans)] draggable">
+      <div className="max-w-2xl mx-auto not-draggable">
         {/* Header */}
         <div className="flex items-center justify-between mb-12">
           <h1 className="text-2xl font-light text-gray-800">Today</h1>

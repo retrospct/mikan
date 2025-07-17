@@ -6,15 +6,15 @@
 
 @theme {
   --font-sans:
-    'Geist Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol', 'Noto Color Emoji';
+    'Geist Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
   /* --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; */
   --font-mono:
-    'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+    'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   --font-heading:
-    'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+    'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
 }
 
 :root {
@@ -33,8 +33,7 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
-    rgb(var(--background-start-rgb));
+  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
 
 body h1,
@@ -43,5 +42,13 @@ body h3,
 body h4,
 body h5,
 body h6 {
-  font-family: 'Geist Mono Variable', monospace;
+  font-family: var(--font-mono);
+}
+
+.draggable {
+  -webkit-app-region: drag;
+}
+
+.not-draggable {
+  -webkit-app-region: no-drag;
 }

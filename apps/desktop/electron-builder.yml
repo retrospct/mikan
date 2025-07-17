@@ -1,14 +1,29 @@
 appId: com.electron.app
 productName: mikan-desktop-evite
+electronVersion: 35.1.5
 directories:
   buildResources: build
 files:
+  - out/**/*
+  - node_modules/**/*
+  - package.json
+  - '!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}'
+  - '!.editorconfig'
+  - '!**/._*'
+  - '!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}'
+  - '!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}'
+  - '!**/{appveyor.yml,.travis.yml,circle.yml}'
+  - '!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}'
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!**/.turbo/*'
+  - '!**/turbo.json'
+  - '!../../packages/**/*'
+  - '!../../apps/**/!(${name})*'
 asarUnpack:
   - resources/**
 win:
@@ -41,5 +56,3 @@ npmRebuild: false
 publish:
   provider: generic
   url: https://example.com/auto-updates
-rebuildConfig:
-  mode: 'sequential'

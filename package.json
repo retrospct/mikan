@@ -3,10 +3,10 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev --filter=apps/web... --filter=apps/desktop...",
-    "dev:app": "turbo run dev --filter=apps/web... --filter=apps/desktop... --filter=apps/mobile...",
-    "dev:mobile": "turbo run dev --filter=apps/mobile...",
-    "dev:home": "turbo run dev --filter=apps/home...",
+    "dev": "turbo run dev --filter=web... --filter=desktop...",
+    "dev:app": "turbo run dev --filter=web... --filter=desktop... --filter=mobile...",
+    "dev:mobile": "turbo run dev --filter=mobile...",
+    "dev:home": "turbo run dev --filter=home...",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
@@ -15,7 +15,7 @@
   "devDependencies": {
     "prettier": "^3.6.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "turbo": "^2.5.4"
+    "turbo": "^2.5.5"
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {

@@ -1,0 +1,24 @@
+{
+  "name": "@mikan/utils",
+  "description": "Utility functions and constants for Mikan",
+  "version": "1.0.0",
+  "keywords": [],
+  "author": "Justin Lee <me@jlee.cool>",
+  "license": "ISC",
+  "sideEffects": false,
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint src/",
+    "dev": "tsup --watch",
+    "check-types": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf .turbo node_modules"
+  },
+  "packageManager": "pnpm@10.13.1"
+}

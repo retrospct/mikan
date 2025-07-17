@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "clean": "rm -rf .turbo node_modules"
   },
   "jest": {
     "preset": "jest-expo"

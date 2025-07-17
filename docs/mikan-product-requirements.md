@@ -413,25 +413,72 @@ class UserModel:
 ```
 
 ```mermaid
+---
+config:
+    theme: 'base'
+    themeVariables:
+        primaryColor: '#2962FF'
+        primaryTextColor: '#fff'
+        primaryBorderColor: '#2962FF'
+        lineColor: '#F8B229'
+        secondaryColor: '#F8B229'
+        tertiaryColor: '#fafafa'
+        labelColor: '#000'
+        textColor: '#000'
+        nodeTextColor: '#000'
+        actorTextColor: '#000'
+        classText: '#000'
+        secondaryTextColor: '#000'
+        tertiaryTextColor: '#000'
+        noteTextColor: '#000'
+        errorTextColor: '#000'
+---
 flowchart TD
     subgraph Client Layer
-        A1["iOS App\n(React Native)"]
-        A2["Android App\n(React Native)"]
-        A3["Web App\n(Next.js)"]
-        A4["Desktop App\n(Electron)"]
+        A1("Web App
+            (Next.js)")
+        A2("Desktop App
+            (Electron)")
+        A3("iOS App
+            (React Native)")
+        A4("Android App
+            (React Native)")
     end
-    A1 -->|HTTPS/WSS| B["API Gateway\n(Vercel/Cloudflare?)\nRate Limiting | Auth | Routing"]
+
+    %% Edge connections between nodes
+    A1 -->|HTTPS/WSS| B("API Gateway
+                        (Vercel/Cloudflare?)
+                        Rate Limiting | Auth | Routing")
     A2 -->|HTTPS/WSS| B
     A3 -->|HTTPS/WSS| B
     A4 -->|HTTPS/WSS| B
-    B --> C["Core API\n(Express/Serverless)\n- User Mgmt\n- Task CRUD\n- Sync Engine"]
-    B --> D["AI Service\n(FastAPI)\n- NLU Engine\n- Prioritization\n- Recommendations"]
+    B --> C("Core API
+            (Express/Serverless)
+            - User Mgmt
+            - Task CRUD
+            - Sync Engine")
+    B --> D("AI Service
+            (FastAPI)
+            - NLU Engine
+            - Prioritization
+            - Recommendations")
     C <-->|http or gRPC| D
-    C --> E["PostgreSQL\n(Primary DB)"]
-    C --> F["Redis Cache\n(Sessions)"]
-    D --> G["ML Pipeline\n(Kubeflow)"]
-    D --> H["Model Store\n(S3 + DVC)"]
+    C --> E("PostgreSQL
+            (Primary DB)")
+    C --> F("Redis Cache
+            (Sessions)")
+    D --> G("ML Pipeline
+            (Kubeflow)")
+    D --> H("Model Store
+            (S3 + DVC)")
+
+    %% Individual node styles
+    %% style E color: #FFFFFF, fill: #AA00FF, stroke: #AA00FF
+    %% style G color: #FFFFFF, stroke: #00C853, fill: #00C853
+    %% style I color: #FFFFFF, stroke: #2962FF, f1ll: #2962FF
 ```
+
+---
 
 ```mermaid
 flowchart TD

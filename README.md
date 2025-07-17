@@ -2,6 +2,8 @@
 
 A minimalist daily to do AI assistant that proactively helps you get things done.
 
+> This README is a WIP of raw content. It'll be cleaned up in later commits once the project is out of early concept and ideation.
+
 ## Views & Pages
 
 - Home

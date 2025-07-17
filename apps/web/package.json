@@ -17,10 +17,10 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^15.3.0",
     "@mikan/eslint-config": "workspace:*",
     "@mikan/tailwind-config": "workspace:*",
     "@mikan/typescript-config": "workspace:*",
+    "@next/eslint-plugin-next": "^15.3.0",
     "@tailwindcss/postcss": "^4.1.5",
     "@types/node": "^22.15.30",
     "@types/react": "^19.1.0",

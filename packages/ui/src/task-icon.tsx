@@ -51,27 +51,27 @@ export const TaskIcon = ({ status, onStatusChange, onShowSelector, onHideSelecto
   const iconElement = (() => {
     switch (status) {
       case 'complete':
-        return <div className={`${baseClasses} bg-gray-800 rounded-full`} />
+        return <div className={`${baseClasses} rounded-full bg-gray-800`} />
       case 'in-progress':
         return (
-          <div className={`${baseClasses} rounded-full relative overflow-hidden`}>
-            <div className="absolute left-0 top-0 w-1/2 h-full bg-gray-800" />
+          <div className={`${baseClasses} relative overflow-hidden rounded-full`}>
+            <div className="absolute top-0 left-0 h-20 w-1/2 bg-gray-800" />
           </div>
         )
       case 'delegated':
         return (
-          <div className={`${baseClasses} rounded-full relative`}>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-3 h-0.5 bg-gray-800" />
+          <div className={`${baseClasses} relative rounded-full`}>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+              <div className="h-0.5 w-3 bg-gray-800" />
             </div>
           </div>
         )
       case 'appointment':
         return (
-          <div className={`${baseClasses} rounded-full relative`}>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-3 h-0.5 bg-gray-800" />
-              <div className="w-0.5 h-3 bg-gray-800 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          <div className={`${baseClasses} relative rounded-full`}>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+              <div className="h-0.5 w-3 bg-gray-800" />
+              <div className="absolute top-1/2 left-1/2 h-3 w-0.5 -translate-x-1/2 -translate-y-1/2 transform bg-gray-800" />
             </div>
           </div>
         )

@@ -47,8 +47,8 @@ A minimalist daily to do AI assistant that proactively helps you get things done
   - [ ] Configure to use shared packages
   - [ ] Configure and setup react native and expo
   - [ ] Working correctly with monorepo and shared packages
-  - [ ] Add and configure vitest
-  - [ ] Add and configure playwright E2E
+  - [ ] Add and configure vitest or similar
+  - [ ] Add and configure playwright E2E or similar
 - [ ] Docs
   - [ ] Create a landing page
     - [ ] Add my x profile and project github
@@ -166,3 +166,7 @@ This Turborepo has some additional tools already setup for you:
 - [TypeScript](https://www.typescriptlang.org/) for static type checking
 - [ESLint](https://eslint.org/) for code linting
 - [Prettier](https://prettier.io) for code formatting
+
+### Handle a team of AI agents
+
+The strongest developers are learning how to break down problems into smaller chunks for multiple agent developers to work on, and then tying together the solutions they get back as a result. “No one’s an expert at this yet, but one of the key skills we’ll see going forward is spending time on markdown files and providing additional instruction and context to LLMs, almost like you would help an intern ramp up on a problem,” says Marcel. “This looks like: ‘Please think about this, consider this part of the problem, and look at this part of our solution space that we’ve already developed.’”

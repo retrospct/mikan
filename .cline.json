@@ -1,0 +1,39 @@
+{
+  "projects": [
+    {
+      "name": "web",
+      "root": "apps/web",
+      "type": "nextjs"
+    },
+    {
+      "name": "desktop",
+      "root": "apps/desktop",
+      "type": "electron"
+    },
+    {
+      "name": "mobile",
+      "root": "apps/mobile",
+      "type": "react-native"
+    },
+    {
+      "name": "docs",
+      "root": "apps/docs",
+      "type": "nextjs"
+    },
+    {
+      "name": "ui",
+      "root": "packages/ui",
+      "type": "lib"
+    },
+    {
+      "name": "utils",
+      "root": "packages/utils",
+      "type": "lib"
+    },
+    {
+      "name": "emails",
+      "root": "packages/emails",
+      "type": "lib"
+    }
+  ]
+}

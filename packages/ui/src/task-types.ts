@@ -19,5 +19,5 @@ export const taskStatusOptions: TaskStatusOption[] = [
   { value: 'in-progress', label: 'In Progress', description: 'Currently working on' },
   { value: 'complete', label: 'Complete', description: 'Finished task' },
   { value: 'delegated', label: 'Delegated', description: 'Assigned to someone else' },
-  { value: 'appointment', label: 'Appointment', description: 'Scheduled meeting or event' }
+  { value: 'appointment', label: 'Appointment', description: 'Scheduled event' }
 ]

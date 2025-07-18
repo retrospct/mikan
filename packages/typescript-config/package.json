@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
+  "scripts": {
+    "release": "pnpm dlx git-cliff",
+    "version-bump": "pnpm dlx git-cliff --bump"
+  },
   "publishConfig": {
     "access": "public"
   }

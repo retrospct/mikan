@@ -1,5 +1,5 @@
 {
-  "name": "home",
+  "name": "docs",
   "version": "1.0.0",
   "type": "module",
   "private": true,
@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf .turbo node_modules",
+    "release": "pnpm dlx git-cliff",
+    "version-bump": "pnpm dlx git-cliff --bump"
   },
   "dependencies": {
     "@mikan/ui": "workspace:*",

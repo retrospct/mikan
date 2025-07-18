@@ -9,12 +9,7 @@ export interface NavigationPanelProps {
   onClose: () => void
 }
 
-export const NavigationPanel = ({
-  showNavigation,
-  currentPage,
-  onNavigate,
-  onClose
-}: NavigationPanelProps) => {
+export const NavigationPanel = ({ showNavigation, currentPage, onNavigate, onClose }: NavigationPanelProps) => {
   const handleNavigate = (page: NavigationPage) => {
     onNavigate(page)
     onClose()
@@ -39,10 +34,7 @@ export const NavigationPanel = ({
         <div className="p-6">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-light text-gray-800 font-mono">Navigation</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <X className="w-5 h-5 text-gray-600" />
             </button>
           </div>
@@ -51,9 +43,7 @@ export const NavigationPanel = ({
             <button
               onClick={() => handleNavigate('today')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentPage === 'today'
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'hover:bg-gray-50 text-gray-700'
+                currentPage === 'today' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'
               }`}
             >
               <Calendar className="w-5 h-5" />
@@ -63,9 +53,7 @@ export const NavigationPanel = ({
             <button
               onClick={() => handleNavigate('next')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentPage === 'next'
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'hover:bg-gray-50 text-gray-700'
+                currentPage === 'next' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'
               }`}
             >
               <Clock className="w-5 h-5" />
@@ -75,9 +63,7 @@ export const NavigationPanel = ({
             <button
               onClick={() => handleNavigate('someday')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentPage === 'someday'
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'hover:bg-gray-50 text-gray-700'
+                currentPage === 'someday' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'
               }`}
             >
               <Sparkles className="w-5 h-5" />
@@ -87,9 +73,7 @@ export const NavigationPanel = ({
             <button
               onClick={() => handleNavigate('settings')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentPage === 'settings'
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'hover:bg-gray-50 text-gray-700'
+                currentPage === 'settings' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'
               }`}
             >
               <Settings className="w-5 h-5" />

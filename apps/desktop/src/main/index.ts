@@ -1,7 +1,17 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
+// import * as os from 'os'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
+
+// const reactDevToolsPath = join(
+//   os.homedir(),
+//   process.platform === 'darwin'
+//     ? '/Library/Application Support/Google/Chrome/Default/Extensions'
+//     : '%LOCALAPPDATA%\Google\Chrome\User Data\Default\Extensions',
+//   'fmkadmapgofadopljbjfkapdkoienihi',
+//   '6.1.5_0'
+// )
 
 function createWindow(): void {
   // Create the browser window.
@@ -10,10 +20,15 @@ function createWindow(): void {
     height: 874, // 874 | 852
     show: false,
     autoHideMenuBar: true,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: true,
+    // frame: false, // TODO: determine frameless or not
+    // resizable: false, // TODO: decide if I want to allow resizeable
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: true
+      sandbox: false // TODO: tbd if needed, can be security issue
+      // nodeIntegration: true // TODO: tbd if needed, can be security issue
     }
   })
 
@@ -41,6 +56,15 @@ function createWindow(): void {
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+
+  // Load React DevTools Extension
+  // if (is.dev) {
+  //   try {
+  //     await session.defaultSession.loadExtension(reactDevToolsPath)
+  //   } catch (error) {
+  //     console.error('Error loading React DevTools:', error)
+  //   }
+  // }
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

@@ -19,7 +19,10 @@
     "check-types": "tsc --noEmit",
     "dev:styles": "tailwindcss -i ./src/styles.css -o ./dist/index.css --watch",
     "dev:components": "tsc --watch",
-    "lint": "eslint src --max-warnings 0"
+    "lint": "eslint src --max-warnings 0",
+    "clean": "rm -rf .turbo node_modules",
+    "release": "pnpm dlx git-cliff",
+    "version-bump": "pnpm dlx git-cliff --bump"
   },
   "peerDependencies": {
     "react": "^19"
@@ -35,6 +38,7 @@
     "typescript": "5.8.2"
   },
   "dependencies": {
+    "@mikan/utils": "workspace:*",
     "lucide-react": "^0.525.0"
   }
 }

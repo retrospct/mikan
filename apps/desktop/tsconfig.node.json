@@ -4,6 +4,6 @@
   "compilerOptions": {
     "composite": true,
     "types": ["electron-vite/node"],
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler" // add this to fix the error: "Cannot find module 'electron-vite/node' or its corresponding type declarations."
   }
 }

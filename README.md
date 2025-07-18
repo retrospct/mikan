@@ -4,6 +4,80 @@ A minimalist daily to do AI assistant that proactively helps you get things done
 
 > This README is a WIP of raw content. It'll be cleaned up in later commits once the project is out of early concept and ideation.
 
+## Project Structure
+
+```text
+/
+├── apps
+│   ├── desktop
+│   ├── docs
+│   ├── mobile
+│   └── web
+├── docs
+├── packages
+│   ├── eslint-config
+│   ├── tailwind-config
+│   ├── typescript-config
+│   └── ui
+└── scripts
+```
+
+## To Do
+
+- [ ] Finish monorepo configuration and setup
+  - [ ] TailwindCSS
+  - [ ] ESLint + Prettier + TypeScript
+- [ ] AI & APIs
+  - [ ] Architect the AI & App APIs
+  - [ ] Prioritize speed over perfect
+    - [ ] Add AI capabilities through AI SDK
+  - [ ] Keep privacy in mind
+  - [ ] Vector DB research on local or how to secure it if not
+- [ ] Desktop
+  - [ ] Configure to use shared packages (where it makes sense)
+  - [ ] Set sandbox, node integration, dev, and build configs
+  - [ ] Working correctly with monorepo and shared packages
+  - [ ] Add and configure vitest
+  - [ ] Add and configure playwright E2E
+- [ ] Web
+  - [ ] Configure to use shared packages
+  - [ ] Add and configure vitest
+  - [ ] Add and configure playwright E2E
+- [ ] Mobile
+  - [ ] Configure to use shared packages
+  - [ ] Configure and setup react native and expo
+  - [ ] Working correctly with monorepo and shared packages
+  - [ ] Add and configure vitest or similar
+  - [ ] Add and configure playwright E2E or similar
+- [ ] Docs
+  - [ ] Create a landing page
+    - [ ] Add my x profile and project github
+  - [ ] Add basic email wait list signup
+  - [ ] Decide on how and when to send updates to wait listers
+- [ ] Packages
+  - [ ] @mikan/utils - finish setup and configuration
+  - [ ] @mikan/ui - Shared UI react components. finish setup and configuration (decide on naming convention)
+  - [ ] @mikan/ui-rn - react native versions of UI components
+    - [ ] Plan for how React Native components will be built
+  - [ ] @mikan/emails - create this email templates and sending package
+  - [ ] @mikan/api - shared fetchers or api calling between nextjs + RN + electron-vite
+  - [ ] @mikan/drizzle? or prisma?
+  - [ ] @mikan/tailwind-config - finish configuring and setup
+  - [ ] @mikan/testing - shared configs, vitest, and react-testing-library setups
+- [ ] Add referrals embed from [dub.co referrals embed](https://dub.co/docs/sdks/embed/referrals)
+- [ ] Consider installing and using [Consola](https://github.com/unjs/consola)
+- [ ] Consider adding [repobeats](https://repobeats.axiom.co/) and [contrib.rocks](https://contrib.rocks/)
+- [x] Add git-cliff for versioning and changelog generating
+
+## Tech Stack
+
+- Frontend: Next.js, TypeScript, Tailwind CSS, ShadCN, MagicUI
+- Backend: FastAPI, Python, Vercel & CF Functions, Server Actions
+- Database: PostgreSQL (with Drizzle ORM)
+- AI: TBD
+- Deployment: Vercel (Frontend), TBD (Backend)
+- Analytics: TBD (PostHog? VA? ??)
+
 ## Views & Pages
 
 - Home
@@ -57,7 +131,7 @@ This Turborepo includes the following packages/apps:
 ### Apps
 
 - `desktop`: a [Electron.js](https://electronjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
-- `home`: a public marketing & landing website [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
+- `docs`: Help and support guides/docs [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
 - `mobile`: a [React Native](https://reactnative.dev/) app with [Expo](https://expo.dev/)
 - `web`: a [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
 
@@ -67,10 +141,22 @@ This Turborepo includes the following packages/apps:
 - `@mikan/tailwind-config`: shared tailwind configs for packages & apps using `@mikan/ui`
 - `@mikan/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `@mikan/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- `@mikan/emails` - create this email templates and sending package
+- `@mikan/api` - shared fetchers or api calling between nextjs + RN + electron-vite
+- `@mikan/drizzle?` or prisma?
+- `@mikan/testing` - shared configs and react-testing-library setups
 
 ### Building Packages
 
-[@mikan/ui build details](./packages/ui/README.md)
+- Uses [git-cliff](https://git-cliff.org/) for versioning and releases
+- `cliff.toml` for git-cliff configuration
+- `.github/workflows/changelog.yml` for GitHub release action
+- [@mikan/ui build details](./packages/ui/README.md)
+
+```bash
+pnpm run version-update
+pnpm run release
+```
 
 ### Utilities
 
@@ -80,3 +166,7 @@ This Turborepo has some additional tools already setup for you:
 - [TypeScript](https://www.typescriptlang.org/) for static type checking
 - [ESLint](https://eslint.org/) for code linting
 - [Prettier](https://prettier.io) for code formatting
+
+### Handle a team of AI agents
+
+The strongest developers are learning how to break down problems into smaller chunks for multiple agent developers to work on, and then tying together the solutions they get back as a result. “No one’s an expert at this yet, but one of the key skills we’ll see going forward is spending time on markdown files and providing additional instruction and context to LLMs, almost like you would help an intern ramp up on a problem,” says Marcel. “This looks like: ‘Please think about this, consider this part of the problem, and look at this part of our solution space that we’ve already developed.’”

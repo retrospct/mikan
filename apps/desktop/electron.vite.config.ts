@@ -17,8 +17,8 @@ export default defineConfig({
       }
     },
     optimizeDeps: {
-      include: ['@mikan/ui']
+      include: ['@mikan/ui'] // added to fix the error: "Cannot find module '@mikan/ui' or its corresponding type declarations."
     },
-    plugins: [react(), tailwindcss()]
+    plugins: [react(), tailwindcss()] // added tailwindcss to fix the error: "Cannot find module '@mikan/tailwind-config' or its corresponding type declarations."
   }
 })

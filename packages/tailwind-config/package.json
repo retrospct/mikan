@@ -5,7 +5,18 @@
   "private": true,
   "exports": {
     ".": "./shared-styles.css",
-    "./postcss": "./postcss.config.js"
+    "./postcss": "./postcss.config.js",
+    "./build": "./build.js"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js --watch",
+    "clean": "rm -rf .turbo node_modules shared-styles.css",
+    "release": "pnpm dlx git-cliff",
+    "version-bump": "pnpm dlx git-cliff --bump"
+  },
+  "dependencies": {
+    "@mikan/design-tokens": "workspace:*"
   },
   "devDependencies": {
     "postcss": "^8.5.3",

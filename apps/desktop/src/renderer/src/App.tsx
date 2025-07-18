@@ -269,9 +269,7 @@ export default function TodoApp(): JSX.Element {
                   <div className="flex items-center gap-4">
                     <TaskIcon
                       status={task.status}
-                      onStatusChange={(newStatus: TaskStatus) =>
-                        updateTaskStatus(task.id, newStatus)
-                      }
+                      onStatusChange={(newStatus: TaskStatus) => updateTaskStatus(task.id, newStatus)}
                       onShowSelector={() => {
                         const element = document.getElementById(`task-${task.id}`)
                         if (element) {
@@ -333,8 +331,8 @@ export default function TodoApp(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-8 font-[family-name:var(--font-geist-sans)] draggable">
+      <div className="max-w-2xl mx-auto not-draggable">
         {/* Header */}
         <div className="flex items-center justify-between mb-12">
           <h1 className="text-2xl font-light text-gray-800">Today</h1>
@@ -368,9 +366,7 @@ export default function TodoApp(): JSX.Element {
         {/* Task Status Selector */}
         <TaskStatusSelector
           currentStatus={
-            selectorState.taskId
-              ? tasks.find((t) => t.id === selectorState.taskId)?.status || 'todo'
-              : 'todo'
+            selectorState.taskId ? tasks.find((t) => t.id === selectorState.taskId)?.status || 'todo' : 'todo'
           }
           onSelect={(status: TaskStatus) => {
             if (selectorState.taskId) {

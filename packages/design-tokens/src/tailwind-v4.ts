@@ -46,8 +46,10 @@ export const tailwindV4Theme = {
   '--spacing-88': '22rem',
 
   // Font families
-  '--font-family-geist': 'Geist, system-ui, sans-serif',
-  '--font-family-geist-mono': 'Geist Mono, ui-monospace, monospace'
+  '--font-sans': `'Geist Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji'`,
+  '--font-mono': `'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace`
 }
 
 /**

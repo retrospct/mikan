@@ -1,9 +1,16 @@
-appId: com.electron.app
-productName: mikan-desktop-evite
+appId: com.mikan.app
+productName: mikan-desktop
 electronVersion: 35.1.5
 directories:
   buildResources: build
 files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  # TODO: everything below this was added to fix build errors, revisit if this is needed
   - out/**/*
   - node_modules/**/*
   - package.json
@@ -14,12 +21,6 @@ files:
   - '!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}'
   - '!**/{appveyor.yml,.travis.yml,circle.yml}'
   - '!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}'
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
   - '!**/.turbo/*'
   - '!**/turbo.json'
   - '!../../packages/**/*'
@@ -27,7 +28,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: mikan-desktop-evite
+  executableName: mikan-desktop
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

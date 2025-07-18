@@ -5,7 +5,12 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**", "out/**"]
+    },
+    "build:packages": {
+      "dependsOn": ["^build:packages"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -23,12 +28,30 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "release": {
-      "dependsOn": ["^build", "^version-packages"]
-    },
-    "version-packages": {
-      "dependsOn": ["^version-packages"],
+    "version-bump": {
+      "dependsOn": ["^version-bump"],
       "cache": false
+    },
+    "version-bump:apps": {
+      "dependsOn": ["^version-bump:apps"],
+      "cache": false
+    },
+    "version-bump:packages": {
+      "dependsOn": ["^version-bump:packages"],
+      "cache": false
+    },
+    "release": {
+      "dependsOn": ["^build", "^version-bump"]
+    },
+    "release:apps": {
+      "dependsOn": ["^build", "^version-bump"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**", "out/**"]
+    },
+    "release:packages": {
+      "dependsOn": ["^build:packages", "^version-bump"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"]
     }
   }
 }

@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:packages": "turbo run build --filter=...{./packages/*}",
     "dev": "turbo run dev --filter=web... --filter=desktop...",
     "dev:app": "turbo run dev --filter=web... --filter=desktop... --filter=mobile...",
     "dev:mobile": "turbo run dev --filter=mobile...",
@@ -13,8 +14,12 @@
     "clean": "turbo clean",
     "install:skip-postinstall": "SKIP_POSTINSTALL=1 pnpm install",
     "git-cliff": "pnpm dlx git-cliff",
-    "version-packages": "turbo run version-packages",
-    "release": "turbo run release"
+    "version-bump": "turbo run version-bump",
+    "version-bump:apps": "turbo run version-bump --filter={./apps/*}...",
+    "version-bump:packages": "turbo run version-bump --filter={./packages/*}...",
+    "release": "turbo run release",
+    "release:apps": "turbo run release --filter={./apps/*}...",
+    "release:packages": "turbo run release --filter={./packages/*}..."
   },
   "devDependencies": {
     "prettier": "^3.6.0",

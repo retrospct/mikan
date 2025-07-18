@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Justin Lee <me@jlee.cool>",
+  "homepage": "https://jlee.cool",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -21,7 +21,9 @@
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux",
-    "clean": "rm -rf .turbo node_modules"
+    "clean": "rm -rf .turbo node_modules",
+    "release": "pnpm dlx git-cliff",
+    "version-bump": "pnpm dlx git-cliff --bump"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",

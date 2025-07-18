@@ -21,6 +21,9 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  /* transparent scroll bar */
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,6 +31,9 @@
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
+    /* transparent scroll bar */
+    scrollbar-width: none;
+    scrollbar-color: transparent transparent;
   }
 }
 
@@ -45,6 +51,7 @@ body h6 {
   font-family: var(--font-mono);
 }
 
+/* Draggable Electron window, can use this to create a custom window bar */
 .draggable {
   -webkit-app-region: drag;
 }

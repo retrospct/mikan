@@ -9,7 +9,7 @@
   },
   "scripts": {
     "release": "pnpm dlx git-cliff",
-    "version-packages": "pnpm dlx git-cliff --bump"
+    "version-bump": "pnpm dlx git-cliff --bump"
   },
   "devDependencies": {
     "postcss": "^8.5.3",

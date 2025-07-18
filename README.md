@@ -63,7 +63,7 @@ A minimalist daily to do AI assistant that proactively helps you get things done
   - [ ] @mikan/api - shared fetchers or api calling between nextjs + RN + electron-vite
   - [ ] @mikan/drizzle? or prisma?
   - [ ] @mikan/tailwind-config - finish configuring and setup
-  - [ ] @mikan/vitest - shared configs and react-testing-library setups
+  - [ ] @mikan/testing - shared configs, vitest, and react-testing-library setups
 - [ ] Add referrals embed from [dub.co referrals embed](https://dub.co/docs/sdks/embed/referrals)
 - [ ] Consider installing and using [Consola](https://github.com/unjs/consola)
 - [ ] Consider adding [repobeats](https://repobeats.axiom.co/) and [contrib.rocks](https://contrib.rocks/)
@@ -141,10 +141,22 @@ This Turborepo includes the following packages/apps:
 - `@mikan/tailwind-config`: shared tailwind configs for packages & apps using `@mikan/ui`
 - `@mikan/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `@mikan/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- `@mikan/emails` - create this email templates and sending package
+- `@mikan/api` - shared fetchers or api calling between nextjs + RN + electron-vite
+- `@mikan/drizzle?` or prisma?
+- `@mikan/testing` - shared configs and react-testing-library setups
 
 ### Building Packages
 
-[@mikan/ui build details](./packages/ui/README.md)
+- Uses [git-cliff](https://git-cliff.org/) for versioning and releases
+- `cliff.toml` for git-cliff configuration
+- `.github/workflows/changelog.yml` for GitHub release action
+- [@mikan/ui build details](./packages/ui/README.md)
+
+```bash
+pnpm run version-update
+pnpm run release
+```
 
 ### Utilities
 

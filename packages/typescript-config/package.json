@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "release": "pnpm dlx git-cliff",
-    "version-packages": "pnpm dlx git-cliff --bump"
+    "version-bump": "pnpm dlx git-cliff --bump"
   },
   "publishConfig": {
     "access": "public"

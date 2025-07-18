@@ -38,6 +38,7 @@
     "typescript": "5.8.2"
   },
   "dependencies": {
+    "@mikan/utils": "workspace:*",
     "lucide-react": "^0.525.0"
   }
 }

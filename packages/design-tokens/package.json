@@ -1,0 +1,23 @@
+{
+  "name": "@mikan/design-tokens",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.js",
+    "./v3": "./dist/tailwind-v3.js",
+    "./v4": "./dist/tailwind-v4.js",
+    "./colors": "./dist/colors.js",
+    "./dist/tailwind-v3.js": "./dist/tailwind-v3.js",
+    "./dist/tailwind-v4.js": "./dist/tailwind-v4.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf .turbo node_modules dist"
+  },
+  "devDependencies": {
+    "@mikan/typescript-config": "workspace:*",
+    "typescript": "5.8.2"
+  }
+}

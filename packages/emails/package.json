@@ -8,7 +8,9 @@
     "build": "email build",
     "preview": "email preview",
     "lint": "eslint .",
-    "clean": "rm -rf .turbo node_modules"
+    "clean": "rm -rf .turbo node_modules",
+    "release": "pnpm dlx git-cliff",
+    "version-packages": "pnpm dlx git-cliff --bump"
   },
   "dependencies": {
     "@mikan/utils": "workspace:*",

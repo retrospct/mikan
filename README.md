@@ -65,6 +65,18 @@ A minimalist daily to do AI assistant that proactively helps you get things done
   - [ ] @mikan/tailwind-config - finish configuring and setup
   - [ ] @mikan/vitest - shared configs and react-testing-library setups
 - [ ] Add referrals embed from [dub.co referrals embed](https://dub.co/docs/sdks/embed/referrals)
+- [ ] Consider installing and using [Consola](https://github.com/unjs/consola)
+- [ ] Consider adding [repobeats](https://repobeats.axiom.co/) and [contrib.rocks](https://contrib.rocks/)
+- [x] Add git-cliff for versioning and changelog generating
+
+## Tech Stack
+
+- Frontend: Next.js, TypeScript, Tailwind CSS, ShadCN, MagicUI
+- Backend: FastAPI, Python, Vercel & CF Functions, Server Actions
+- Database: PostgreSQL (with Drizzle ORM)
+- AI: TBD
+- Deployment: Vercel (Frontend), TBD (Backend)
+- Analytics: TBD (PostHog? VA? ??)
 
 ## Views & Pages
 

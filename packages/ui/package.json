@@ -20,7 +20,9 @@
     "dev:styles": "tailwindcss -i ./src/styles.css -o ./dist/index.css --watch",
     "dev:components": "tsc --watch",
     "lint": "eslint src --max-warnings 0",
-    "clean": "rm -rf .turbo node_modules"
+    "clean": "rm -rf .turbo node_modules",
+    "release": "pnpm dlx git-cliff",
+    "version-packages": "pnpm dlx git-cliff --bump"
   },
   "peerDependencies": {
     "react": "^19"

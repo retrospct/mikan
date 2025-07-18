@@ -32,7 +32,10 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onPress }: TaskCardProps) {
   return (
-    <StyledPressable className="mb-2 rounded-lg bg-white p-4 shadow-sm active:opacity-90" onPress={onPress}>
+    <StyledPressable
+      className="mb-2 rounded-lg bg-white p-4 shadow-sm active:opacity-90"
+      onPress={onPress}
+    >
       <StyledText className="text-lg font-semibold text-gray-900">{task.title}</StyledText>
     </StyledPressable>
   )

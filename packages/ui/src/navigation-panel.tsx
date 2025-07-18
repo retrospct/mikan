@@ -9,7 +9,12 @@ export interface NavigationPanelProps {
   onClose: () => void
 }
 
-export const NavigationPanel = ({ showNavigation, currentPage, onNavigate, onClose }: NavigationPanelProps) => {
+export const NavigationPanel = ({
+  showNavigation,
+  currentPage,
+  onNavigate,
+  onClose
+}: NavigationPanelProps) => {
   const handleNavigate = (page: NavigationPage) => {
     onNavigate(page)
     onClose()
@@ -19,64 +24,75 @@ export const NavigationPanel = ({ showNavigation, currentPage, onNavigate, onClo
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ${
-          showNavigation ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`bg-opacity-50 fixed inset-0 z-40 bg-black transition-opacity duration-300 ${
+          showNavigation ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={onClose}
       />
 
       {/* Navigation Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 z-50 h-full w-80 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
           showNavigation ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         <div className="p-6">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-light text-gray-800 font-mono">Navigation</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <X className="w-5 h-5 text-gray-600" />
+          <div className="mb-8 flex items-center justify-between">
+            <h2 className="font-mono text-xl font-light text-gray-800">Navigation</h2>
+            <button
+              onClick={onClose}
+              className="rounded-lg p-2 transition-colors hover:bg-gray-100"
+            >
+              <X className="h-5 w-5 text-gray-600" />
             </button>
           </div>
 
           <nav className="space-y-2">
             <button
               onClick={() => handleNavigate('today')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentPage === 'today' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'
+              className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
+                currentPage === 'today'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Calendar className="w-5 h-5" />
+              <Calendar className="h-5 w-5" />
               <span className="font-medium">Today</span>
             </button>
 
             <button
               onClick={() => handleNavigate('next')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentPage === 'next' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'
+              className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
+                currentPage === 'next'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Clock className="w-5 h-5" />
+              <Clock className="h-5 w-5" />
               <span className="font-medium">Next</span>
             </button>
 
             <button
               onClick={() => handleNavigate('someday')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentPage === 'someday' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'
+              className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
+                currentPage === 'someday'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Sparkles className="w-5 h-5" />
+              <Sparkles className="h-5 w-5" />
               <span className="font-medium">Someday</span>
             </button>
 
             <button
               onClick={() => handleNavigate('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentPage === 'settings' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'
+              className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
+                currentPage === 'settings'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="h-5 w-5" />
               <span className="font-medium">Settings</span>
             </button>
           </nav>

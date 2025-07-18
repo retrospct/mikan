@@ -32,15 +32,19 @@ export default function WelcomeEmail({
             <Section className="mt-8">
               <Img src={DUB_WORDMARK} height="32" alt="Dub" />
             </Section>
-            <Heading className="mx-0 my-7 p-0 text-xl font-semibold text-black">Welcome {name || 'to Dub'}!</Heading>
+            <Heading className="mx-0 my-7 p-0 text-xl font-semibold text-black">
+              Welcome {name || 'to Dub'}!
+            </Heading>
             <Text className="mb-8 text-sm leading-6 text-gray-600">
-              Thank you for signing up for Dub! You can now start creating short links, track conversions, and explore
-              our API.
+              Thank you for signing up for Dub! You can now start creating short links, track
+              conversions, and explore our API.
             </Text>
 
             <Hr />
 
-            <Heading className="mx-0 my-6 p-0 text-lg font-semibold text-black">Getting started</Heading>
+            <Heading className="mx-0 my-6 p-0 text-lg font-semibold text-black">
+              Getting started
+            </Heading>
 
             <Text className="mb-4 text-sm leading-6 text-gray-600">
               <strong className="font-medium text-black">1. Set up your domain</strong>:{' '}
@@ -72,8 +76,8 @@ export default function WelcomeEmail({
             </Text>
 
             <Text className="mb-4 text-sm leading-6 text-gray-600">
-              <strong className="font-medium text-black">3. Track conversions</strong>: Measure how your links convert
-              to signups and sales with our built-in{' '}
+              <strong className="font-medium text-black">3. Track conversions</strong>: Measure how
+              your links convert to signups and sales with our built-in{' '}
               <Link
                 href="https://dub.co/help/article/dub-conversions"
                 className="font-semibold text-black underline underline-offset-4"

@@ -9,8 +9,14 @@ export interface TaskIconProps {
   onHideSelector: () => void
 }
 
-export const TaskIcon = ({ status, onStatusChange, onShowSelector, onHideSelector }: TaskIconProps) => {
-  const baseClasses = 'w-6 h-6 border-2 border-gray-800 cursor-pointer transition-all hover:scale-110 relative'
+export const TaskIcon = ({
+  status,
+  onStatusChange,
+  onShowSelector,
+  onHideSelector
+}: TaskIconProps) => {
+  const baseClasses =
+    'w-6 h-6 border-2 border-gray-800 cursor-pointer transition-all hover:scale-110 relative'
   const longPressTimer = useRef<NodeJS.Timeout | undefined>(undefined)
   const [isPressed, setIsPressed] = useState(false)
 

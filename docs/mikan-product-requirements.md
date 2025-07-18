@@ -268,7 +268,8 @@ interface TaskScore {
 }
 
 // Weighted calculation
-finalScore = urgency * 0.3 + importance * 0.25 + energyMatch * 0.2 + context * 0.15 + dependency * 0.1
+finalScore =
+  urgency * 0.3 + importance * 0.25 + energyMatch * 0.2 + context * 0.15 + dependency * 0.1
 ```
 
 ### User Energy Pattern Recognition

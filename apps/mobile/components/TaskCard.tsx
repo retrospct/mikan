@@ -30,7 +30,10 @@ export function TaskCard({ title, status, onPress }: TaskCardProps) {
   }
 
   return (
-    <Pressable className={`mb-3 rounded-lg border p-4 ${statusColors[status]} active:opacity-80`} onPress={onPress}>
+    <Pressable
+      className={`mb-3 rounded-lg border p-4 ${statusColors[status]} active:opacity-80`}
+      onPress={onPress}
+    >
       <Text className="text-base font-medium text-gray-900">{title}</Text>
       <View className="mt-2 flex-row items-center">
         <View className={`h-2 w-2 rounded-full ${statusIndicatorColors[status]}`} />

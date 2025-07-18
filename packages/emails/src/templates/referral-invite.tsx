@@ -35,7 +35,9 @@ export default function ReferralInvite({
             <Section className="mt-8">
               <Img src={DUB_WORDMARK} height="32" alt="Dub" />
             </Section>
-            <Heading className="mx-0 my-7 p-0 text-xl font-medium text-black">Sign up for Dub</Heading>
+            <Heading className="mx-0 my-7 p-0 text-xl font-medium text-black">
+              Sign up for Dub
+            </Heading>
             {workspaceUser && workspaceUserEmail ? (
               <Text className="text-sm leading-6 text-black">
                 <strong>{workspaceUser}</strong> (
@@ -45,7 +47,9 @@ export default function ReferralInvite({
                 ) has invited you to start using Dub!
               </Text>
             ) : (
-              <Text className="text-sm leading-6 text-black">You have been invited to start using Dub!</Text>
+              <Text className="text-sm leading-6 text-black">
+                You have been invited to start using Dub!
+              </Text>
             )}
             <Section className="mt-8 mb-8">
               <Link
@@ -55,7 +59,9 @@ export default function ReferralInvite({
                 Learn More
               </Link>
             </Section>
-            <Text className="text-sm leading-6 text-black">or copy and paste this URL into your browser:</Text>
+            <Text className="text-sm leading-6 text-black">
+              or copy and paste this URL into your browser:
+            </Text>
             <Text className="max-w-sm flex-wrap font-medium break-words text-purple-600 no-underline">
               {url.replace(/^https?:\/\//, '')}
             </Text>

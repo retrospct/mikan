@@ -1,4 +1,12 @@
-export function Gradient({ conic, className, small }: { small?: boolean; conic?: boolean; className?: string }) {
+export function Gradient({
+  conic,
+  className,
+  small
+}: {
+  small?: boolean
+  conic?: boolean
+  className?: string
+}) {
   return (
     <span
       className={`ui:absolute ui:mix-blend-normal ui:will-change-[filter] ui:rounded-[100%] ${

@@ -113,7 +113,6 @@ export function ComponentName({
 
 ```tsx
 import { Check, X } from 'lucide-react'
-
 ;<Check className="ui:w-4 ui:h-4" aria-hidden="true" />
 ```
 
@@ -154,7 +153,8 @@ onSubmit: (data: FormData) => void
 - Respect `prefers-reduced-motion`
 
 ```tsx
-className = 'ui:transition-colors ui:duration-150 hover:ui:bg-gray-100 motion-reduce:ui:transition-none'
+className =
+  'ui:transition-colors ui:duration-150 hover:ui:bg-gray-100 motion-reduce:ui:transition-none'
 ```
 
 ## Component Documentation

@@ -106,14 +106,14 @@ export default function TodoApp() {
       case 'next':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-4xl font-light text-gray-800 font-mono">Next</h1>
+            <div className="mb-8 flex items-center justify-between">
+              <h1 className="font-mono text-4xl font-light text-gray-800">Next</h1>
               <span className="text-lg font-light text-gray-600">Upcoming Tasks</span>
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-2 font-mono">This Week</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="mb-2 font-mono font-medium text-gray-800">This Week</h3>
                 <div className="space-y-2 text-sm text-gray-600">
                   <div>• Plan quarterly review meeting</div>
                   <div>• Update project documentation</div>
@@ -121,8 +121,8 @@ export default function TodoApp() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-2 font-mono">Next Week</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="mb-2 font-mono font-medium text-gray-800">Next Week</h3>
                 <div className="space-y-2 text-sm text-gray-600">
                   <div>• Prepare presentation slides</div>
                   <div>• Schedule client check-ins</div>
@@ -136,14 +136,14 @@ export default function TodoApp() {
       case 'someday':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-4xl font-light text-gray-800 font-mono">Someday</h1>
+            <div className="mb-8 flex items-center justify-between">
+              <h1 className="font-mono text-4xl font-light text-gray-800">Someday</h1>
               <span className="text-lg font-light text-gray-600">Future Ideas</span>
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-2 font-mono">Learning Goals</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="mb-2 font-mono font-medium text-gray-800">Learning Goals</h3>
                 <div className="space-y-2 text-sm text-gray-600">
                   <div>• Learn a new programming language</div>
                   <div>• Take a photography course</div>
@@ -151,8 +151,8 @@ export default function TodoApp() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-2 font-mono">Travel & Experiences</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="mb-2 font-mono font-medium text-gray-800">Travel & Experiences</h3>
                 <div className="space-y-2 text-sm text-gray-600">
                   <div>• Visit Japan</div>
                   <div>• Go on a hiking trip</div>
@@ -160,8 +160,8 @@ export default function TodoApp() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-2 font-mono">Projects</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="mb-2 font-mono font-medium text-gray-800">Projects</h3>
                 <div className="space-y-2 text-sm text-gray-600">
                   <div>• Build a personal website</div>
                   <div>• Start a side project</div>
@@ -175,14 +175,14 @@ export default function TodoApp() {
       case 'settings':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-4xl font-light text-gray-800 font-mono">Settings</h1>
+            <div className="mb-8 flex items-center justify-between">
+              <h1 className="font-mono text-4xl font-light text-gray-800">Settings</h1>
               <span className="text-lg font-light text-gray-600">Preferences</span>
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-4 font-mono">AI Assistance</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="mb-4 font-mono font-medium text-gray-800">AI Assistance</h3>
                 <div className="space-y-3">
                   <label className="flex items-center gap-3">
                     <input type="checkbox" defaultChecked className="rounded" />
@@ -199,8 +199,8 @@ export default function TodoApp() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-4 font-mono">Notifications</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="mb-4 font-mono font-medium text-gray-800">Notifications</h3>
                 <div className="space-y-3">
                   <label className="flex items-center gap-3">
                     <input type="checkbox" defaultChecked className="rounded" />
@@ -213,12 +213,12 @@ export default function TodoApp() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-800 mb-4 font-mono">Appearance</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="mb-4 font-mono font-medium text-gray-800">Appearance</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-700">Theme</span>
-                    <select className="px-3 py-1 border border-gray-300 rounded text-sm">
+                    <select className="rounded border border-gray-300 px-3 py-1 text-sm">
                       <option>Light</option>
                       <option>Dark</option>
                       <option>Auto</option>
@@ -226,7 +226,7 @@ export default function TodoApp() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-700">Font Size</span>
-                    <select className="px-3 py-1 border border-gray-300 rounded text-sm">
+                    <select className="rounded border border-gray-300 px-3 py-1 text-sm">
                       <option>Small</option>
                       <option>Medium</option>
                       <option>Large</option>
@@ -245,14 +245,14 @@ export default function TodoApp() {
             <div className="mb-8">
               <button
                 onClick={() => setShowAISuggestions(!showAISuggestions)}
-                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 transition-colors mb-4"
+                className="mb-4 flex items-center gap-2 text-sm text-blue-600 transition-colors hover:text-blue-800"
               >
                 {/* <Sparkles className="w-4 h-4" /> */}
                 AI Insights {showAISuggestions ? '(Hide)' : '(Show)'}
               </button>
 
               {showAISuggestions && (
-                <div className="bg-blue-50 border-l-4 border-blue-200 p-4 mb-6 rounded-r-lg">
+                <div className="mb-6 rounded-r-lg border-l-4 border-blue-200 bg-blue-50 p-4">
                   <div className="space-y-2">
                     {aiSuggestions.slice(0, 2).map((suggestion, index) => (
                       <p key={index} className="text-sm text-blue-800">
@@ -271,7 +271,9 @@ export default function TodoApp() {
                   <div className="flex items-center gap-4">
                     <TaskIcon
                       status={task.status}
-                      onStatusChange={(newStatus: TaskStatus) => updateTaskStatus(task.id, newStatus)}
+                      onStatusChange={(newStatus: TaskStatus) =>
+                        updateTaskStatus(task.id, newStatus)
+                      }
                       onShowSelector={() => {
                         const element = document.getElementById(`task-${task.id}`)
                         if (element) {
@@ -290,17 +292,17 @@ export default function TodoApp() {
                     />
                     <div className="flex-1" id={`task-${task.id}`}>
                       <div
-                        className={`text-lg font-light ${task.status === 'complete' ? 'line-through text-gray-500' : 'text-gray-800'}`}
+                        className={`text-lg font-light ${task.status === 'complete' ? 'text-gray-500 line-through' : 'text-gray-800'}`}
                       >
                         {task.text}
                       </div>
-                      <div className="h-px bg-gray-300 mt-2"></div>
+                      <div className="mt-2 h-px bg-gray-300"></div>
                     </div>
                   </div>
 
                   {/* AI Suggestion for specific tasks */}
                   {task.aiSuggestion && showAISuggestions && (
-                    <div className="ml-10 mt-2 text-xs text-blue-600 italic opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="mt-2 ml-10 text-xs text-blue-600 italic opacity-0 transition-opacity group-hover:opacity-100">
                       💡 {task.aiSuggestion}
                     </div>
                   )}
@@ -322,9 +324,9 @@ export default function TodoApp() {
                   onChange={(e) => setNewTask(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addTask()}
                   placeholder="Add a new task..."
-                  className="w-full text-lg font-light text-gray-800 bg-transparent border-none outline-none placeholder-gray-400"
+                  className="w-full border-none bg-transparent text-lg font-light text-gray-800 placeholder-gray-400 outline-none"
                 />
-                <div className="h-px bg-gray-300 mt-2"></div>
+                <div className="mt-2 h-px bg-gray-300"></div>
               </div>
             </div>
           </>
@@ -334,9 +336,9 @@ export default function TodoApp() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="max-w-2xl mx-auto">
+      <div className="mx-auto max-w-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
+        <div className="mb-12 flex items-center justify-between">
           <h1 className="text-2xl font-light text-gray-800">Today</h1>
           <div className="flex items-center gap-4">
             <div className="flex flex-col gap-1">
@@ -345,11 +347,11 @@ export default function TodoApp() {
             </div>
             <button
               onClick={() => setShowNavigation(true)}
-              className="flex flex-col gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex flex-col gap-2 rounded-lg p-2 transition-colors hover:bg-gray-100"
             >
-              <div className="w-3 h-3 rounded-full border-2 border-gray-300"></div>
-              <div className="w-3 h-3 rounded-full border-2 border-gray-300"></div>
-              <div className="w-3 h-3 rounded-full border-2 border-gray-300"></div>
+              <div className="h-3 w-3 rounded-full border-2 border-gray-300"></div>
+              <div className="h-3 w-3 rounded-full border-2 border-gray-300"></div>
+              <div className="h-3 w-3 rounded-full border-2 border-gray-300"></div>
             </button>
           </div>
         </div>
@@ -368,7 +370,9 @@ export default function TodoApp() {
         {/* Task Status Selector */}
         <TaskStatusSelector
           currentStatus={
-            selectorState.taskId ? tasks.find((t) => t.id === selectorState.taskId)?.status || 'todo' : 'todo'
+            selectorState.taskId
+              ? tasks.find((t) => t.id === selectorState.taskId)?.status || 'todo'
+              : 'todo'
           }
           onSelect={(status: TaskStatus) => {
             if (selectorState.taskId) {

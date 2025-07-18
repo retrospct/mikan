@@ -17,7 +17,6 @@
     "preset": "jest-expo"
   },
   "dependencies": {
-    "@expo/vector-icons": "^14.1.0",
     "@mikan/design-tokens": "workspace:*",
     "@react-navigation/native": "^7.1.6",
     "expo": "~53.0.17",
@@ -28,6 +27,7 @@
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.10",
     "expo-web-browser": "~14.2.0",
+    "lucide-react-native": "^0.525.0",
     "nativewind": "^4.1.23",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

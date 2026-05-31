@@ -6,13 +6,58 @@
  * operationIds (e.g. `healthHealthGet`). Re-exporting here gives stable, ergonomic
  * names and one place to adjust if the generator output shifts.
  *
- * Importing `./generated/client.gen` also initializes the shared client with our
- * runtime config (base URL + auth seam from `./runtime.ts`).
+ * Importing the generated SDK also initializes the shared client with our runtime
+ * config (base URL + auth seam from `./runtime.ts`).
+ *
+ * NOTE on type-safety: request inputs ARE typed (NoteIn, TodoIn, query params),
+ * but responses are currently `unknown` — the FastAPI handlers return plain dicts
+ * with no `response_model`, so the OpenAPI spec declares no response schema. The
+ * high-leverage next step for a fully-typed stack is adding response models on the
+ * backend, after which `pnpm gen:api` yields typed responses here for free.
  */
-import { healthHealthGet } from './generated'
+import {
+  healthHealthGet,
+  ingestIngestPost,
+  addNoteNotesPost,
+  searchSearchGet,
+  recentRecentGet,
+  getItemItemsItemIdGet,
+  forgetItemsItemIdDelete,
+  todayTodayGet,
+  addTodoTodosPost,
+  patchTodoTodosTodoIdPatch,
+  deleteTodoTodosTodoIdDelete,
+  todoContextTodosTodoIdContextGet
+} from './generated'
 
-/** GET /health — backend configuration status. Needs no params or auth. */
+// ---- Memory / item capture + retrieval ----
+/** GET /health — backend configuration status. No params, no auth. */
 export const getHealth = healthHealthGet
+/** POST /ingest — multipart file upload (file + optional tags). */
+export const ingest = ingestIngestPost
+/** POST /notes — quick text capture. */
+export const addNote = addNoteNotesPost
+/** GET /search — semantic search (q, top_k, type). */
+export const search = searchSearchGet
+/** GET /recent — recently captured items. */
+export const getRecent = recentRecentGet
+/** GET /items/{id} — full record (+ presigned raw_url). */
+export const getItem = getItemItemsItemIdGet
+/** DELETE /items/{id} — forget an item (S3 + Redis + Search). */
+export const forgetItem = forgetItemsItemIdDelete
 
-// Re-export response/data types for callers that want them.
+// ---- Daily to-do list (the retrieval anchor) ----
+/** GET /today — the day's to-do list. */
+export const getToday = todayTodayGet
+/** POST /todos — add a to-do; returns it plus surfaced memory context. */
+export const addTodo = addTodoTodosPost
+/** PATCH /todos/{id} — edit / complete / reorder. */
+export const patchTodo = patchTodoTodosTodoIdPatch
+/** DELETE /todos/{id} — remove a to-do. */
+export const deleteTodo = deleteTodoTodosTodoIdDelete
+/** GET /todos/{id}/context — memories relevant to a to-do. */
+export const getTodoContext = todoContextTodosTodoIdContextGet
+
+// ---- Request input types (these ARE typed from the backend) ----
+export type { NoteIn, TodoIn, TodoPatch, BodyIngestIngestPost } from './generated'
 export type { HealthHealthGetResponses } from './generated'

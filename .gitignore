@@ -1,0 +1,16 @@
+node_modules
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local libSQL/SQLite database (never commit personal data)
+*.db
+*.db-wal
+*.db-shm

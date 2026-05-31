@@ -10,6 +10,11 @@
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",
+    // The generated API client imports its runtime config as `'../runtime.ts'`
+    // (hey-api pastes the runtimeConfigPath verbatim). tsc is typecheck-only here
+    // (--noEmit); the real renderer build is esbuild/Vite, which resolves .ts natively.
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@renderer/*": [

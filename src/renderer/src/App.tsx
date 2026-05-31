@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Memory } from '../../shared/ipc'
+import ApiStatus from './components/ApiStatus'
 
 function App(): React.JSX.Element {
   const [memories, setMemories] = useState<Memory[]>([])
@@ -33,6 +34,8 @@ function App(): React.JSX.Element {
           <h1 className="text-2xl font-semibold tracking-tight">neeme</h1>
           <p className="text-sm text-neutral-400">Local-first memory — stored on this device.</p>
         </header>
+
+        <ApiStatus />
 
         <div className="flex gap-2">
           <input

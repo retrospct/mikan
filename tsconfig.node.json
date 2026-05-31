@@ -1,6 +1,9 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
   "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*", "src/shared/**/*"],
+  // The HTTP API client is renderer-only (uses Vite `import.meta.env` + the
+  // browser fetch client); it belongs to the web tsconfig, not node.
+  "exclude": ["src/shared/api/**/*"],
   "compilerOptions": {
     "composite": true,
     "types": ["electron-vite/node"]

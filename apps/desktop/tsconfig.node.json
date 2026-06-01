@@ -4,9 +4,9 @@
   "compilerOptions": {
     "composite": true,
     "types": ["electron-vite/node"],
-    "baseUrl": ".",
     // Resolve the contract from source. main/preload import only `ipc`/`views`,
     // so the renderer-only api client is never pulled into the node typecheck.
+    // TS 6: paths no longer requires baseUrl.
     "paths": {
       "@nimi/contract/*": ["../../packages/contract/src/*"]
     }

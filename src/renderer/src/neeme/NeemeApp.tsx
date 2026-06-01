@@ -7,8 +7,11 @@
 //      frameless-window + tray integration is a later main-process step). The app
 //      is a single centred column on the matcha wallpaper, "the same size as mobile".
 //   2. The design-time TweaksPanel (a variation explorer) is dropped. Its chosen
-//      defaults — dark / matcha / stack / cozy / ambient-on — are applied to <html>,
+//      defaults — dark / apricot / stack / cozy / ambient-on — are applied to <html>,
 //      and the header's "Plan tomorrow" button still triggers the new-day ritual.
+//   3. The prototype's menu-bar/tray search + badge live on the header here: the
+//      "waiting" badge sits on the header mark, and global search replaces the (then
+//      meaningless) "On device" pill.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { TodayView, BottomNav } from './today'
@@ -17,6 +20,7 @@ import { FeedView } from './feed'
 import { AddSheet } from './add'
 import { PlanRitual } from './plan'
 import { AllDone } from './celebrate'
+import { SearchOverlay } from './search'
 import { SEED_TASKS, REL, BACKLOG } from './data'
 import type { BacklogItem, Task } from './data'
 import type { NeemeMarkState } from './types'
@@ -27,12 +31,29 @@ const CAP = 5
 // The product defaults the design landed on (formerly the TweaksPanel defaults).
 const TWEAKS = {
   theme: 'dark',
-  accent: 'matcha', // matcha is the CSS :root default, so no var override needed
+  accent: 'apricot',
   todayLayout: 'stack',
   captureStyle: 'drop',
   density: 'cozy',
   ambient: true
 } as const
+
+// accent palettes from the design (oklch). matcha is the CSS :root default; any
+// other accent (apricot is the current default) sets the --accent* vars on <html>.
+const ACCENTS: Record<string, { solid: string; ink: string; deep: string }> = {
+  matcha: {
+    solid: 'oklch(0.80 0.13 142)',
+    ink: 'oklch(0.90 0.09 142)',
+    deep: 'oklch(0.62 0.13 142)'
+  },
+  apricot: {
+    solid: 'oklch(0.80 0.12 64)',
+    ink: 'oklch(0.90 0.09 64)',
+    deep: 'oklch(0.64 0.12 64)'
+  },
+  rose: { solid: 'oklch(0.76 0.12 18)', ink: 'oklch(0.87 0.09 18)', deep: 'oklch(0.60 0.12 18)' },
+  iris: { solid: 'oklch(0.74 0.12 280)', ink: 'oklch(0.86 0.10 280)', deep: 'oklch(0.58 0.13 280)' }
+}
 
 function seedTasks(): Task[] {
   return SEED_TASKS.map((t) => ({ ...t, relMap: REL[t.id] || {} }))
@@ -50,12 +71,17 @@ export default function NeemeApp(): JSX.Element {
   const [backlog, setBacklog] = useState<BacklogItem[]>(BACKLOG)
   const [feedRecording, setFeedRecording] = useState(false)
   const [addRecording, setAddRecording] = useState(false)
+  const [searching, setSearching] = useState(false)
 
   useEffect(() => {
     const el = document.documentElement
     el.setAttribute('data-theme', TWEAKS.theme)
     el.setAttribute('data-density', TWEAKS.density)
     el.setAttribute('data-ambient', TWEAKS.ambient ? 'on' : 'off')
+    const a = ACCENTS[TWEAKS.accent] || ACCENTS.matcha
+    el.style.setProperty('--accent', a.solid)
+    el.style.setProperty('--accent-ink', a.ink)
+    el.style.setProperty('--accent-deep', a.deep)
   }, [])
 
   const cheer = (): void => {
@@ -148,6 +174,20 @@ export default function NeemeApp(): JSX.Element {
   // a stable carried-over count for the fresh-day meta line
   const carriedCount = useMemo(() => yesterday.filter((x) => !x.done).length, [yesterday])
 
+  // things waiting on you: drafts ready to act + freshly-uncovered backlog to-dos
+  const waiting =
+    tasks.filter((x) => !x.done && x.status === 'drafted').length +
+    backlog.filter((b) => b.fresh).length
+  const openSearch = (): void => {
+    setOverlay(null)
+    setSearching(true)
+  }
+  // a memory kept from search → added to the open task's context pool
+  const addContextToTask = (memId: string): void => {
+    if (!openTask) return
+    updateTask(openTask.id, { ctx: [...new Set([...(openTask.ctx || []), memId])] })
+  }
+
   return (
     <div className="desk">
       <div className="desk-wall" />
@@ -163,11 +203,13 @@ export default function NeemeApp(): JSX.Element {
                 planned={planned}
                 carriedCount={carriedCount}
                 backlogCount={backlog.length}
+                badge={waiting}
                 onOpen={setOpenId}
                 onToggle={toggleTask}
                 onAdd={() => setOverlay('add')}
                 onPlan={() => setOverlay('plan')}
                 onTomorrow={beginNewDay}
+                onSearch={openSearch}
                 onWeather={() => setOverlay('plan')}
               />
             ) : (
@@ -185,6 +227,7 @@ export default function NeemeApp(): JSX.Element {
                 onBack={() => setOpenId(null)}
                 onToggle={toggleTask}
                 onUpdate={updateTask}
+                onDig={openSearch}
               />
             )}
 
@@ -210,11 +253,21 @@ export default function NeemeApp(): JSX.Element {
             {allDone && showWin && (
               <AllDone
                 count={tasks.length}
+                titles={tasks.map((x) => x.title)}
                 onClose={() => setShowWin(false)}
                 onPlan={() => {
                   setShowWin(false)
                   beginNewDay()
                 }}
+              />
+            )}
+
+            {searching && (
+              <SearchOverlay
+                contextTitle={openTask ? openTask.title : null}
+                keptIds={openTask ? openTask.ctx : []}
+                onKeep={openTask ? addContextToTask : null}
+                onClose={() => setSearching(false)}
               />
             )}
           </div>

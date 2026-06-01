@@ -1,6 +1,6 @@
 /* ============================================================================
    Neeme — a personal-memory companion.  (mneme · the muse of memory)
-   Visual system extends "Mr. Matcha": warm-dark, matcha accent, hairlines,
+   Visual system extends "Mr. Matcha": warm-dark, accent, hairlines,
    Hanken Grotesk + JetBrains Mono. Animation-forward & personable.
 
    Ported from the Claude Design handoff bundle (neeme-desktop.html). The desktop
@@ -976,7 +976,7 @@ html[data-ambient='off'] .task.pop {
   position: relative;
   z-index: 2;
   color: var(--accent-ink);
-  animation: nm-bigbloom 0.65s var(--ease-spring) 0.42s both;
+  animation: nm-bigbloom 0.6s var(--ease-spring) 0.62s both;
 }
 @keyframes nm-bigbloom {
   0% {
@@ -991,20 +991,38 @@ html[data-ambient='off'] .task.pop {
 .win-shard {
   position: absolute;
   z-index: 1;
+  animation: nm-converge 0.8s var(--ease-out) both;
+}
+.win-shard-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 550;
+  white-space: nowrap;
+  box-shadow: var(--shadow-soft);
+}
+.win-shard-chip svg {
   color: var(--accent-ink);
-  animation: nm-converge 0.6s var(--ease-out) both;
+  flex: 0 0 auto;
 }
 @keyframes nm-converge {
   0% {
     opacity: 0;
-    transform: translate(var(--sx), var(--sy)) scale(0.6);
+    transform: translate(var(--sx), var(--sy)) scale(0.85);
   }
-  40% {
+  35% {
     opacity: 1;
+    transform: translate(calc(var(--sx) * 0.55), calc(var(--sy) * 0.55)) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(0, 0) scale(0.3);
+    transform: translate(0, 0) scale(0.2);
   }
 }
 .win-conf {
@@ -1061,6 +1079,286 @@ html[data-ambient='off'] .win-shard {
 }
 html[data-ambient='off'] .win-big {
   animation: none;
+}
+
+/* badge on the Neeme mark (tray + header) — things waiting on you */
+.hdr-mark,
+.tray-peek-mark {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+.nm-badge {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #0a0a0b;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 17px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bg);
+  display: inline-block;
+}
+.tray-btn {
+  position: relative;
+}
+.tray-count {
+  display: inline-block;
+  min-width: 15px;
+  height: 15px;
+  line-height: 15px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: #0a0a0b;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  text-align: center;
+}
+.nm-badge.dot {
+  top: -2px;
+  right: -2px;
+  min-width: 9px;
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px color-mix(in oklch, var(--bg) 52%, transparent),
+    0 0 7px -1px var(--accent);
+}
+.mb-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 22px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.mb-iconbtn:hover {
+  background: var(--surface-3);
+}
+
+/* ── Dig deeper: universal memory search ── */
+.search-ov {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  animation: nm-push 0.32s var(--ease-out) both;
+}
+.search-top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 12px;
+  border-bottom: 1px solid var(--hairline);
+}
+.search-field {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 13px;
+  border: 1px solid var(--accent-line);
+  background: var(--surface-2);
+}
+.search-field > svg:first-child {
+  color: var(--accent-ink);
+  flex: 0 0 auto;
+}
+.search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+}
+.search-input::placeholder {
+  color: var(--ink-3);
+}
+.search-clear {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 0;
+  background: var(--surface-3);
+  color: var(--ink-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.search-clear:hover {
+  background: var(--hairline);
+  color: var(--ink);
+}
+.search-scope {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 16px 4px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.search-scope b {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.search-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 14px 16px;
+}
+.search-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 2px 10px;
+}
+.search-meta {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 6px 2px 10px;
+  min-height: 16px;
+  display: flex;
+  align-items: center;
+}
+.sr {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--hairline);
+  animation: nm-rowin 0.35s var(--ease-out) both;
+}
+.sr-thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  border: 1px solid var(--hairline);
+  background: var(--surface-3);
+}
+.sr-thumb.img {
+  background:
+    repeating-linear-gradient(45deg, var(--accent-soft) 0 5px, transparent 5px 11px),
+    var(--surface-2);
+}
+.sr-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sr-kind {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sr-kind .dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+.sr-t {
+  font-size: 13.5px;
+  font-weight: 550;
+  line-height: 1.3;
+  margin-top: 3px;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+.sr-snip {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sr-keep {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 9px;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 2px;
+}
+.sr-keep:hover {
+  border-color: var(--accent-line);
+  color: var(--accent-ink);
+  background: var(--accent-faint);
+}
+.sr-keep.on {
+  border-color: var(--accent-line);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  cursor: default;
+}
+.search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 7px;
+  padding: 40px 24px;
+}
+.search-empty-t {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.search-empty-s {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  max-width: 240px;
 }
 
 /* ───────────────────────── fresh-day (unplanned) entry ───────────────────────── */
@@ -2359,6 +2657,7 @@ html[data-ambient='off'] .vrec-wave span {
   font-size: 9.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
   padding: 4px 9px;
   border-radius: 999px;
   border: 1px solid var(--hairline);
@@ -2418,6 +2717,65 @@ html[data-ambient='off'] .vrec-wave span {
   gap: 10px;
   padding: 13px 14px 10px;
 }
+.draft-hd.as-toggle {
+  width: 100%;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+.draft-collapse {
+  flex: 0 0 auto;
+  color: var(--ink-3);
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+}
+.draft-hd.as-toggle:hover .draft-collapse {
+  color: var(--accent-ink);
+}
+.draft-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px 13px;
+  border: 1px solid var(--accent-line);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.16s var(--ease-out);
+  background: linear-gradient(120deg, var(--accent-faint), transparent 70%), var(--surface-2);
+  animation: nm-rowin 0.3s var(--ease-out) both;
+}
+.draft-strip:hover {
+  background: linear-gradient(120deg, var(--accent-soft), transparent 70%), var(--surface-2);
+}
+.draft-strip-ico {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--accent-ink);
+  border: 1px solid var(--accent-line);
+  background: var(--surface-2);
+}
+.draft-strip-tx {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.draft-strip-tx b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.draft-strip-cv {
+  flex: 0 0 auto;
+  color: var(--ink-3);
+}
 .draft-hd .nm {
   flex: 0 0 auto;
 }
@@ -2471,17 +2829,13 @@ html[data-ambient='off'] .vrec-wave span {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 8px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   border: 1px solid var(--hairline);
   background: var(--surface);
   color: var(--ink-2);
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -3071,23 +3425,18 @@ html[data-ambient='off'] .kept-chip.fresh {
   justify-content: space-between;
   width: 100%;
   gap: 10px;
-  padding: 12px 13px;
-  margin: 4px 0 11px;
-  border: 1px solid var(--hairline);
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--ink-2);
+  padding: 6px 2px;
+  margin: 2px 0 11px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--accent-ink);
   cursor: pointer;
-  transition: all 0.16s var(--ease-out);
+  transition: color 0.16s var(--ease-out);
   text-align: left;
 }
-.pool-review:hover {
-  border-color: var(--accent-line);
-  color: var(--ink);
-  background: var(--accent-faint);
-}
-.pool-review.has-new {
-  border-color: var(--accent-line);
+.pool-review:hover .pr-r {
+  color: var(--accent-ink);
 }
 .pool-review .pr-l {
   display: flex;
@@ -3095,6 +3444,7 @@ html[data-ambient='off'] .kept-chip.fresh {
   gap: 11px;
   min-width: 0;
   font-size: 12.5px;
+  font-weight: 550;
 }
 .pool-review .pr-r {
   display: flex;
@@ -3246,19 +3596,15 @@ html[data-ambient='off'] .mem.fresh::after {
   width: 48px;
   height: 48px;
   padding: 0;
-  border-radius: 14px;
-  border: 1px solid var(--accent-line);
-  background:
-    radial-gradient(120% 120% at 30% 25%, var(--accent-faint), transparent 65%), var(--surface);
+  border: 0;
+  background: transparent;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: all 0.16s var(--ease-out);
+  transition: transform 0.16s var(--ease-out);
 }
 .dt-ask:hover {
-  background:
-    radial-gradient(120% 120% at 30% 25%, var(--accent-soft), transparent 65%), var(--surface);
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.06);
 }
 /* Dig deeper — the universal "search your life" bar */
 .dt-dig {
@@ -3817,7 +4163,7 @@ html[data-ambient='off'] .mem.fresh::after {
 /* ───────────────────────── desktop surface — fills the real window ─────────────────────────
    The prototype simulated a macOS menu bar + tray popover; here the app fills the actual
    Electron window. The single-column app (intentionally "the same size as mobile") is centered
-   on the matcha wallpaper and stretches full-height, so it reads as a real desktop surface now
+   on the wallpaper and stretches full-height, so it reads as a real desktop surface now
    and ports cleanly to a small frameless/tray window later. */
 .desk {
   position: relative;

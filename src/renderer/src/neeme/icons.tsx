@@ -132,7 +132,15 @@ const NM_PATHS: Record<string, ReactNode> = {
   ),
   sweep: (
     <>
-      <path d="M16.5 3.5l4 4M14 6l4 4-7.5 7.5-4-4zM6.5 13.5L4 20l6.5-2.5" />
+      <path d="M20 4l-8 8" />
+      <path d="M12 12l-6.5 3 1.5 5.5 6.5-3z" />
+      <path d="M7 15.7l1.3 4.6M10 14.3l1.3 4.6" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="8.5" y="8.5" width="11" height="11" rx="2.3" />
+      <path d="M5.5 15.5A1.5 1.5 0 0 1 4 14V5.5A1.5 1.5 0 0 1 5.5 4H14a1.5 1.5 0 0 1 1.5 1.5" />
     </>
   ),
   search: (

@@ -4,7 +4,36 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { initDb } from './db'
 import { memoryService } from './services/memory-service'
+import * as auth from './auth/logto'
 import { IPC } from '../shared/ipc'
+
+// Register `neeme://` as the OAuth callback scheme. In dev (electron launched
+// with a script arg) we must pass execPath + the project dir so the OS routes
+// the deep link back to this instance.
+if (process.defaultApp && process.argv.length >= 2) {
+  app.setAsDefaultProtocolClient('neeme', process.execPath, [join(__dirname, '../..')])
+} else {
+  app.setAsDefaultProtocolClient('neeme')
+}
+
+// Single-instance lock so Windows/Linux deep links reach the already-running app.
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+}
+app.on('second-instance', (_event, argv) => {
+  const url = argv.find((a) => a.startsWith('neeme://'))
+  if (url) auth.handleCallback(url).catch((e) => console.error('auth callback failed', e))
+  const win = BrowserWindow.getAllWindows()[0]
+  if (win) {
+    if (win.isMinimized()) win.restore()
+    win.focus()
+  }
+})
+// macOS delivers the deep link via open-url.
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  auth.handleCallback(url).catch((e) => console.error('auth callback failed', e))
+})
 
 function createWindow(): void {
   // Create the browser window.
@@ -59,6 +88,19 @@ app.whenReady().then(async () => {
   await initDb()
   ipcMain.handle(IPC.memoryList, () => memoryService.list())
   ipcMain.handle(IPC.memoryAdd, (_event, content: string) => memoryService.add(content))
+
+  // Auth (Logto) — broadcast changes to renderers, restore any saved session,
+  // then expose login/logout/token over IPC. Inert until Logto env is configured.
+  auth.onChange((state, accessToken) => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send(IPC.authChanged, { state, accessToken })
+    }
+  })
+  await auth.init()
+  ipcMain.handle(IPC.authLogin, () => auth.startLogin())
+  ipcMain.handle(IPC.authLogout, () => auth.logout())
+  ipcMain.handle(IPC.authGetToken, () => auth.getAccessToken())
+  ipcMain.handle(IPC.authGetState, () => auth.getState())
 
   createWindow()
 

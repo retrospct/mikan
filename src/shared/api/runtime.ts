@@ -1,4 +1,5 @@
 import type { CreateClientConfig } from './generated/client.gen'
+import { getToken } from './token-store'
 
 /**
  * Runtime configuration for the generated Neeme API client.
@@ -12,16 +13,9 @@ export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
   // Base URL from env; defaults to the local `neeme serve` address.
   baseUrl: import.meta.env.VITE_NEEME_API_URL ?? 'http://localhost:8000',
-  // Auth seam: returns the bearer token once auth exists. `undefined` today
-  // means no Authorization header is attached — wired now, no rework later.
-  auth: () => getAuthToken()
+  // Auth seam: hey-api calls `auth` per request, so the token can be hydrated
+  // lazily. `token-store` holds the bearer in memory, populated over IPC from the
+  // main-process Logto flow (`src/main/auth/logto.ts`). `undefined` today (no
+  // login) means no Authorization header — the local-first app stays unauthenticated.
+  auth: () => getToken()
 })
-
-/**
- * Placeholder token source. Returns `undefined` until auth/identity is built.
- * When tokens land, read from wherever they're stored (e.g. an in-memory store
- * hydrated over IPC from Electron `safeStorage`) and return the bearer string.
- */
-function getAuthToken(): string | undefined {
-  return undefined
-}

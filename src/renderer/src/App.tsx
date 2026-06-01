@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import ApiStatus from './components/ApiStatus'
+import { useAuth } from './hooks/useAuth'
 import {
   addNote,
   getRecent,
@@ -37,6 +38,8 @@ function App(): React.JSX.Element {
   // Item detail overlay
   const [detail, setDetail] = useState<ItemDetail | null>(null)
   const [detailBusy, setDetailBusy] = useState(false)
+
+  const auth = useAuth()
 
   async function refreshRecent(): Promise<void> {
     setRecent((await unwrap(getRecent({ query: { limit: 20 } }))).items)
@@ -128,11 +131,36 @@ function App(): React.JSX.Element {
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 p-8">
       <div className="mx-auto flex max-w-xl flex-col gap-6">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">neeme</h1>
-          <p className="text-sm text-neutral-400">
-            Capture a memory or a file, then search across everything.
-          </p>
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">neeme</h1>
+            <p className="text-sm text-neutral-400">
+              Capture a memory or a file, then search across everything.
+            </p>
+          </div>
+          {/* Auth control — only shown once Logto is configured (auth is deferred,
+              so unconfigured installs show nothing here). */}
+          {auth.state.configured &&
+            (auth.state.isAuthenticated ? (
+              <div className="flex shrink-0 items-center gap-2 text-xs">
+                <span className="text-neutral-400">
+                  {auth.state.claims?.email ?? auth.state.claims?.name ?? 'signed in'}
+                </span>
+                <button
+                  onClick={auth.logout}
+                  className="rounded-md border border-neutral-700 px-2 py-1 transition-colors hover:bg-neutral-800"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={auth.login}
+                className="shrink-0 rounded-md bg-indigo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-400"
+              >
+                Sign in
+              </button>
+            ))}
         </header>
 
         <ApiStatus />

@@ -4,6 +4,7 @@ import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { NimiMark, NimiNote } from './mark'
+import { AuthControl } from './auth'
 import { MemoryContext } from './api'
 import type { Task } from '@nimi/contract/views'
 import type { NimiMarkState } from './types'
@@ -48,6 +49,7 @@ function AppHeader({
         </div>
       </div>
       <div className="hdr-r">
+        <AuthControl />
         <button className="hdr-btn" aria-label="Plan tomorrow" onClick={onTomorrow}>
           <NIcon name="dayNext" size={18} />
         </button>

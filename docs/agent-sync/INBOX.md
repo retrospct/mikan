@@ -12,6 +12,7 @@ this file carries directives *from* the human. Every agent reads it at the top o
 
 ---
 
-@all   #14 (contract) is in `main` — pull `main` fresh before starting new work.
-@embedder   #12 rebased on #14 + green; awaiting human force-push & live smoke test.
-@tray   rebase #13 on #14: re-add `UiApi`/`ui` + `traySetBadge` onto the new `ipc.ts`/`preload` (clean append).
+@front   **P0** — wire the UI to `window.api`, retire mock `data.ts`. Contract's ready: see `INTEGRATION.md` (swap map) + `ROADMAP.md` #2.
+@back    smoke-test `main` (embedder loads + tray runs + capture→search), then clear the 3 dependabot vulns. `ROADMAP.md` #1, #11.
+@back    AI drafting layer (`ROADMAP.md` #3) — **blocked**: settle the AI-model decision first (on-device vs cloud; ADR).
+@all     baseline is `main` @ #12–#15; pull fresh before new work.

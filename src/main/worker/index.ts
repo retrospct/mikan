@@ -48,6 +48,15 @@ async function start(): Promise<void> {
   const port = process.parentPort
   await initDb()
 
+  // Keep the vector index consistent with the active embedder (reindex if it
+  // changed). Best-effort: a model-load/network failure must not block startup —
+  // search stays on the prior index until a later boot succeeds.
+  try {
+    await pipelineService.syncEmbedder()
+  } catch (err) {
+    console.error('[worker] embedder sync/reindex failed; search may be degraded', err)
+  }
+
   port.on('message', (event) => {
     const msg = event.data as CallMessage
     const handler = handlers[msg.channel]

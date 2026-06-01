@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto'
+import { join } from 'node:path'
 import { EMBED_DIM } from '../db'
+import { userDataDir } from '../runtime/paths'
 
 /**
  * The embedding seam. Today's default is a deterministic hash-of-tokens
@@ -43,4 +45,51 @@ export class HashEmbedder implements Embedder {
   }
 }
 
-export const embedder: Embedder = new HashEmbedder()
+/**
+ * On-device embedder via transformers.js (ONNX). The model downloads once into
+ * the app data dir, then runs fully offline. The heavy module + native
+ * onnxruntime are loaded **lazily, via dynamic import on first embed** — never on
+ * the boot path or the hash path. all-MiniLM-L6-v2 is 384-dim → matches EMBED_DIM,
+ * so no schema change. (Proven in the neeme-mono spike; this runs it in the worker.)
+ */
+type Extractor = (
+  text: string,
+  opts: { pooling: 'mean'; normalize: boolean }
+) => Promise<{ data: Float32Array }>
+
+export class LocalEmbedder implements Embedder {
+  readonly name = 'minilm-l6-v2'
+  readonly dim = EMBED_DIM
+  private extractor?: Promise<Extractor>
+
+  private load(): Promise<Extractor> {
+    if (!this.extractor) {
+      this.extractor = (async () => {
+        const { env, pipeline } = await import('@huggingface/transformers')
+        env.cacheDir = join(userDataDir(), 'models') // models cache in the app data dir
+        const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')
+        return extractor as unknown as Extractor
+      })()
+    }
+    return this.extractor
+  }
+
+  async embed(texts: string[]): Promise<number[][]> {
+    const extractor = await this.load()
+    const out: number[][] = []
+    for (const text of texts) {
+      const result = await extractor(text, { pooling: 'mean', normalize: true })
+      out.push(Array.from(result.data))
+    }
+    return out
+  }
+}
+
+/**
+ * The active embedder. Real on-device model by default; `NEEME_EMBEDDER=hash`
+ * forces the deterministic placeholder (offline/dev/tests). Changing this requires
+ * a reindex — `pipelineService.syncEmbedder()` handles it on worker boot, since the
+ * vector index is a rebuildable artifact derived from `items.text`.
+ */
+export const embedder: Embedder =
+  process.env.NEEME_EMBEDDER === 'hash' ? new HashEmbedder() : new LocalEmbedder()

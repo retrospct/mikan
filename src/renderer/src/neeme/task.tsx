@@ -262,7 +262,8 @@ export function TaskDetail({
   onBack,
   onToggle,
   onUpdate,
-  onDig
+  onDig,
+  onSearch
 }: {
   task: Task
   index: number
@@ -270,6 +271,7 @@ export function TaskDetail({
   onToggle: (id: string) => void
   onUpdate?: (id: string, patch: Partial<Task>) => void
   onDig: () => void
+  onSearch: () => void
 }): JSX.Element {
   const [pinned, setPinned] = useState<Set<string>>(new Set(task.pinned || []))
   const [swept, setSwept] = useState<Set<string>>(new Set())
@@ -349,8 +351,8 @@ export function TaskDetail({
           <div className="push-kicker">{(task.when || 'Today').toUpperCase()}</div>
           <div className="push-ttl">{task.title}</div>
         </div>
-        <button className="hdr-btn" aria-label="More">
-          <NIcon name="dots" size={18} />
+        <button className="hdr-btn" aria-label="Search your memory" onClick={onSearch}>
+          <NIcon name="search" size={18} />
         </button>
       </div>
 

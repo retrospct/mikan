@@ -71,7 +71,9 @@ export default function NeemeApp(): JSX.Element {
   const [backlog, setBacklog] = useState<BacklogItem[]>(BACKLOG)
   const [feedRecording, setFeedRecording] = useState(false)
   const [addRecording, setAddRecording] = useState(false)
-  const [searching, setSearching] = useState(false)
+  // global = "search everything" (header magnifier); task = "dig deeper" scoped to the
+  // open task (its footer). Only task-mode carries the task's context into the overlay.
+  const [searchMode, setSearchMode] = useState<'global' | 'task' | null>(null)
 
   useEffect(() => {
     const el = document.documentElement
@@ -178,10 +180,11 @@ export default function NeemeApp(): JSX.Element {
   const waiting =
     tasks.filter((x) => !x.done && x.status === 'drafted').length +
     backlog.filter((b) => b.fresh).length
-  const openSearch = (): void => {
+  const openGlobalSearch = (): void => {
     setOverlay(null)
-    setSearching(true)
+    setSearchMode('global')
   }
+  const openTaskSearch = (): void => setSearchMode('task')
   // a memory kept from search → added to the open task's context pool
   const addContextToTask = (memId: string): void => {
     if (!openTask) return
@@ -209,7 +212,7 @@ export default function NeemeApp(): JSX.Element {
                 onAdd={() => setOverlay('add')}
                 onPlan={() => setOverlay('plan')}
                 onTomorrow={beginNewDay}
-                onSearch={openSearch}
+                onSearch={openGlobalSearch}
                 onWeather={() => setOverlay('plan')}
               />
             ) : (
@@ -227,7 +230,8 @@ export default function NeemeApp(): JSX.Element {
                 onBack={() => setOpenId(null)}
                 onToggle={toggleTask}
                 onUpdate={updateTask}
-                onDig={openSearch}
+                onDig={openTaskSearch}
+                onSearch={openGlobalSearch}
               />
             )}
 
@@ -262,12 +266,12 @@ export default function NeemeApp(): JSX.Element {
               />
             )}
 
-            {searching && (
+            {searchMode && (
               <SearchOverlay
-                contextTitle={openTask ? openTask.title : null}
-                keptIds={openTask ? openTask.ctx : []}
-                onKeep={openTask ? addContextToTask : null}
-                onClose={() => setSearching(false)}
+                contextTitle={searchMode === 'task' && openTask ? openTask.title : null}
+                keptIds={searchMode === 'task' && openTask ? openTask.ctx : []}
+                onKeep={searchMode === 'task' && openTask ? addContextToTask : null}
+                onClose={() => setSearchMode(null)}
               />
             )}
           </div>

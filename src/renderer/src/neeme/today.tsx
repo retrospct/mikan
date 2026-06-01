@@ -48,11 +48,11 @@ function AppHeader({
         </div>
       </div>
       <div className="hdr-r">
-        <button className="hdr-btn" aria-label="Search your memory" onClick={onSearch}>
-          <NIcon name="search" size={18} />
-        </button>
         <button className="hdr-btn" aria-label="Plan tomorrow" onClick={onTomorrow}>
           <NIcon name="dayNext" size={18} />
+        </button>
+        <button className="hdr-btn" aria-label="Search your memory" onClick={onSearch}>
+          <NIcon name="search" size={18} />
         </button>
       </div>
     </header>

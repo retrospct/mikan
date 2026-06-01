@@ -71,10 +71,11 @@ async function main(): Promise<void> {
   // Whisper may transcribe with slight variation; check for key words
   const lower = text.toLowerCase()
   const hasHello = lower.includes('hello') || lower.includes('nimi')
-  console.log(
-    '[asr-live]',
-    hasHello ? '✓ recognized speech words' : '⚠ no expected words (empty audio?)'
-  )
+  if (!hasHello) {
+    console.error('[asr-live] ✗ FAIL — no expected words in transcription')
+    process.exit(1)
+  }
+  console.log('[asr-live] ✓ recognized speech words')
 
   console.log('[asr-live] ✓ PASS — ASR extraction succeeded, status=extracted')
   process.exit(0)

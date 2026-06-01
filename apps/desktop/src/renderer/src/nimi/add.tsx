@@ -6,8 +6,9 @@ import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { NimiMark, Dots } from './mark'
 import { VoiceRecorder } from './voice'
-import { TASK_SUGGESTIONS, matchTask, uncoverTodos, nextTranscript } from './data'
-import type { MemoryKind, UncoveredTodo, BacklogItem } from './data'
+import { data } from './api'
+import { TASK_SUGGESTIONS, uncoverTodos, nextTranscript } from './ui-stubs'
+import type { MemoryKind, UncoveredTodo, BacklogItem } from '@nimi/contract/views'
 
 type AddTodo = (
   item: Partial<BacklogItem> & { title: string; why?: string; conf?: number | null; ctx?: string[] }
@@ -177,6 +178,8 @@ function FeedPane({
     if (!text.trim() && !hasAttach) return
     setPhase('indexing')
     onFed && onFed()
+    // real capture for typed/pasted/transcribed text (attaches are sample-only sim)
+    if (text.trim()) void data.pipeline.captureText(text.trim())
     const found = 2 + Math.floor(Math.random() * 4)
     let i = 0
     const tick = setInterval(() => {
@@ -451,8 +454,12 @@ function TodoPane({
     if (!tx) return
     setText(tx)
     setPhase('ranking')
-    const matches = matchTask(tx)
-    setTimeout(() => {
+    // real semantic search for nearby memories; keep a short beat so the "Sizing
+    // it up" stage doesn't flash past when the search resolves instantly (mock).
+    void Promise.all([
+      data.pipeline.search(tx).catch(() => []),
+      new Promise((r) => setTimeout(r, 900))
+    ]).then(([matches]) => {
       setKept(matches.length)
       onAddTodo &&
         onAddTodo({
@@ -463,7 +470,7 @@ function TodoPane({
           ctx: matches.map((m) => m.id)
         })
       setPhase('done')
-    }, 1450)
+    })
   }
 
   if (phase === 'ranking') {

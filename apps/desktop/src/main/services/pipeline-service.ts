@@ -1,6 +1,6 @@
-import { desc, eq, inArray } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { client, db } from '../db'
-import { items, type Item as ItemRow } from '../db/schema'
+import { items, connectorState, type Item as ItemRow } from '../db/schema'
 import { chunkText } from '../pipeline/chunk'
 import { embedder } from '../pipeline/embed'
 import { detectContentType, extract, extractMedia, suffixOf } from '../pipeline/extract'
@@ -24,6 +24,9 @@ function toItem(row: ItemRow): Item {
     sizeBytes: row.sizeBytes,
     status: row.status as ItemStatus,
     text: row.text,
+    connector: row.connector ?? undefined,
+    externalId: row.externalId ?? undefined,
+    uri: row.uri ?? undefined,
     createdAt: row.createdAt
   }
 }
@@ -104,6 +107,12 @@ async function indexItem(id: string, text: string): Promise<void> {
   }
 }
 
+export interface ExternalProvenance {
+  connector: string
+  externalId: string
+  uri?: string
+}
+
 export const pipelineService = {
   captureText(text: string, name = 'note.md'): Promise<CaptureResult> {
     return capture(new TextEncoder().encode(text), name, 'text/markdown')
@@ -111,6 +120,117 @@ export const pipelineService = {
 
   captureFile(bytes: Uint8Array, name: string, mime?: string): Promise<CaptureResult> {
     return capture(bytes, name, mime)
+  },
+
+  /**
+   * Ingest text from an external connector (Gmail, Calendar).
+   *
+   * Dedup strategy:
+   *   - Email (immutable): skip if `externalId` already exists.
+   *   - Calendar (mutable): upsert — re-index with fresh text if `externalId` already exists.
+   *
+   * Provenance (`connector`, `externalId`, `uri`) is stored alongside the item
+   * so `memoryKindOf` can emit the correct UI kind (email / calendar / event).
+   */
+  async captureExternal(
+    text: string,
+    name: string,
+    provenance: ExternalProvenance
+  ): Promise<CaptureResult> {
+    const { connector, externalId, uri } = provenance
+
+    // Check for an existing item with this externalId.
+    const existing = await db
+      .select()
+      .from(items)
+      .where(eq(items.externalId, externalId))
+      .limit(1)
+
+    if (existing[0]) {
+      const isCalendar = connector === 'gcal'
+      if (isCalendar) {
+        // Calendar events mutate — upsert text + re-index.
+        await db
+          .update(items)
+          .set({ text, status: 'extracted', uri: uri ?? null })
+          .where(eq(items.externalId, externalId))
+        if (text) await indexItem(existing[0].id, text)
+        const refreshed = await db.select().from(items).where(eq(items.id, existing[0].id)).limit(1)
+        return { memory: toMemory(toItem(refreshed[0]!)), created: false }
+      }
+      // Email is immutable — skip.
+      return { memory: toMemory(toItem(existing[0])), created: false }
+    }
+
+    // New item: encode text as bytes, store in the raw store, then index.
+    const bytes = new TextEncoder().encode(text)
+    const { id, storedPath, sizeBytes } = putRaw(bytes, '.txt')
+
+    // Content-hash dedup (same bytes, different externalId — very unlikely but safe).
+    const byHash = await db.select().from(items).where(eq(items.id, id)).limit(1)
+    if (byHash[0]) {
+      // Patch provenance onto the existing content-hash row.
+      await db.update(items).set({ connector, externalId, uri: uri ?? null }).where(eq(items.id, id))
+      return { memory: toMemory(toItem({ ...byHash[0], connector, externalId, uri: uri ?? null })), created: false }
+    }
+
+    const [created] = await db
+      .insert(items)
+      .values({
+        id,
+        sourceName: name,
+        contentType: 'text',
+        sizeBytes,
+        storedPath,
+        text,
+        status: 'extracted',
+        connector,
+        externalId,
+        uri: uri ?? null
+      })
+      .returning()
+
+    if (text) await indexItem(id, text)
+    return { memory: toMemory(toItem(created!)), created: true }
+  },
+
+  /** Read the sync cursor for a provider (Gmail historyId / Calendar syncToken). */
+  async getConnectorCursor(provider: string): Promise<string | null> {
+    const row = await db.select().from(connectorState).where(eq(connectorState.provider, provider)).limit(1)
+    return row[0]?.cursor ?? null
+  },
+
+  /** Persist the sync cursor + item count after a successful sync run. */
+  async setConnectorCursor(provider: string, cursor: string | null, deltaCount: number): Promise<void> {
+    await db
+      .insert(connectorState)
+      .values({ provider, cursor, itemCount: deltaCount, lastSyncAt: new Date() })
+      .onConflictDoUpdate({
+        target: connectorState.provider,
+        set: {
+          cursor,
+          itemCount: sql`${connectorState.itemCount} + ${deltaCount}`,
+          lastSyncAt: new Date()
+        }
+      })
+  },
+
+  /** Return the current item count for a provider (for the ConnectorsState UI). */
+  async getConnectorItemCount(provider: string): Promise<number> {
+    const row = await db.select().from(connectorState).where(eq(connectorState.provider, provider)).limit(1)
+    return row[0]?.itemCount ?? 0
+  },
+
+  /** Return the last sync timestamp for a provider (ISO string or null). */
+  async getConnectorLastSync(provider: string): Promise<string | null> {
+    const row = await db.select().from(connectorState).where(eq(connectorState.provider, provider)).limit(1)
+    const d = row[0]?.lastSyncAt
+    return d ? d.toISOString() : null
+  },
+
+  /** Reset a provider's cursor (forces a full re-sync on next run). */
+  async resetConnectorCursor(provider: string): Promise<void> {
+    await db.delete(connectorState).where(eq(connectorState.provider, provider))
   },
 
   async search(query: string, topK = 8): Promise<SearchHit[]> {

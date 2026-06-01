@@ -10,10 +10,12 @@
  *   worker → parent : { ready: true }  (once the schema is up)  | { fatal }
  */
 import { IPC } from '@nimi/contract/ipc'
+import type { ConnectorId } from '@nimi/contract/ipc'
 import { initDb } from '../db'
 import { pipelineService } from '../services/pipeline-service'
 import { todoService } from '../services/todo-service'
 import { uncoverService } from '../services/uncover-service'
+import { connectorService } from '../services/connector-service'
 
 type Handler = (args: unknown[]) => unknown | Promise<unknown>
 
@@ -39,7 +41,25 @@ const handlers: Record<string, Handler> = {
   [IPC.todoContextSearch]: ([id]) => todoService.searchMoreContext(id as string),
   [IPC.todoContextPin]: ([id, itemId]) => todoService.pinContext(id as string, itemId as string),
   [IPC.todoContextDismiss]: ([id, itemId]) =>
-    todoService.dismissContext(id as string, itemId as string)
+    todoService.dismissContext(id as string, itemId as string),
+
+  // Connector sync: main passes a fresh access token; worker fetches + ingests.
+  [IPC.connectorsIngest]: ([provider, accessToken]) =>
+    connectorService.ingest(provider as ConnectorId, accessToken as string),
+
+  // DB stats for ConnectorsState (item count + last sync per provider).
+  [IPC.connectorsGetStats]: async () => {
+    const [gmailCount, gmailSync, gcalCount, gcalSync] = await Promise.all([
+      pipelineService.getConnectorItemCount('gmail'),
+      pipelineService.getConnectorLastSync('gmail'),
+      pipelineService.getConnectorItemCount('gcal'),
+      pipelineService.getConnectorLastSync('gcal')
+    ])
+    return {
+      gmail: { itemCount: gmailCount, lastSyncAt: gmailSync },
+      gcal: { itemCount: gcalCount, lastSyncAt: gcalSync }
+    }
+  }
 }
 
 interface CallMessage {

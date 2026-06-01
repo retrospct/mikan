@@ -100,9 +100,28 @@ export async function initDb(): Promise<void> {
     );
   `)
 
+  // connector_state: tracks per-provider sync cursors (Gmail historyId / Calendar syncToken).
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS connector_state (
+      provider TEXT PRIMARY KEY,
+      cursor TEXT,
+      item_count INTEGER NOT NULL DEFAULT 0,
+      last_sync_at INTEGER
+    )
+  `)
+
   // Additive migrations: add columns that may not exist on older DBs.
   // Each is guarded so it's a no-op if the column already exists.
   await addColumnIfMissing('todo_context', 'why', 'TEXT')
+  // Connector provenance on items (additive, null for manual captures).
+  await addColumnIfMissing('items', 'connector', 'TEXT')
+  await addColumnIfMissing('items', 'external_id', 'TEXT')
+  await addColumnIfMissing('items', 'uri', 'TEXT')
+  // Unique index on external_id — SQLite allows multiple NULLs in a unique index
+  // so existing manual items are unaffected.
+  await client.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS items_external_id_idx ON items (external_id) WHERE external_id IS NOT NULL`
+  )
 }
 
 /** Add a column to an existing table only if it doesn't already exist. */

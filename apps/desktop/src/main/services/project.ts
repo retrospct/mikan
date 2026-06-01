@@ -41,8 +41,12 @@ export function relativeWhen(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
-/** Map the pipeline's coarse contentType (+ filename) to the UI's richer kind. */
-function memoryKindOf(contentType: string, sourceName: string): MemoryKind {
+/** Map the pipeline's coarse contentType (+ filename + connector) to the UI's richer kind. */
+function memoryKindOf(contentType: string, sourceName: string, connector?: string): MemoryKind {
+  // Connector provenance takes precedence over content-type inference.
+  if (connector === 'gmail') return 'email'
+  if (connector === 'gcal') return 'calendar'
+
   const ext = sourceName.includes('.') ? sourceName.split('.').pop()!.toLowerCase() : ''
   switch (contentType) {
     case 'pdf':
@@ -77,10 +81,10 @@ function deriveSnip(text: string): string {
 export function toMemory(item: Item): Memory {
   return {
     id: item.id,
-    kind: memoryKindOf(item.contentType, item.sourceName),
+    kind: memoryKindOf(item.contentType, item.sourceName, item.connector),
     title: deriveTitle(item),
     snip: deriveSnip(item.text),
-    src: item.sourceName,
+    src: item.uri ?? item.sourceName,
     when: relativeWhen(item.createdAt)
   }
 }
@@ -89,7 +93,7 @@ export function toFedItem(item: Item): FedItem {
   const done: ItemStatus[] = ['captured', 'extracted']
   return {
     id: item.id,
-    kind: memoryKindOf(item.contentType, item.sourceName),
+    kind: memoryKindOf(item.contentType, item.sourceName, item.connector),
     title: deriveTitle(item),
     when: relativeWhen(item.createdAt),
     status: done.includes(item.status) ? 'done' : 'pending'

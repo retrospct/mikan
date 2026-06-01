@@ -13,7 +13,7 @@ this file carries directives _from_ the human. Every agent reads it at the top o
 
 ---
 
-@all ✅ **Monorepo migration (#0) is DONE** on its branch (pnpm + turborepo: `apps/desktop` + `packages/contract`/`@nimi/contract`; typecheck/build/lint green). 🚧 **HOLD still in effect until it MERGES** — don't branch new work onto the flat `main` or you'll conflict with the path moves. Once merged, branch off the monorepo'd `main` (paths: `apps/desktop/src/…`, contract = `packages/contract`).
+@all ✅ **Monorepo migration (#0) MERGED** — branch off `main` (paths: `apps/desktop/src/…`, contract = `@nimi/contract` at `packages/contract`). Hold lifted.
 @front after #0: wire the UI to `window.api`, retire mock `data.ts` (`ROADMAP.md` #2, `INTEGRATION.md`). Paths shift to `apps/desktop/src/renderer`.
 @back after #0: smoke-test `main` (embedder + tray + capture→search), clear the 3 dependabot vulns (`ROADMAP.md` #1, #11). AI drafting = cloud (BYO-key) behind the `Drafter` seam (ADR 0004).
 @all AI-model decision settled: cloud-first behind a seam; on-device LLM is a parked spike (ADR 0004).

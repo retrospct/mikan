@@ -1,6 +1,6 @@
 # ADR 0004 — AI drafting / chat model (the "AI-gap" layer)
 
-**Status:** Accepted direction — **on-device happy path, benchmark-gated; cloud as the measured worst-case cutover** (per-capability). Open: local model choice, managed-vs-BYO key (below).
+**Status:** Accepted direction — `Drafter` seam; **cloud-first to ship the experience, on-device as the benchmarked fast-follow** (the latency/privacy win). Device-breadth deferred. Open: managed-vs-BYO key, local model choice (below).
 **Date:** 2026-06-01
 **Context owners:** jlee (+ Claude)
 **Related:** fills the AI-gap left by the contract convergence (`docs/INTEGRATION.md`); extends [[0003-all-typescript-on-device-pipeline]] (cloud = offload); touches [[0002-authentication]] (only if we host a managed key)
@@ -10,110 +10,95 @@
 "Wire real, plain" shipped the structural data and left every AI-generated field `null`:
 `Task.brief`/`draft`/`note`, the `gathering→drafted` status, `BacklogItem.conf`, the
 per-context "why" strings, feed-inferred `UncoveredTodo`s, and "Ask Nimi" chat. This ADR
-decides **what generates that text** — and how it squares with on-device-first.
+decides **what generates that text**, and **in what order we build it**.
 
 The honest tension: Nimi is a **personal-memory** app, so drafting prompts carry the user's
-private content (emails, notes, calendar). And on-device-first (0003) is the spine. But
-small local models draft markedly worse than frontier cloud models — and 0003 already
-carved out "big chat LLM" as a legitimate **cloud-offload** case.
+private content, and on-device-first (0003) is the spine — which argues for a local model.
+But for _speed to ship the experience_, a local LLM is the slowest possible start (native
+addon, multi-GB download, packaging), while cloud is an HTTPS call. The resolution is a
+**seam** that lets us start fast and graduate, not pick one forever.
 
 ## Options considered
 
 Legend: ✅ strong · ⚠️ caveats · ❌ poor
 
-| Option                                                                   | Draft quality      | Offline     | Privacy                      | $ to us                 | Ships in Electron          |
-| ------------------------------------------------------------------------ | ------------------ | ----------- | ---------------------------- | ----------------------- | -------------------------- |
-| A. Cloud frontier API only (we hold the key)                             | ✅                 | ❌          | ⚠️ sends memory to 3rd party | ❌ per-token, we eat it | ✅ trivial                 |
-| B. On-device small LLM only (`node-llama-cpp`, Llama-3.2-3B/Qwen2.5/Phi) | ⚠️ ceiling         | ✅          | ✅                           | ✅ free                 | ⚠️ native addon + GB model |
-| C. Hybrid behind a seam: local default, cloud offload _(recommended)_    | ✅ when it matters | ✅ degraded | ✅ by default                | ✅ user-keyed           | ✅                         |
-| D. BYO-key, provider-agnostic (user supplies Claude/OpenAI/local)        | ✅                 | ⚠️          | ✅ user's choice             | ✅ zero                 | ✅                         |
+| Option                                                                   | Draft quality           | Offline             | Privacy                      | $ to us                 | Ships in Electron          |
+| ------------------------------------------------------------------------ | ----------------------- | ------------------- | ---------------------------- | ----------------------- | -------------------------- |
+| A. Cloud frontier API only (we hold the key)                             | ✅                      | ❌                  | ⚠️ sends memory to 3rd party | ❌ per-token, we eat it | ✅ trivial                 |
+| B. On-device small LLM only (`node-llama-cpp`, Llama-3.2-3B/Qwen2.5/Phi) | ⚠️ ceiling              | ✅                  | ✅                           | ✅ free                 | ⚠️ native addon + GB model |
+| C. Seam: cloud first, on-device fast-follow _(recommended)_              | ✅ now → ✅ local later | ✅ once local lands | ✅ (cloud opt-in/keyed)      | ✅ BYO-key              | ✅                         |
+| D. BYO-key, provider-agnostic (user supplies Claude/OpenAI/local)        | ✅                      | ⚠️                  | ✅ user's choice             | ✅ zero                 | ✅                         |
 
 ### Notes
 
-- **A** — fastest to ship the magic, but it breaks the offline promise, makes us pay per
-  user, and routes private memory to a vendor by default. Fine as _an_ option, wrong as the
-  _only_ one for this app.
-- **B** — purest 0003 fit, but a 3B-class model writes mediocre replies and a multi-GB
-  download + device variance is real. Great for the _cheap_ generations (status, short
-  briefs, todo inference), not for the headline draft.
-- **C + D (recommended together)** — mirror the **Embedder seam** that already worked: a
-  `Drafter` interface with a local impl (default: private, free, offline, good enough for
-  structured/short output) and a cloud impl the user enables **with their own key** (BYO)
-  for quality-sensitive drafting + "Ask Nimi". This is exactly 0003's "cloud = offload for
-  the big chat LLM," and BYO-key means we don't eat token cost pre-revenue.
+- **A** — fastest to _ship_, but offline-breaking, we pay per user, and routes private memory
+  to a vendor by default. Right as _phase 1 behind a seam_, wrong as the permanent only-path.
+- **B** — purest 0003 fit and the latency end-goal, but the _slowest start_: a 3B model is
+  mediocre at long drafts, multi-GB download + device variance is real, and it's weeks of
+  native-ML yak-shaving before the first drafted reply.
+- **C + D (recommended)** — a `Drafter` seam (mirrors the `Embedder` seam) with BYO-key so we
+  eat no token cost. Ship the cloud impl first to validate the UX; slot the local impl in
+  later behind the same interface. Exactly 0003's "cloud = offload for the big chat LLM,"
+  just sequenced for dev speed.
 
 ## Recommendation
 
-**Build a `Drafter` seam (like `Embedder`) and ship hybrid:**
+Build a **`Drafter` seam** (like `Embedder`) and **sequence cloud → local**:
 
-- **Local default** (`node-llama-cpp`, small instruct model, lazy-downloaded + cached in
-  userData like the embedder) handles the always-on, privacy-sensitive, cheap generations:
-  task `note`/`noteKind`, `brief` summaries over the context pool, `BacklogItem.conf`, and
-  feed→`UncoveredTodo` inference.
-- **Cloud offload, opt-in + BYO-key** (default provider: Claude) for the quality bar:
-  long `draft` bodies and the "Ask Nimi" conversation. Off by default; enabling it shows a
-  clear "this sends the relevant memories to <provider>" consent.
-- The projection layer (`src/main/services/project.ts`) already isolates every AI-gap field
-  — the Drafter feeds exactly those, so the UI keeps degrading gracefully when AI is off.
+**Phase 1 — cloud, BYO-key (ship the experience, fast).** Wire `brief`/`draft`/Ask-Nimi
+through a cloud provider (default Claude) the user keys. An HTTPS call — hours, not weeks; no
+native addon, no model download, frontier quality immediately. This validates the product UX.
+BYO-key = zero token cost on us pre-revenue; opt-in with a clear "this sends the relevant
+memories to <provider>" consent. No device-capability question → **v1 ships everywhere.**
 
-### Sequencing — happy path first, measure, cut over only if needed
+**Phase 2 — on-device, benchmarked fast-follow (the latency/privacy win).** Add a local impl
+(`node-llama-cpp`, lazy model cached in userData like the embedder) behind the _same_ seam,
+**measured against the cloud output as the quality + latency bar**. Per-capability graduation:
+short/structured generations (`note`/`noteKind`, `brief`, `BacklogItem.conf`,
+feed→`UncoveredTodo`) move local first — cheap, latency-sensitive, easiest to clear the bar;
+long-form `draft` + Ask-Nimi stay cloud until/unless local is good enough. Best case "all
+local," worst case "long drafts stay cloud."
 
-The call (consistent with 0003's "spike + measure before committing"): **build the on-device
-path first and benchmark it.** Local is not just the principled default — it's _quicker_ for
-the common case (no network round-trip; 0003's speed/latency/offline driver). Only build the
-cloud path and cut over **where the numbers say local isn't good enough** — and that cutover
-is **per-capability, not wholesale**.
+The projection layer (`src/main/services/project.ts`) isolates every AI-gap field, so the UI
+degrades gracefully whenever AI is off or unkeyed.
 
-**The "good enough" bar (define before building):** acceptable draft quality on real tasks
-(reply-to-email, one-pager brief) + a latency target on the **v1 target device** (Apple
-Silicon — get it working _there_ first). Low-end/weak-hardware viability is the capability
-probe's job _later_, not a launch gate. Measure each capability against it.
+### Why this order
 
-Likely outcome by capability (to be confirmed by benchmark, not assumed):
+Ease-of-dev + speed-to-begin is the axis that matters to _start_, and on it cloud wins
+decisively: an API call vs a native addon + multi-GB download + packaging matrix. The **seam**
+keeps it non-throwaway — local drops in later with zero caller changes (same pattern as
+`NIMI_EMBEDDER`), and the cloud output becomes the **benchmark** for local. On-device
+latency/privacy (0003's driver — skipping the record→upload→process→respond loop) is a
+_runtime_ optimization applied once the experience is proven worth it.
 
-- **Cheap/structured — stays local:** `note`/`noteKind`, `brief` over the context pool,
-  `BacklogItem.conf`, feed→`UncoveredTodo` inference. Short, templated, latency-sensitive.
-- **Long-form `draft` + "Ask Nimi" — the most likely to fail the bar** → the first/only
-  capability that cuts over to cloud offload (opt-in, BYO-key) if local can't clear it.
+### v1 scope — defer the device problem
 
-So: ship local, benchmark, and let the bar — per capability — decide what (if anything)
-graduates to cloud. Worst case is "long drafts go cloud"; best case is "all local."
+Cloud-first has no device-capability question, so v1 just ships. When on-device lands later,
+"device too weak to run local" is handled **free** by the graceful-null state we already built
+("wire real, plain"). Min-spec probes, device tiers, quantized models — all a **success
+problem**: if we ever have so many users that some can't run local, we'll have earned the
+right to solve it. Not now.
 
-### Device capability gate + v1 scope
+### No chatty hybrid
 
-Local inference is hardware-bound and not every device clears the bar. Two rules:
-
-- **v1: get it working _somewhere_, not everywhere.** Target capable hardware first (the
-  Apple-Silicon dev machine) and ship the local path there. Broadening device reach
-  (quantized/smaller models, tiers, weak-Intel/Windows) is a later concern, **not a launch
-  blocker** — don't let universal coverage gate getting the loop working at all.
-- **Runtime capability probe.** On first use, check the device against a **minimum spec**
-  (arch / RAM / accelerator, or a quick timed warm-up inference). Clears it → local Drafter
-  on. Below it → fall back to cloud (opt-in) or simply the **graceful-null state the UI
-  already handles** ("wire real, plain": no draft, neutral status). The "device too weak"
-  path is _free_ — it's the degrade path we already built, not new work.
-
-**No chatty hybrid.** Keep each capability end-to-end on **one** side. A split that ferries
-embeddings / intermediate state back and forth over the network reintroduces exactly the
-round-trip latency on-device is meant to kill — so a capability is _fully_ local or _fully_
-cloud, never half-and-half mid-pipeline. (This is the latency win you're really after: skip
-the record→upload→process→respond loop, not just the upload.)
+When local lands, keep each capability end-to-end on **one** side. A split that ferries
+embeddings/intermediate state across the network re-adds the very round-trip latency on-device
+is meant to kill — a capability is fully local or fully cloud, never half mid-pipeline.
 
 ## Consequences
 
-- **Easier:** the magic ships; privacy story is honest (local default, cloud opt-in); no
-  per-token cost on us; the seam keeps model choice swappable.
-- **Harder:** two code paths to maintain; `node-llama-cpp` is another native addon in the
-  packaging matrix (we already carry `onnxruntime-node`); a settings surface for the key +
-  the local/cloud toggle; prompt-injection hygiene once memory content feeds prompts.
+- **Easier:** the experience ships in days, not weeks; no native-ML packaging to _start_;
+  privacy stays honest (cloud opt-in + keyed; local later); the seam keeps model + provider
+  swappable.
+- **Harder:** eventually two impls to maintain; `node-llama-cpp` enters the packaging matrix
+  when phase 2 starts (we already carry `onnxruntime-node`); a settings surface for the key +
+  provider; prompt-injection hygiene once memory content feeds prompts.
 
 ## Open questions
 
-- Which local model (size vs quality vs download), and what's the per-capability bar that
-  triggers a cloud cutover? (Decided: local ships first and gets benchmarked — this is the
-  one to actually measure.)
-- Managed key (we proxy, simplest UX, but cost + an auth need → re-opens [[0002]]) vs strict
-  BYO-key (zero cost, more friction)?
+- **Managed key (we proxy — simplest UX, but cost + an auth need → re-opens [[0002]]) vs
+  strict BYO-key (zero cost, more friction)? — the phase-1 fork to decide first.**
+- Which local model + the per-capability bar for phase 2 (the thing to actually benchmark).
 - Streaming "Ask Nimi" over IPC — chunked events on the existing `window.api` seam.
 - Does `gathering`/`drafted` status become real only when the Drafter runs, or do we infer
   `gathering` structurally (open + empty context)?
@@ -121,11 +106,9 @@ the record→upload→process→respond loop, not just the upload.)
 ## Action items
 
 1. [ ] Define the `Drafter` interface + a `NIMI_DRAFTER` env seam (mirror `embed.ts`).
-2. [ ] Set the "good enough" bar on the **v1 target** (Apple Silicon): real-task quality + latency.
-3. [ ] Build the **on-device** Drafter first (`node-llama-cpp`, lazy model) → benchmark
-       `brief` + `draft` against the bar, per capability. Get it working _there_ before
-       worrying about device breadth.
-4. [ ] Add a runtime **capability probe** (min-spec / timed warm-up) → enable local only when
-       cleared; below it, fall back to cloud (opt-in) or the existing graceful-null state.
-5. [ ] Only for capabilities that miss the bar: add the cloud offload (opt-in, BYO-key) +
-       the consent/settings surface, and cut those over.
+2. [ ] Decide managed-key vs BYO-key (phase 1's one real fork).
+3. [ ] **Phase 1:** wire the cloud impl (BYO-key, Claude) feeding `brief` + `draft` for one
+       task end-to-end through the seam → validate the UX.
+4. [ ] Settings: provider + key + the consent copy.
+5. [ ] **Phase 2 (later):** on-device impl behind the same seam, benchmarked per-capability
+       against the cloud output.

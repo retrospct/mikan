@@ -42,7 +42,9 @@ Single runnable app: **nimi Desktop** (`@nimi/desktop`, Electron). `pnpm dev` fr
 
 ### Verify (no runtime)
 
-From repo root: `pnpm typecheck`, `pnpm build`, `pnpm lint`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output).
+From repo root: `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output).
+
+`pnpm test` runs 152 vitest tests in plain Node (no Electron, no model download): pipeline unit tests + integration tests for pipeline-service/todo-service/draft-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
 
 ### Run the desktop app
 
@@ -111,5 +113,5 @@ Windows SmartScreen → **More info → Run anyway**. Packaged userData/DB: macO
 
 ### Scoped commands
 
-- Desktop only: `pnpm --filter @nimi/desktop dev|build|typecheck`
+- Desktop only: `pnpm --filter @nimi/desktop dev|build|typecheck|test`
 - See root `README.md` and `CLAUDE.md` for monorepo layout and agent lanes (`docs/agent-sync/INBOX.md`).

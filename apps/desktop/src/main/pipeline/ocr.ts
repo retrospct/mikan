@@ -42,11 +42,14 @@ export class TesseractOcr implements Ocr {
     if (!this.workerP) {
       this.workerP = (async () => {
         const { createWorker } = await import('tesseract.js')
-        const langPath = join(userDataDir(), 'models', 'tesseract')
-        // Ensure the cache directory exists before tesseract.js tries to read/write it.
-        mkdirSync(langPath, { recursive: true })
+        // `cachePath` = where tesseract saves (and reads back on next boot) the downloaded
+        // .traineddata. Do NOT use `langPath` for a local directory: in v7 Node mode, a
+        // local `langPath` means "read from here (no download)", which requires the file to
+        // already exist. `cachePath` correctly triggers CDN download → local cache.
+        const cachePath = join(userDataDir(), 'models', 'tesseract')
+        mkdirSync(cachePath, { recursive: true })
         // OEM 1 = LSTM_ONLY (the neural net engine — better than legacy)
-        return (await createWorker(this.lang, 1, { langPath })) as unknown as TsWorker
+        return (await createWorker(this.lang, 1, { cachePath })) as unknown as TsWorker
       })()
     }
     return this.workerP

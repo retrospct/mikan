@@ -50,6 +50,20 @@ If you change the contract, edit it in `packages/contract` and update `docs/INTE
 - The worker receives its data dir from main as `NEEME_USER_DATA` when forked (it has no
   `electron.app`).
 
+## Tests (vitest)
+
+Worker-service tests live under `test/` and run in plain Node (no Electron):
+
+```bash
+pnpm --filter @nimi/desktop test        # run once
+pnpm --filter @nimi/desktop test:watch  # watch mode
+```
+
+Tests use `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off` + a per-file temp libSQL DB
+(auto-created / cleaned up). No ONNX model download, no network, no Electron required.
+Tier A: pure unit tests (chunk, extract, embed, draft, projectors). Tier B: integration
+tests against a real libSQL file (pipeline-service, todo-service, draft-service).
+
 ## Security
 
 The non-negotiable Electron invariants live in the root `CLAUDE.md` and `docs/SECURITY.md`.

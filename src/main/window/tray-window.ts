@@ -19,6 +19,7 @@ import appIcon from '../../../resources/icon.png?asset'
 const WIN_W = 440
 const WIN_H = 840
 const SNAP_PX = 28 // drag-release within this of the anchor → snap/lock
+const ANCHOR_GAP = 12 // breathing room between the menu bar and the window top
 const HOTKEY = 'CommandOrControl+Shift+N' // configurable later (punch-listed)
 
 let win: BrowserWindow | null = null
@@ -48,10 +49,10 @@ function anchorPosition(): { x: number; y: number } {
   let y: number
   if (tb && tb.width) {
     x = Math.round(tb.x + tb.width / 2 - width / 2)
-    y = Math.round(tb.y + tb.height + 4)
+    y = Math.round(tb.y + tb.height + ANCHOR_GAP)
   } else {
-    x = wa.x + wa.width - width - 8
-    y = wa.y + 8
+    x = wa.x + wa.width - width - ANCHOR_GAP
+    y = wa.y + ANCHOR_GAP
   }
   x = Math.max(wa.x + 8, Math.min(x, wa.x + wa.width - width - 8))
   y = Math.max(wa.y + 8, Math.min(y, wa.y + wa.height - height - 8))

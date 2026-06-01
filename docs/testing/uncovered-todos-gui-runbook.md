@@ -173,7 +173,11 @@ Switch to a different tab (e.g. Today), then switch back to **Feed**.
 **Expected result:**
 - The "I spotted these to-dos" section reappears **instantly** with the same cards — no
   network call is made, because the feed content hash has not changed.
-- Cards that were already added still show "Added".
+- The "Backlog" button state **resets** on remount — this is correct. The `added` set is
+  local React component state (`useState`) that does not persist across tab switches. The
+  to-do was already written to the database on the first click; the button reset does not
+  undo that. The section re-rendering instantly without a spinner or API call is the
+  cache behaviour this step verifies.
 
 ### 5f. Verify re-inference after new capture
 

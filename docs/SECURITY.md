@@ -1,8 +1,8 @@
 # Electron security posture
 
 The hard part is staying both **secure** and **performant** as the app grows. These are
-the invariants we hold — treat them as a checklist on any PR that touches `src/main`,
-`src/preload`, or window/`webPreferences` config.
+the invariants we hold — treat them as a checklist on any PR that touches `apps/desktop/src/main`,
+`apps/desktop/src/preload`, or window/`webPreferences` config.
 
 ## Process model
 
@@ -13,10 +13,10 @@ renderer (sandboxed, context-isolated, NO node)
       → utilityProcess (DB + pipeline/todos + native addons, off the main loop)
 ```
 
-- **Renderer is locked down** (`createWindow`, `src/main/index.ts`):
+- **Renderer is locked down** (`createWindow`, `apps/desktop/src/main/index.ts`):
   `sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`. The renderer has
   no Node and no direct Electron/DB access — only the typed `window.api.*` bridge.
-- **Heavy + native work is isolated** in a `utilityProcess` (`src/main/worker/*`). Keeps
+- **Heavy + native work is isolated** in a `utilityProcess` (`apps/desktop/src/main/worker/*`). Keeps
   the main loop responsive (performance) *and* shrinks main's attack surface.
 - **Main is a router.** It must not become a Node server: no business logic, no DB, no
   remote/network servers. New data capabilities go in the worker, exposed via IPC.
@@ -31,7 +31,7 @@ renderer (sandboxed, context-isolated, NO node)
 
 ## Content Security Policy
 
-Set in `src/renderer/index.html`. Keep `script-src 'self'` (no `unsafe-inline`/`eval`).
+Set in `apps/desktop/src/renderer/index.html`. Keep `script-src 'self'` (no `unsafe-inline`/`eval`).
 Tighten `connect-src` once the legacy cloud API is fully retired (the renderer talks to
 the backend over IPC, not HTTP). Bundling fonts locally would let us drop the Google
 Fonts origins entirely (offline-first).
@@ -41,6 +41,6 @@ Fonts origins entirely (offline-first).
 - Never set `sandbox: false`, `nodeIntegration: true`, `contextIsolation: false`, or
   `webSecurity: false`.
 - Never expose Node/`ipcRenderer` directly on `window` — only scoped methods via
-  `contextBridge` in `src/preload`.
+  `contextBridge` in `apps/desktop/src/preload`.
 - Validate inputs at the IPC boundary; keep the preload free of Node built-ins (so the
   sandbox holds).

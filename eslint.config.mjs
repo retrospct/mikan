@@ -28,5 +28,16 @@ export default defineConfig(
       ...eslintPluginReactRefresh.configs.vite.rules
     }
   },
+  {
+    // Plain JS/MJS build scripts (e.g. scripts/make-tray-icon.mjs) don't need
+    // explicit return types. @electron-toolkit/eslint-config-ts disables this for
+    // `*.js`/`*.mjs`, but that pattern only matches files at the repo root — broaden
+    // it to any depth so scripts in subdirectories (and the monorepo's package dirs)
+    // are covered too.
+    files: ['**/*.{js,mjs,cjs}'],
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off'
+    }
+  },
   eslintConfigPrettier
 )

@@ -1,7 +1,9 @@
 # ADR 0006 — Repo structure: migrate to a monorepo now, before parallel workstreams
 
-**Status:** Accepted — **migrate to a pnpm-workspace monorepo NOW**, in the quiet window (0 open
-PRs, pre-agent-ramp), _ahead_ of Expo. Supersedes the original "defer until Expo starts" timing (see Decision).
+**Status:** Accepted **and implemented** (2026-06-01) — migrated to a **pnpm-workspace +
+turborepo** monorepo in the quiet window (0 open PRs, pre-agent-ramp), _ahead_ of Expo.
+Supersedes the original "defer until Expo starts" timing (see Decision). Layout shipped:
+`apps/desktop` + `packages/contract` (`@nimi/contract`); see ROADMAP "Shipped".
 **Date:** 2026-06-01
 **Context owners:** jlee (+ Claude)
 **Related:** corrects the timing in [[0003-all-typescript-on-device-pipeline]] (which pencilled in a turborepo "now"); gates roadmap #14 (RN/Expo)
@@ -104,7 +106,9 @@ under work, and worktrees — so a desktop task isn't polluted by mobile context
 
 ## Open questions
 
-- pnpm workspaces alone, or turborepo from the migration moment?
+- ~~pnpm workspaces alone, or turborepo from the migration moment?~~ **Resolved: turborepo
+  from the migration moment.** `turbo.json` orchestrates `build`/`typecheck`/`dev` across the
+  workspace (strict env mode, with `NEEME_*`/`VITE_*` declared in `globalEnv`).
 - Does the **on-device pipeline** become a shared `packages/pipeline`, or is mobile's capture
   path different enough (RN native modules) that it doesn't share? (Likely diverges → keep
   `contract` shared, not `pipeline`, until proven.)

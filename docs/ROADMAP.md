@@ -1,23 +1,24 @@
 # Nimi roadmap
 
-Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `src/main` + `src/shared`; **front** = `src/renderer`.
+Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `apps/desktop/src/main` + `packages/contract`; **front** = `apps/desktop/src/renderer`.
 
 ## Shipped
 
+- **Monorepo migration (#0):** flat → `apps/desktop` + `packages/contract` (`@nimi/contract`), pnpm workspaces + turborepo. See [ADR 0006](adr/0006-repo-structure.md).
 - On-device pipeline: capture → content-hash store → extract → chunk → embed → libSQL vector search.
 - Real on-device embedder (transformers.js / MiniLM) behind a swappable seam.
 - Daily focus todos: cap-5 + finish-the-list latch, plan/carry-over, per-todo context pool (surface / pin / dismiss).
-- View-model IPC contract, `window.api.*`, projection layer (`src/main/services/project.ts`).
+- View-model IPC contract, `window.api.*`, projection layer (`apps/desktop/src/main/services/project.ts`).
 - Electron security posture (sandbox / context-isolation / no-node, utilityProcess, nav lockdown) + tray-anchored frameless window.
 - Scaffold: auth (Logto, inert until configured).
 
 ## Punch list
 
-> **DO FIRST (#0): monorepo migration** — `git mv src → apps/desktop/src` + lift `src/shared` → `packages/contract` + pnpm workspaces. Must land in the **quiet window (0 open PRs)** before any parallel branches. See [ADR 0006](adr/0006-repo-structure.md).
+> **#0 monorepo migration — ✅ DONE** (see Shipped). Paths: `apps/desktop/src/…`; contract = `packages/contract` (`@nimi/contract`). Everything below branches off the already-monorepo'd `main`.
 
 | #   | Item                                                                                                     | Lane         | Unblocks                                         | Size | When       |
 | --- | -------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------ | ---- | ---------- |
-| 0   | **Monorepo migration** (flat → `apps/desktop` + `packages/contract`, pnpm workspaces)                    | back/struct  | a clean root everyone branches off; unblocks #14 | M    | **FIRST**  |
+| 0   | ~~**Monorepo migration**~~ ✅ **done**                                                                    | back/struct  | a clean root everyone branches off; unblocks #14 | M    | ✅ shipped  |
 | 1   | Smoke-test integrated main (embedder + tray actually run)                                                | human        | confidence in the baseline                       | S    | now        |
 | 2   | **Wire UI → `window.api`** (retire mock `data.ts`; see `INTEGRATION.md`)                                 | front        | the app runs on real data — the headline         | L    | **P0**     |
 | 3   | AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings) | back         | every AI-gap field                               | L    | P1 ⚠️      |
@@ -31,10 +32,10 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `s
 | 11  | Vuln cleanup + CSP tighten                                                                               | back         | the dependabot alerts + hardening                | S    | P1 (quick) |
 | 12  | Auto-updater (electron-updater)                                                                          | back/dist    | testers auto-get each pushed build               | M    | P1         |
 | 13  | Package macOS (build + notarize) + Windows canary                                                        | back/dist    | shipping signed builds to testers                | M    | P1         |
-| 14  | Start an RN + Expo app in-repo (mobile companion)                                                        | mobile       | the mobile surface                               | L    | P2         |
+| 14  | Start an RN + Expo app in-repo (`apps/mobile`, mobile companion)                                         | mobile       | the mobile surface                               | L    | P2         |
 
 ## Decisions gating work
 
 - **AI model (gates #3):** → [ADR 0004](adr/0004-ai-drafting-model.md) _(accepted: cloud BYO-key behind a `Drafter` seam)_
 - **OCR / ASR (gates #5):** → [ADR 0005](adr/0005-image-audio-extraction.md) _(proposed: on-device default, macOS-native fast path)_
-- **Repo structure (gates #14):** → [ADR 0006](adr/0006-repo-structure.md) _(accepted: migrate to monorepo NOW, item #0)_
+- **Repo structure (gates #14):** → [ADR 0006](adr/0006-repo-structure.md) _(accepted: monorepo NOW — ✅ done)_

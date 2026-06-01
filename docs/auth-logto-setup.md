@@ -6,12 +6,12 @@
 
 ## What's implemented
 
-- **Main process** (`src/main/auth/logto.ts`): OIDC Authorization Code + PKCE in the
+- **Main process** (`apps/desktop/src/main/auth/logto.ts`): OIDC Authorization Code + PKCE in the
   **system browser**, custom-scheme redirect `neeme://callback`, token exchange + refresh,
   refresh token sealed via Electron `safeStorage`. Inert when unconfigured.
-- **IPC** (`src/shared/ipc.ts`, `src/preload`): `window.api.auth.{login,logout,getAccessToken,getState,onChanged}`.
-- **Renderer** (`src/renderer/src/hooks/useAuth.ts`): hydrates the API client's bearer token
-  (`src/shared/api/token-store.ts` → `runtime.ts` `getToken()` seam) and shows a Sign in/out
+- **IPC** (`packages/contract/src/ipc.ts`, `apps/desktop/src/preload`): `window.api.auth.{login,logout,getAccessToken,getState,onChanged}`.
+- **Renderer** (`apps/desktop/src/renderer/src/hooks/useAuth.ts`): hydrates the API client's bearer token
+  (`packages/contract/src/api/token-store.ts` → `runtime.ts` `getToken()` seam) and shows a Sign in/out
   control in the header. No CSP change needed — the renderer never calls Logto.
 
 ## To turn it on

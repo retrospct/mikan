@@ -1,7 +1,7 @@
 /**
- * Data utilityProcess — a plain Node child that owns the libSQL DB and all the
- * data services (memory / pipeline / todos), so the heavy + native work runs OFF
- * the Electron main loop. Main forks this and proxies IPC to it; the renderer is
+ * Data utilityProcess — a plain Node child that owns the libSQL DB and the
+ * data services (pipeline / todos), so the heavy + native work runs OFF the
+ * Electron main loop. Main forks this and proxies IPC to it; the renderer is
  * unaware (same `window.api.*` contract).
  *
  * Protocol over `process.parentPort`:
@@ -11,21 +11,18 @@
  */
 import { IPC } from '../../shared/ipc'
 import { initDb } from '../db'
-import { memoryService } from '../services/memory-service'
 import { pipelineService } from '../services/pipeline-service'
 import { todoService } from '../services/todo-service'
 
 type Handler = (args: unknown[]) => unknown | Promise<unknown>
 
 const handlers: Record<string, Handler> = {
-  [IPC.memoryList]: () => memoryService.list(),
-  [IPC.memoryAdd]: ([content]) => memoryService.add(content as string),
-
   [IPC.pipelineCaptureText]: ([text, name]) =>
     pipelineService.captureText(text as string, name as string | undefined),
+  [IPC.pipelineArchive]: () => pipelineService.archive(),
+  [IPC.pipelineFeed]: () => pipelineService.feed(),
   [IPC.pipelineSearch]: ([query, topK]) =>
-    pipelineService.search(query as string, topK as number | undefined),
-  [IPC.pipelineList]: () => pipelineService.listItems(),
+    pipelineService.match(query as string, topK as number | undefined),
 
   [IPC.todoAdd]: ([title, notes]) => todoService.add(title as string, notes as string | undefined),
   [IPC.todoToday]: ([day]) => todoService.today(day as string | undefined),

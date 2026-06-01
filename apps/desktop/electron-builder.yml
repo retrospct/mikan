@@ -15,7 +15,7 @@ asarUnpack:
 win:
   executableName: nimi
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: nimi-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
@@ -29,7 +29,7 @@ mac:
     - NSSpeechRecognitionUsageDescription: Nimi uses on-device speech recognition to transcribe voice memos into searchable memories.
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: nimi-${version}.${ext}
 linux:
   target:
     - AppImage
@@ -38,7 +38,7 @@ linux:
   maintainer: electronjs.org
   category: Utility
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: nimi-${version}.${ext}
 npmRebuild: false
 publish:
   provider: generic

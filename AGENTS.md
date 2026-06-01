@@ -75,6 +75,40 @@ import { pipelineService } from './src/main/services/pipeline-service.ts';
 "
 ```
 
+### Capture tests (`captureFile` pipeline + UX)
+
+Two committed tiers under `apps/desktop/test/` (fixtures in `test/fixtures/`). Both pin
+`NEEME_EMBEDDER=hash` (offline) and `NEEME_EXTRACTOR=off` (deterministic image→`pending`).
+
+```bash
+# Tier 1 — headless pipeline (no Electron, no display): capture → extract → index → search
+pnpm --filter @nimi/desktop test:smoke
+
+# Tier 2 — Playwright Electron E2E (real picker + drag-drop → IPC → worker → DB).
+# Launches the BUILT app, so build first. Electron _electron needs no browser download.
+pnpm --filter @nimi/desktop build && pnpm --filter @nimi/desktop test:e2e
+```
+
+The E2E reads ground truth back through `window.api.pipeline.archive()` (the app's own DB
+connection — a separate SQLite reader hits WAL-visibility races). It launches with
+`--user-data-dir=<tmp>` for an isolated throwaway DB.
+
+### Tier 3 — packaged installer on a second computer (Mac/Windows)
+
+```bash
+pnpm --filter @nimi/desktop build:mac    # → apps/desktop/dist/nimi-<ver>.dmg
+pnpm --filter @nimi/desktop build:win    # → dist/nimi-<ver>-setup.exe (build ON Windows)
+```
+
+Unsigned: macOS → right-click **Open** (or `xattr -dr com.apple.quarantine /Applications/Nimi.app`);
+Windows SmartScreen → **More info → Run anyway**. Packaged userData/DB: macOS
+`~/Library/Application Support/Nimi/neeme.db`, Windows `%APPDATA%\Nimi\neeme.db`.
+
+> The preload **must** stay bundled (not externalized) — sandboxed preloads can't
+> `require()` npm modules, so `@electron-toolkit/preload` is in `electron.vite.config.ts`'s
+> externalize `exclude` list. Without it the packaged app's `window.api` silently fails and
+> the renderer falls back to mock data.
+
 ### Scoped commands
 
 - Desktop only: `pnpm --filter @nimi/desktop dev|build|typecheck`

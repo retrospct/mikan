@@ -8,6 +8,25 @@ in the Feed tab with confidence rings, and lets the user add them to backlog.
 
 ---
 
+## Test pyramid
+
+Run these tiers in order. Stop if an earlier tier fails.
+
+| Tier | Command | Needs secret? | Needs display? | Covers |
+|---|---|---|---|---|
+| **1 — Static** | `pnpm typecheck && pnpm build` | No | No | Types, build integrity |
+| **2 — Service tests** | `pnpm --filter @nimi/desktop test` | No | No | NullDrafter path, cache write/hit/invalidation, pipeline, todos |
+| **3 — GUI test** | This runbook (§4–§7) | `NEEME_ANTHROPIC_KEY` | Yes | CloudDrafter inference, UI rendering, Backlog button, meta-cache |
+
+Tiers 1 and 2 run in any CI environment without secrets and without a display. Tier 3 is the
+only part that requires a cloud agent with an X11 display and an Anthropic key.
+
+**Expected test counts for Tier 2 (as of this PR):**
+- 9 test files, 158 tests (including 6 new `uncover-service` tests)
+- `NEEME_EMBEDDER=hash NEEME_DRAFTER=off` — no model download, no API calls
+
+---
+
 ## Prerequisites
 
 | Requirement | Minimum | Notes |
@@ -114,8 +133,11 @@ but useful for layout checks).
 
 ### 5a. Capture action-oriented notes
 
-Use the **+** button or the Feed tab's quick-feed buttons to add at least two notes with
-clear action signals. Enter text directly into the text capture field.
+Use the **+ button** (centre of the bottom nav) to open the AddSheet, then type each note
+and confirm. **Do not use the quick-feed buttons** (Note / Voice / Link in the Feed tab) —
+those are a non-persisting demo affordance (`feedOne()` builds a fake local `FedItem` and
+never calls `captureText`). Only the AddSheet and real file drops write to the `items` table
+that `uncoverTodos()` reads from.
 
 Recommended test inputs (use as-is for reproducibility):
 
@@ -164,7 +186,9 @@ Click the **Backlog** button on one of the inferred cards.
 **Expected result:**
 - The button label changes from "Backlog" to "**Added**" (with a check icon) and becomes
   disabled.
-- The item appears in the Today or Backlog list (navigate to the **Plan** tab to confirm).
+- The item appears in the **Today** tab (if fewer than 5 tasks are already there; cap = 5),
+  otherwise it lands in the backlog visible inside the Plan overlay. Switch to the **Today**
+  tab to confirm. (Plan is an overlay launched from Today, not a separate bottom-nav tab.)
 
 ### 5e. Verify the meta-cache (instant re-load)
 
@@ -173,15 +197,28 @@ Switch to a different tab (e.g. Today), then switch back to **Feed**.
 **Expected result:**
 - The "I spotted these to-dos" section reappears **instantly** with the same cards — no
   network call is made, because the feed content hash has not changed.
-- Cards that were already added still show "Added".
+- The "Backlog" button state **resets** on remount — this is correct. The `added` set is
+  local React component state (`useState`) that does not persist across tab switches. The
+  to-do was already written to the database on the first click; the button reset does not
+  undo that. The section re-rendering instantly without a spinner or API call is the
+  cache behaviour this step verifies.
 
 ### 5f. Verify re-inference after new capture
 
-Capture another action-y note (§5a), then return to the **Feed** tab.
+Capture another action-y note **using the + button** (§5a), then switch tabs away and back
+to **Feed**.
 
 **Expected result:**
 - The section re-renders, potentially with updated or additional cards, because the feed
   content hash changed and a new Claude call was issued.
+
+Two things to note:
+- Re-inference is triggered by `FeedView` **remounting** — the fetch lives in a
+  `useEffect(..., [])`. Simply scrolling or waiting in the Feed tab is not enough; you must
+  switch away and back to trigger a remount.
+- Only real captures (AddSheet / file drop) change the feed hash. Clicking the quick-feed
+  buttons (Note / Voice / Link) adds a fake local `FedItem` that is never written to the
+  `items` table, so the hash does not change and no re-inference occurs.
 
 ---
 
@@ -234,6 +271,7 @@ pnpm lint        # expect exactly 34 errors, ALL in packages/contract/src/api/ge
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
+| "I spotted" section absent despite captures | Used quick-feed buttons (Note/Voice/Link) instead of + button | Capture via the **+ button** (AddSheet) — quick-feed buttons are a non-persisting demo affordance and do not write to the `items` table |
 | `Error: Electron uninstall` on `pnpm dev` | Electron binary not downloaded | `node node_modules/electron/install.js` |
 | App window never opens | X11/display not set | Ensure `DISPLAY` is set (e.g. `export DISPLAY=:1`) |
 | "I spotted" section absent with key set | Key not reaching the worker process | Verify turbo passthrough: inline the var on the same command, not just in a separate `export` |

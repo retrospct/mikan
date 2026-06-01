@@ -35,7 +35,7 @@ import {
 } from './oidc'
 
 const REDIRECT_URI = 'neeme://callback'
-const SCOPE = 'openid profile offline_access'
+const SCOPE = 'openid profile email offline_access'
 
 type Listener = (state: AuthState, accessToken?: string) => void
 type JwksResolver = ReturnType<typeof createRemoteJWKSet>

@@ -11,6 +11,7 @@ const api: NimiApi = {
       ipcRenderer.invoke(IPC.pipelineCaptureFile, bytes, name, mime),
     archive: () => ipcRenderer.invoke(IPC.pipelineArchive),
     feed: () => ipcRenderer.invoke(IPC.pipelineFeed),
+    uncoverTodos: () => ipcRenderer.invoke(IPC.pipelineUncoverTodos),
     search: (query: string, topK?: number) => ipcRenderer.invoke(IPC.pipelineSearch, query, topK)
   },
   todos: {

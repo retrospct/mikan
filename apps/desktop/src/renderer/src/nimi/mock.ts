@@ -7,7 +7,15 @@
 // absent (i.e. running in a plain browser, not Electron). It mutates module-local
 // arrays and returns the updated view shapes, mirroring the real worker so the
 // browser preview behaves like the app.
-import type { BacklogItem, FedItem, MatchHit, Memory, MemoryKind, Task } from '@nimi/contract/views'
+import type {
+  BacklogItem,
+  FedItem,
+  MatchHit,
+  Memory,
+  MemoryKind,
+  Task,
+  UncoveredTodo
+} from '@nimi/contract/views'
 import { CAP_REACHED, type CaptureResult, type NimiApi, type Todo } from '@nimi/contract/ipc'
 
 type MockApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui'>
@@ -252,6 +260,26 @@ const FED_RECENT: FedItem[] = [
   }
 ]
 
+// ── to-dos Nimi infers from the recent feed (AI-gap; real backend gates on a key) ──
+const UNCOVERED: UncoveredTodo[] = [
+  {
+    id: 'unc_dentist',
+    title: 'Book the overdue dentist cleaning',
+    why: 'Last visit was November — Dr. Okafor texts to confirm.',
+    conf: 0.82,
+    ctxN: 1,
+    ctx: ['m_dentist']
+  },
+  {
+    id: 'unc_flight',
+    title: 'Use the $214 United credit before Jun 30',
+    why: 'Travel credit on file expires end of month.',
+    conf: 0.71,
+    ctxN: 1,
+    ctx: ['m_flight']
+  }
+]
+
 // ── matcher: rank archive memories for an arbitrary typed task ───────────────
 const KEYS: Record<string, string> = {
   m_cabin_note: 'sarah cabin weekend trip hike boots dates april',
@@ -360,6 +388,8 @@ export function makeMockApi(): MockApi {
       },
       archive: async (): Promise<Memory[]> => Object.values(MEMORIES).map((m) => ({ ...m })),
       feed: async (): Promise<FedItem[]> => feed.map((f) => ({ ...f })),
+      uncoverTodos: async (): Promise<UncoveredTodo[]> =>
+        UNCOVERED.filter((t) => (t.ctx ?? []).every((id) => MEMORIES[id])).map((t) => ({ ...t })),
       search: async (query: string, topK?: number): Promise<MatchHit[]> => {
         const hits = matchTask(query)
         return topK ? hits.slice(0, topK) : hits

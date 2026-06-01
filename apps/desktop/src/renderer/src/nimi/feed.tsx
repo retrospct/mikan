@@ -7,8 +7,17 @@ import { NimiMark } from './mark'
 import { VoiceRecorder } from './voice'
 import { data } from './api'
 import { captureFiles, kindOfFile } from './capture-file'
-import type { FedItem, MemoryKind } from '@nimi/contract/views'
+import type { FedItem, MemoryKind, UncoveredTodo } from '@nimi/contract/views'
 import type { IconName } from './icons'
+
+// a new to-do accepted from the feed → routed to today (or backlog) by NimiApp
+type AddTodo = (item: {
+  id?: string
+  title: string
+  why?: string
+  conf?: number | null
+  ctx?: string[]
+}) => void
 
 interface FeedKind {
   kind: MemoryKind
@@ -40,13 +49,19 @@ const FEED_MODES: FeedKind[] = [
 export function FeedView({
   captureStyle,
   onCaptured,
+  onAddTodo,
   onRecordingChange
 }: {
   captureStyle: string
   onCaptured?: () => void
+  onAddTodo?: AddTodo
   onRecordingChange?: (v: boolean) => void
 }): JSX.Element {
   const [fed, setFed] = useState<FedItem[]>([])
+  // AI-gap: to-dos Nimi infers from the recent feed. `[]` until the drafter is
+  // configured; the section below hides itself when empty.
+  const [unc, setUnc] = useState<UncoveredTodo[]>([])
+  const [added, setAdded] = useState<Set<string>>(new Set())
   const [morsel, setMorsel] = useState<FeedKind | null>(null)
   const [eating, setEating] = useState(false)
   const [over, setOver] = useState(false)
@@ -65,6 +80,9 @@ export function FeedView({
     let cancelled = false
     void data.pipeline.feed().then((items) => {
       if (!cancelled) setFed(items)
+    })
+    void data.pipeline.uncoverTodos().then((todos) => {
+      if (!cancelled) setUnc(todos)
     })
     return () => {
       cancelled = true
@@ -227,6 +245,69 @@ export function FeedView({
             Anything you give me, I&apos;ll remember — and quietly bring back when it&apos;s useful.
           </div>
         </div>
+
+        {unc.length > 0 && (
+          <div className="fed-list unc-feed">
+            <div className="fed-hd">
+              <NIcon name="sparkle" size={12} /> I spotted{' '}
+              {unc.length === 1 ? 'a to-do' : 'these to-dos'}
+            </div>
+            {unc.map((td) => {
+              const tid = td.id as string
+              const on = added.has(tid)
+              return (
+                <div key={tid} className={'unc' + (on ? ' on' : '')}>
+                  <div className="unc-conf" title={Math.round(td.conf * 100) + '% confident'}>
+                    <svg viewBox="0 0 36 36" width="34" height="34">
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="15"
+                        fill="none"
+                        stroke="var(--hairline)"
+                        strokeWidth="3"
+                      />
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="15"
+                        fill="none"
+                        stroke="var(--accent)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeDasharray={`${Math.round(td.conf * 94)} 200`}
+                        transform="rotate(-90 18 18)"
+                      />
+                    </svg>
+                    <span>{Math.round(td.conf * 100)}</span>
+                  </div>
+                  <div className="unc-main">
+                    <div className="unc-t">{td.title}</div>
+                    <div className="unc-why">{td.why}</div>
+                  </div>
+                  <button
+                    className={'unc-add' + (on ? ' on' : '')}
+                    disabled={on}
+                    onClick={() => {
+                      setAdded((s) => new Set(s).add(tid))
+                      onAddTodo && onAddTodo({ ...td, ctx: td.ctx ?? [] })
+                    }}
+                  >
+                    {on ? (
+                      <>
+                        <NIcon name="check" size={14} /> Added
+                      </>
+                    ) : (
+                      <>
+                        <NIcon name="plus" size={14} /> Backlog
+                      </>
+                    )}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         <div className="fed-list">
           <div className="fed-hd">

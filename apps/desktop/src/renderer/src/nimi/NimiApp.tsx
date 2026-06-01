@@ -352,6 +352,7 @@ export default function NimiApp(): JSX.Element {
                   <FeedView
                     captureStyle={TWEAKS.captureStyle}
                     onCaptured={cheer}
+                    onAddTodo={addTodo}
                     onRecordingChange={setFeedRecording}
                   />
                 )}

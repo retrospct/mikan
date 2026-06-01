@@ -85,7 +85,7 @@ async function main(): Promise<void> {
   check('text contains fixture phrase', !!txtRow && txtRow.text.includes('Hello Nimi smoke test'))
   check('chunks indexed (> 0)', (await chunkCount(txt.memory.id)) > 0)
 
-  // ── Image: stored, parked as pending (no extractor) ───────────────────────
+  // ── Image (PNG): stored, parked as pending (no extractor) ────────────────
   console.log('\nImage capture (extractor off → pending)')
   const png = await pipelineService.captureFile(bytesOf('sample.png'), 'sample.png', 'image/png')
   check('created === true', png.created)
@@ -94,6 +94,31 @@ async function main(): Promise<void> {
   const pngRow = await rowOf(png.memory.id)
   check("items.status === 'pending'", pngRow?.status === 'pending')
   check('no chunks indexed (=== 0)', (await chunkCount(png.memory.id)) === 0)
+
+  // ── Image (HEIC): same contract as PNG → pending ───────────────────────
+  console.log('\nHEIC capture (extractor off → pending)')
+  const heic = await pipelineService.captureFile(
+    bytesOf('sample.heic'),
+    'sample.heic',
+    'image/heic'
+  )
+  check('heic created === true', heic.created)
+  check(
+    'heic memory.kind is image-like',
+    ['image', 'photo', 'screenshot'].includes(heic.memory.kind)
+  )
+  const heicRow = await rowOf(heic.memory.id)
+  check("heic items.status === 'pending'", heicRow?.status === 'pending')
+  check('heic no chunks indexed (=== 0)', (await chunkCount(heic.memory.id)) === 0)
+
+  // ── Audio (WAV): stored, parked as pending (no extractor) ─────────────
+  console.log('\nAudio capture (extractor off → pending)')
+  const wav = await pipelineService.captureFile(bytesOf('sample.wav'), 'sample.wav', 'audio/wav')
+  check('wav created === true', wav.created)
+  check("wav memory.kind === 'voice'", wav.memory.kind === 'voice')
+  const wavRow = await rowOf(wav.memory.id)
+  check("wav items.status === 'pending'", wavRow?.status === 'pending')
+  check('wav no chunks indexed (=== 0)', (await chunkCount(wav.memory.id)) === 0)
 
   // ── Search: the indexed text is retrievable ───────────────────────────────
   console.log('\nSearch over the index')

@@ -14,6 +14,20 @@ const api: NeemeApi = {
     search: (query: string, topK?: number) => ipcRenderer.invoke(IPC.pipelineSearch, query, topK),
     listItems: () => ipcRenderer.invoke(IPC.pipelineList)
   },
+  todos: {
+    add: (title: string, notes?: string) => ipcRenderer.invoke(IPC.todoAdd, title, notes),
+    today: (day?: string) => ipcRenderer.invoke(IPC.todoToday, day),
+    backlog: () => ipcRenderer.invoke(IPC.todoBacklog),
+    done: (limit?: number) => ipcRenderer.invoke(IPC.todoDone, limit),
+    complete: (id: string) => ipcRenderer.invoke(IPC.todoComplete, id),
+    reopen: (id: string) => ipcRenderer.invoke(IPC.todoReopen, id),
+    plan: (keep: string[], day?: string) => ipcRenderer.invoke(IPC.todoPlan, keep, day),
+    schedule: (id: string, day?: string) => ipcRenderer.invoke(IPC.todoSchedule, id, day),
+    searchMoreContext: (id: string) => ipcRenderer.invoke(IPC.todoContextSearch, id),
+    pinContext: (id: string, itemId: string) => ipcRenderer.invoke(IPC.todoContextPin, id, itemId),
+    dismissContext: (id: string, itemId: string) =>
+      ipcRenderer.invoke(IPC.todoContextDismiss, id, itemId)
+  },
   auth: {
     login: () => ipcRenderer.invoke(IPC.authLogin),
     logout: () => ipcRenderer.invoke(IPC.authLogout),

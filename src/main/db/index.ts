@@ -54,5 +54,29 @@ export async function initDb(): Promise<void> {
       PRIMARY KEY (item_id, chunk_idx)
     );
     CREATE INDEX IF NOT EXISTS chunks_vec_idx ON chunks (libsql_vector_idx(embedding));
+    CREATE TABLE IF NOT EXISTS todos (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'open',
+      day TEXT,
+      position INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      completed_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS todos_day_idx ON todos (day, position);
+    CREATE TABLE IF NOT EXISTS todo_context (
+      todo_id TEXT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+      item_id TEXT NOT NULL,
+      score REAL,
+      source_name TEXT,
+      content_type TEXT,
+      excerpt TEXT,
+      state TEXT NOT NULL DEFAULT 'surfaced',
+      first_surfaced_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      last_surfaced_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      PRIMARY KEY (todo_id, item_id)
+    );
+    CREATE INDEX IF NOT EXISTS todo_context_idx ON todo_context (todo_id, state);
   `)
 }

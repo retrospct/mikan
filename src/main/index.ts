@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { initDb } from './db'
 import { memoryService } from './services/memory-service'
 import { pipelineService } from './services/pipeline-service'
+import { todoService } from './services/todo-service'
 import * as auth from './auth/logto'
 import { IPC } from '../shared/ipc'
 
@@ -98,6 +99,23 @@ app.whenReady().then(async () => {
     pipelineService.search(query, topK)
   )
   ipcMain.handle(IPC.pipelineList, () => pipelineService.listItems())
+
+  // Todos — daily focus list + per-todo context pool (see services/todo-service).
+  ipcMain.handle(IPC.todoAdd, (_e, title: string, notes?: string) => todoService.add(title, notes))
+  ipcMain.handle(IPC.todoToday, (_e, day?: string) => todoService.today(day))
+  ipcMain.handle(IPC.todoBacklog, () => todoService.backlog())
+  ipcMain.handle(IPC.todoDone, (_e, limit?: number) => todoService.done(limit))
+  ipcMain.handle(IPC.todoComplete, (_e, id: string) => todoService.complete(id))
+  ipcMain.handle(IPC.todoReopen, (_e, id: string) => todoService.reopen(id))
+  ipcMain.handle(IPC.todoPlan, (_e, keep: string[], day?: string) => todoService.plan(keep, day))
+  ipcMain.handle(IPC.todoSchedule, (_e, id: string, day?: string) => todoService.schedule(id, day))
+  ipcMain.handle(IPC.todoContextSearch, (_e, id: string) => todoService.searchMoreContext(id))
+  ipcMain.handle(IPC.todoContextPin, (_e, id: string, itemId: string) =>
+    todoService.pinContext(id, itemId)
+  )
+  ipcMain.handle(IPC.todoContextDismiss, (_e, id: string, itemId: string) =>
+    todoService.dismissContext(id, itemId)
+  )
 
   // Auth (Logto) — broadcast changes to renderers, restore any saved session,
   // then expose login/logout/token over IPC. Inert until Logto env is configured.

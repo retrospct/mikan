@@ -17,6 +17,18 @@ export const IPC = {
   pipelineCaptureText: 'pipeline:capture-text',
   pipelineSearch: 'pipeline:search',
   pipelineList: 'pipeline:list',
+  // Todos (daily focus list: cap/plan + the per-todo context pool)
+  todoAdd: 'todo:add',
+  todoToday: 'todo:today',
+  todoBacklog: 'todo:backlog',
+  todoDone: 'todo:done',
+  todoComplete: 'todo:complete',
+  todoReopen: 'todo:reopen',
+  todoPlan: 'todo:plan',
+  todoSchedule: 'todo:schedule',
+  todoContextSearch: 'todo:context-search',
+  todoContextPin: 'todo:context-pin',
+  todoContextDismiss: 'todo:context-dismiss',
   // Auth (Logto OIDC flow lives in main; see src/main/auth/logto.ts)
   authLogin: 'auth:login',
   authLogout: 'auth:logout',
@@ -92,6 +104,62 @@ export interface AuthApi {
   onChanged: (cb: (state: AuthState, accessToken?: string) => void) => () => void
 }
 
+// --- Todos (daily focus list + context pool) ------------------------------
+
+export type TodoStatus = 'open' | 'done'
+
+export interface Todo {
+  id: string
+  title: string
+  notes: string | null
+  status: TodoStatus
+  /** ISO date the todo lives on; null = backlog (unscheduled). */
+  day: string | null
+  position: number
+  createdAt: Date
+  completedAt: Date | null
+}
+
+export type ContextState = 'surfaced' | 'pinned' | 'dismissed'
+
+/** One surfaced memory in a todo's context pool. */
+export interface ContextEntry {
+  itemId: string
+  score: number | null
+  sourceName: string | null
+  contentType: ContentType | null
+  excerpt: string | null
+  state: ContextState
+}
+
+export interface TodoWithContext extends Todo {
+  context: ContextEntry[]
+}
+
+/** Raised when adding would exceed the day's focus cap. */
+export const CAP_REACHED = 'CAP_REACHED'
+
+export interface TodoApi {
+  /** Add to today (cap-enforced; rejects with CAP_REACHED when full). Surfaces context. */
+  add: (title: string, notes?: string) => Promise<TodoWithContext>
+  /** Today's focus list, each item with its stored context pool. */
+  today: (day?: string) => Promise<TodoWithContext[]>
+  /** Open, unscheduled items (the backlog). */
+  backlog: () => Promise<Todo[]>
+  /** The done log (newest first). */
+  done: (limit?: number) => Promise<Todo[]>
+  complete: (id: string) => Promise<Todo | null>
+  reopen: (id: string) => Promise<Todo | null>
+  /** Plan a day: carry `keep` open items onto it, sweep the rest to the backlog. */
+  plan: (keep: string[], day?: string) => Promise<TodoWithContext[]>
+  /** Pull a backlog item onto a day (cap-enforced). */
+  schedule: (id: string, day?: string) => Promise<Todo | null>
+  /** "Search more" — re-run search and merge new hits into the pool. */
+  searchMoreContext: (id: string) => Promise<ContextEntry[]>
+  pinContext: (id: string, itemId: string) => Promise<ContextEntry[]>
+  dismissContext: (id: string, itemId: string) => Promise<ContextEntry[]>
+}
+
 /** Capture + surface, backed by the on-device pipeline in the main process. */
 export interface PipelineApi {
   /** Quick text capture → returns the item (+ whether it was newly created). */
@@ -105,5 +173,6 @@ export interface PipelineApi {
 export interface NeemeApi {
   memory: MemoryApi
   pipeline: PipelineApi
+  todos: TodoApi
   auth: AuthApi
 }

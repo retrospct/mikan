@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
 
 /**
  * `memories` — the atomic unit of neeme's local store.
@@ -44,3 +44,49 @@ export const items = sqliteTable('items', {
 
 export type Item = typeof items.$inferSelect
 export type NewItem = typeof items.$inferInsert
+
+/**
+ * `todos` — the daily focus list (cap 5). `day` is the ISO date the item lives
+ * on; NULL = backlog (unscheduled). Done items keep their `day` as a record.
+ * (The Python/neeme-mono cap+plan model.)
+ */
+export const todos = sqliteTable('todos', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  title: text('title').notNull(),
+  notes: text('notes'),
+  status: text('status').notNull().default('open'), // open | done
+  day: text('day'), // ISO date; NULL = backlog
+  position: integer('position').notNull().default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  completedAt: integer('completed_at', { mode: 'timestamp' })
+})
+
+export type Todo = typeof todos.$inferSelect
+export type NewTodo = typeof todos.$inferInsert
+
+/**
+ * `todoContext` — each todo's persistent, additive pool of surfaced memories
+ * (from semantic search over `items`). Denormalized so the UI renders without a
+ * re-search; `state` is the user's pin/dismiss verdict (a search-quality signal).
+ */
+export const todoContext = sqliteTable('todo_context', {
+  todoId: text('todo_id').notNull(),
+  itemId: text('item_id').notNull(),
+  score: real('score'),
+  sourceName: text('source_name'),
+  contentType: text('content_type'),
+  excerpt: text('excerpt'),
+  state: text('state').notNull().default('surfaced'), // surfaced | pinned | dismissed
+  firstSurfacedAt: integer('first_surfaced_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  lastSurfacedAt: integer('last_surfaced_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`)
+})
+
+export type TodoContextRow = typeof todoContext.$inferSelect

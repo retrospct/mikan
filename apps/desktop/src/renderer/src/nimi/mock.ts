@@ -7,7 +7,7 @@
 // absent (i.e. running in a plain browser, not Electron). It mutates module-local
 // arrays and returns the updated view shapes, mirroring the real worker so the
 // browser preview behaves like the app.
-import type { BacklogItem, FedItem, MatchHit, Memory, Task } from '@nimi/contract/views'
+import type { BacklogItem, FedItem, MatchHit, Memory, MemoryKind, Task } from '@nimi/contract/views'
 import { CAP_REACHED, type CaptureResult, type NimiApi, type Todo } from '@nimi/contract/ipc'
 
 type MockApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui'>
@@ -315,6 +315,47 @@ export function makeMockApi(): MockApi {
         }
         MEMORIES[id] = memory
         feed = [{ id: uid('f_'), kind: 'note', title, when: 'Just now', status: 'done' }, ...feed]
+        return { memory: { ...memory }, created: true }
+      },
+      captureFile: async (
+        _bytes: Uint8Array,
+        name: string,
+        mime?: string
+      ): Promise<CaptureResult> => {
+        const id = uid('m_')
+        const ext =
+          name.lastIndexOf('.') >= 0 ? name.slice(name.lastIndexOf('.')).toLowerCase() : ''
+        const kind: MemoryKind =
+          ext === '.pdf' || mime === 'application/pdf'
+            ? 'pdf'
+            : mime?.startsWith('image/') ||
+                ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.heic'].includes(ext)
+              ? 'photo'
+              : mime?.startsWith('audio/') || ['.m4a', '.mp3', '.wav', '.opus'].includes(ext)
+                ? 'voice'
+                : ['.txt', '.md', '.csv', '.json'].includes(ext) || mime?.startsWith('text/')
+                  ? 'txt'
+                  : 'doc'
+        const isTextLike = kind === 'txt' || kind === 'doc'
+        const memory: Memory = {
+          id,
+          kind,
+          title: name,
+          snip: '',
+          src: name,
+          when: 'Just now'
+        }
+        MEMORIES[id] = memory
+        feed = [
+          {
+            id: uid('f_'),
+            kind,
+            title: name,
+            when: 'Just now',
+            status: isTextLike ? 'done' : 'pending'
+          },
+          ...feed
+        ]
         return { memory: { ...memory }, created: true }
       },
       archive: async (): Promise<Memory[]> => Object.values(MEMORIES).map((m) => ({ ...m })),

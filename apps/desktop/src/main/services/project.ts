@@ -5,7 +5,7 @@
  * Why a separate layer: it keeps the view model out of the domain services (which
  * stay about capture/search/todos), and — per "wire real, plain" — confines every
  * AI-gap (`brief`/`draft`/`note`/`gathering`→`drafted`) to ONE place. When the AI
- * layer lands, only these functions change; capture/search/todo logic doesn't.
+ * layer lands (or is absent), only these functions change.
  * Runs in the worker (off the main loop).
  */
 import type { ContextEntry, Item, ItemStatus, Todo } from '@nimi/contract/ipc'
@@ -15,9 +15,11 @@ import type {
   MatchHit,
   Memory,
   MemoryKind,
+  NoteKind,
   Task,
   TaskStatus
 } from '@nimi/contract/views'
+import type { TaskDraft } from '../pipeline/draft'
 
 const DAY_MS = 86_400_000
 
@@ -116,38 +118,60 @@ function whenOfDay(day: string | null): string {
 
 /**
  * Project a todo + its (already non-dismissed, pinned-first, score-sorted) context
- * pool into a `Task`. Structural fields are real; AI fields are null/undefined.
+ * pool into a `Task`. When `ai` is provided, AI-generated fields are populated;
+ * otherwise they degrade gracefully to null.
+ *
  * Invariant for the UI: every `ctx` id also appears in `pipeline.archive()` (both
  * come from the `items` table), so `MEMORIES[id]` always resolves.
  */
-export function toTask(todo: Todo, context: ContextEntry[]): Task {
+export function toTask(todo: Todo, context: ContextEntry[], ai?: TaskDraft): Task {
   const relMap: Record<string, number> = {}
+  const whyMap: Record<string, string> = {}
   for (const c of context) {
     if (c.score != null) relMap[c.itemId] = relevanceFromDistance(c.score)
+    if (c.why) whyMap[c.itemId] = c.why
   }
-  const status: TaskStatus = todo.status === 'done' ? 'done' : 'gathered'
+
+  const done = todo.status === 'done'
+  let status: TaskStatus
+  if (done) {
+    status = 'done'
+  } else if (ai?.status === 'drafted') {
+    status = 'drafted'
+  } else {
+    status = 'gathered'
+  }
+
   return {
     id: todo.id,
     title: todo.title,
     when: whenOfDay(todo.day),
     status,
-    done: todo.status === 'done',
+    done,
     ctx: context.map((c) => c.itemId),
     pinned: context.filter((c) => c.state === 'pinned').map((c) => c.itemId),
     relMap,
-    // ── AI-gap: nulled until the drafting layer lands ──
-    draft: null,
-    draftNote: null,
-    note: null
+    whyMap: Object.keys(whyMap).length > 0 ? whyMap : undefined,
+    draft: ai?.draft ?? null,
+    draftNote: ai?.draftNote ?? null,
+    note: ai?.note ?? null,
+    noteKind: (ai?.noteKind as NoteKind | undefined) ?? undefined,
+    brief: ai?.brief ?? undefined,
+    draftFor: ai?.draftFor,
+    draftType: ai?.draftType,
+    draftIcon: ai?.draftIcon,
+    useLabel: ai?.useLabel,
+    useNote: ai?.useNote,
+    useDone: ai?.useDone
   }
 }
 
-export function toBacklogItem(todo: Todo): BacklogItem {
+export function toBacklogItem(todo: Todo, ai?: TaskDraft): BacklogItem {
   return {
     id: todo.id,
     title: todo.title,
-    hint: todo.notes ?? '', // structural: the user's own note
+    hint: todo.notes ?? '',
     ctx: [], // surfaced only once scheduled onto a day
-    conf: null // AI-gap
+    conf: ai?.conf ?? null
   }
 }

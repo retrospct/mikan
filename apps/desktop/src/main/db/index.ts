@@ -85,5 +85,31 @@ export async function initDb(): Promise<void> {
       PRIMARY KEY (todo_id, item_id)
     );
     CREATE INDEX IF NOT EXISTS todo_context_idx ON todo_context (todo_id, state);
+    CREATE TABLE IF NOT EXISTS todo_ai (
+      todo_id TEXT PRIMARY KEY REFERENCES todos(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'gathered',
+      brief TEXT,
+      draft TEXT,
+      draft_note TEXT,
+      note TEXT,
+      note_kind TEXT,
+      conf REAL,
+      meta TEXT,
+      inputs_hash TEXT NOT NULL DEFAULT '',
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
   `)
+
+  // Additive migrations: add columns that may not exist on older DBs.
+  // Each is guarded so it's a no-op if the column already exists.
+  await addColumnIfMissing('todo_context', 'why', 'TEXT')
+}
+
+/** Add a column to an existing table only if it doesn't already exist. */
+async function addColumnIfMissing(table: string, column: string, type: string): Promise<void> {
+  const info = await client.execute(`PRAGMA table_info(${table})`)
+  const exists = info.rows.some((r) => r['name'] === column)
+  if (!exists) {
+    await client.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`)
+  }
 }

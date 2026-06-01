@@ -64,8 +64,8 @@ graceful-null state already covers that for free.
 
 ## Action items
 
-1. [ ] Define the `Drafter` interface + a `NIMI_DRAFTER` env seam (mirror `embed.ts`).
-2. [ ] Decide managed-key vs BYO-key (the one fork).
-3. [ ] Wire the cloud impl (BYO-key, Claude) feeding `brief` + `draft` for one task end-to-end.
-4. [ ] Settings: provider + key + the consent copy.
+1. [x] Define the `Drafter` interface + a `NEEME_DRAFTER` env seam (mirror `embed.ts`). → `apps/desktop/src/main/pipeline/draft.ts`
+2. [x] Decide managed-key vs BYO-key — **BYO-key** for v1. Env var: `NEEME_ANTHROPIC_KEY`.
+3. [x] Wire the cloud impl (BYO-key, Claude) feeding all AI-gap fields end-to-end. → `draft-service.ts` + `todo-service.ts` + `project.ts`. Override model with `NEEME_DRAFTER_MODEL` (default `claude-sonnet-4-5`).
+4. [ ] Settings: provider + key + the consent copy. _(front lane / #2)_
 5. [ ] _(Sidequest, optional)_ on-device spike behind the same seam, benchmarked vs cloud.

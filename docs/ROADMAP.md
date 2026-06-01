@@ -11,6 +11,7 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 - View-model IPC contract, `window.api.*`, projection layer (`apps/desktop/src/main/services/project.ts`).
 - Electron security posture (sandbox / context-isolation / no-node, utilityProcess, nav lockdown) + tray-anchored frameless window.
 - Scaffold: auth (Logto, inert until configured).
+- AI drafting layer: `Drafter` seam + `CloudDrafter` (Anthropic BYO-key via `NEEME_ANTHROPIC_KEY`). All AI-gap fields (`brief`/`draft`/`note`/`noteKind`/`gathering→drafted`/`BacklogItem.conf`/per-context `whyMap`) backed; degrade to null without a key. Override model with `NEEME_DRAFTER_MODEL`.
 
 ## Punch list
 
@@ -21,7 +22,7 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 | 0   | ~~**Monorepo migration**~~ ✅ **done**                                                                    | back/struct  | a clean root everyone branches off; unblocks #14 | M    | ✅ shipped  |
 | 1   | Smoke-test integrated main (embedder + tray actually run)                                                | human        | confidence in the baseline                       | S    | now        |
 | 2   | **Wire UI → `window.api`** (retire mock `data.ts`; see `INTEGRATION.md`)                                 | front        | the app runs on real data — the headline         | L    | **P0**     |
-| 3   | AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings) | back         | every AI-gap field                               | L    | P1 ⚠️      |
+| 3   | ~~AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings)~~ ✅ | back         | every AI-gap field                               | L    | ✅ shipped  |
 | 4   | `captureFile` over IPC + capture UX (drag-drop / picker)                                                 | back + front | capturing PDFs/files, not just typed notes       | M    | P1         |
 | 5   | Image + audio extraction (OCR / transcription)                                                           | back         | screenshots & voice memos as memories            | M–L  | P1 ⚠️      |
 | 6   | Feed view + uncovered-todos (Nimi proposes todos from the feed)                                          | back + front | the `FedItem` / `UncoveredTodo` surfaces         | M    | P2         |

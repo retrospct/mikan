@@ -6,6 +6,7 @@ import { kindIcon } from './iconKind'
 import { NimiMark } from './mark'
 import { VoiceRecorder } from './voice'
 import { data } from './api'
+import { captureFiles, kindOfFile } from './capture-file'
 import type { FedItem, MemoryKind } from '@nimi/contract/views'
 import type { IconName } from './icons'
 
@@ -29,7 +30,7 @@ const SAMPLE_TITLES: Record<string, string> = {
   voice: 'voice memo · 0:18',
   link: 'Saved link'
 }
-// manual quick-feed modes; photos & files arrive via the dropzone (auto-detected)
+// manual quick-feed modes; files arrive via the dropzone (real) or picker
 const FEED_MODES: FeedKind[] = [
   { kind: 'note', label: 'Note', ico: 'note' },
   { kind: 'voice', label: 'Voice', ico: 'mic' },
@@ -52,6 +53,7 @@ export function FeedView({
   const [toast, setToast] = useState<{ msg: string } | null>(null)
   const [recording, setRecording] = useState(false)
   const busy = useRef(false)
+  const fileRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     onRecordingChange && onRecordingChange(recording)
   }, [recording, onRecordingChange])
@@ -69,10 +71,50 @@ export function FeedView({
     }
   }, [])
 
+  const refreshFeed = (): void => {
+    void data.pipeline.feed().then(setFed)
+  }
+
+  const handleFiles = async (files: FileList | null): Promise<void> => {
+    if (!files || files.length === 0) return
+    if (busy.current) return
+    busy.current = true
+
+    // Show the first file as the "morsel" while eating
+    const firstFile = files[0]!
+    const firstKind = kindOfFile(firstFile)
+    const k = FEED_KINDS.find((x) => x.kind === firstKind) || FEED_KINDS[0]!
+    setMorsel(k)
+    setEating(true)
+    setOver(false)
+
+    const results = await captureFiles(Array.from(files))
+    setEating(false)
+    setMorsel(null)
+
+    if (results.length === 0) {
+      setToast({ msg: 'Nothing captured — try a different file.' })
+    } else {
+      refreshFeed()
+      setToast({
+        msg:
+          results.length === 1
+            ? "Got it — that's in your memory now."
+            : `Got all ${results.length} — filed into your memory.`
+      })
+      onCaptured && onCaptured()
+    }
+
+    setTimeout(() => setToast(null), 2200)
+    setTimeout(() => {
+      busy.current = false
+    }, 900)
+  }
+
   const feedOne = (kind: MemoryKind): void => {
     if (busy.current) return
     busy.current = true
-    const k = FEED_KINDS.find((x) => x.kind === kind) || FEED_KINDS[0]
+    const k = FEED_KINDS.find((x) => x.kind === kind) || FEED_KINDS[0]!
     setMorsel(k)
     setEating(true)
     setOver(false)
@@ -89,7 +131,6 @@ export function FeedView({
       setFed((f) => [item, ...f])
       setToast({ msg: "Got it — that's in your memory now." })
       onCaptured && onCaptured()
-      // settle: pending → done, mark back to idle
       setTimeout(
         () => setFed((f) => f.map((x) => (x.id === item.id ? { ...x, status: 'done' } : x))),
         1100
@@ -105,38 +146,67 @@ export function FeedView({
     <div className="view feed">
       <div className="scroll">
         {captureStyle !== 'tray' && (
-          <div
-            className={'maw' + (over ? ' over' : '') + (eating ? ' eating' : '')}
-            onClick={() => (captureStyle === 'voice' ? setRecording(true) : feedOne('note'))}
-            onMouseEnter={() => !busy.current && setOver(true)}
-            onMouseLeave={() => setOver(false)}
-          >
-            <NimiMark
-              className="maw-mark"
-              state={eating ? 'gathering' : over ? 'thinking' : 'idle'}
-              size={64}
+          <>
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              style={{ display: 'none' }}
+              onChange={(e) => void handleFiles(e.target.files)}
+              onClick={(e) => {
+                // reset so the same file can be re-picked after removal
+                ;(e.target as HTMLInputElement).value = ''
+              }}
             />
-            <div className="maw-tx">
-              {eating ? (
-                <b>Filing it into your memory…</b>
-              ) : captureStyle === 'voice' ? (
-                <>
-                  Tap to <b>record a thought</b>. I&apos;ll transcribe and file it.
-                </>
-              ) : (
-                <>Drop a note, photo, PDF or voice memo here — or tap to jot one.</>
+            <div
+              className={'maw' + (over ? ' over' : '') + (eating ? ' eating' : '')}
+              onClick={() => {
+                if (captureStyle === 'voice') {
+                  setRecording(true)
+                } else {
+                  fileRef.current?.click()
+                }
+              }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                if (!busy.current) setOver(true)
+              }}
+              onDragLeave={() => setOver(false)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setOver(false)
+                void handleFiles(e.dataTransfer.files)
+              }}
+              onMouseEnter={() => !busy.current && setOver(true)}
+              onMouseLeave={() => setOver(false)}
+            >
+              <NimiMark
+                className="maw-mark"
+                state={eating ? 'gathering' : over ? 'thinking' : 'idle'}
+                size={64}
+              />
+              <div className="maw-tx">
+                {eating ? (
+                  <b>Filing it into your memory…</b>
+                ) : captureStyle === 'voice' ? (
+                  <>
+                    Tap to <b>record a thought</b>. I&apos;ll transcribe and file it.
+                  </>
+                ) : (
+                  <>Drop files here — or click to choose. PDFs, text, images, audio.</>
+                )}
+              </div>
+              {!eating && <div className="maw-hint">Drag in · or click</div>}
+              {morsel && (
+                <div className="morsel-wrap">
+                  <div className="morsel go">
+                    <NIcon name={morsel.ico} size={16} style={{ color: 'var(--accent-ink)' }} />
+                    {morsel.label}
+                  </div>
+                </div>
               )}
             </div>
-            {!eating && <div className="maw-hint">Drag in · or tap</div>}
-            {morsel && (
-              <div className="morsel-wrap">
-                <div className="morsel go">
-                  <NIcon name={morsel.ico} size={16} style={{ color: 'var(--accent-ink)' }} />
-                  {morsel.label}
-                </div>
-              </div>
-            )}
-          </div>
+          </>
         )}
 
         <div className="feed-tools">

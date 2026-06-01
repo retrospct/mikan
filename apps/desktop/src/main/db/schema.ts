@@ -81,6 +81,8 @@ export const todoContext = sqliteTable('todo_context', {
   contentType: text('content_type'),
   excerpt: text('excerpt'),
   state: text('state').notNull().default('surfaced'), // surfaced | pinned | dismissed
+  /** AI-gap: why Nimi kept this beside the task. Populated by the drafter; null otherwise. */
+  why: text('why'),
   firstSurfacedAt: integer('first_surfaced_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -90,3 +92,33 @@ export const todoContext = sqliteTable('todo_context', {
 })
 
 export type TodoContextRow = typeof todoContext.$inferSelect
+
+/**
+ * `todo_ai` — the persisted output of the Drafter for each todo. One row per
+ * todo; upserted on every successful drafting run. `inputs_hash` is a
+ * content-address over (title + notes + sorted ctx ids/excerpts) so regenerate()
+ * can skip the LLM call when nothing has changed.
+ *
+ * `status` tracks the drafting lifecycle:
+ *   gathering → the drafter call is in flight (transient; cleared on upsert)
+ *   gathered  → drafter ran but decided not to write a full draft
+ *   drafted   → drafter produced a complete draft
+ */
+export const todoAi = sqliteTable('todo_ai', {
+  todoId: text('todo_id').primaryKey(),
+  status: text('status').notNull().default('gathered'), // gathering | gathered | drafted
+  brief: text('brief'),
+  draft: text('draft'), // JSON: string[]
+  draftNote: text('draft_note'),
+  note: text('note'),
+  noteKind: text('note_kind'), // ready | ask | wait | gathered | done
+  conf: real('conf'), // 0..1, backlog confidence
+  meta: text('meta'), // JSON: { draftFor, draftType, draftIcon, useLabel, useNote, useDone }
+  inputsHash: text('inputs_hash').notNull().default(''),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`)
+})
+
+export type TodoAiRow = typeof todoAi.$inferSelect
+export type NewTodoAiRow = typeof todoAi.$inferInsert

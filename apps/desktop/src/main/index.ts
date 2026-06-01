@@ -82,6 +82,7 @@ app.whenReady().then(async () => {
   await startWorker()
   const DATA_CHANNELS: string[] = [
     IPC.pipelineCaptureText,
+    IPC.pipelineCaptureFile,
     IPC.pipelineArchive,
     IPC.pipelineFeed,
     IPC.pipelineSearch,

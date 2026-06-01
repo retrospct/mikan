@@ -8,6 +8,25 @@ in the Feed tab with confidence rings, and lets the user add them to backlog.
 
 ---
 
+## Test pyramid
+
+Run these tiers in order. Stop if an earlier tier fails.
+
+| Tier | Command | Needs secret? | Needs display? | Covers |
+|---|---|---|---|---|
+| **1 — Static** | `pnpm typecheck && pnpm build` | No | No | Types, build integrity |
+| **2 — Service tests** | `pnpm --filter @nimi/desktop test` | No | No | NullDrafter path, cache write/hit/invalidation, pipeline, todos |
+| **3 — GUI test** | This runbook (§4–§7) | `NEEME_ANTHROPIC_KEY` | Yes | CloudDrafter inference, UI rendering, Backlog button, meta-cache |
+
+Tiers 1 and 2 run in any CI environment without secrets and without a display. Tier 3 is the
+only part that requires a cloud agent with an X11 display and an Anthropic key.
+
+**Expected test counts for Tier 2 (as of this PR):**
+- 9 test files, 158 tests (including 6 new `uncover-service` tests)
+- `NEEME_EMBEDDER=hash NEEME_DRAFTER=off` — no model download, no API calls
+
+---
+
 ## Prerequisites
 
 | Requirement | Minimum | Notes |

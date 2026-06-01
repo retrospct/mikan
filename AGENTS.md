@@ -12,39 +12,11 @@ See **`CLAUDE.md`** for the full shared spine (architecture, contract, verify st
 | **neeme FastAPI** (`:8000`) | No | Sibling repo; only if testing `@nimi/contract/api` HTTP client |
 | **Logto OIDC** | No | Inert until `MAIN_VITE_LOGTO_*` env is set |
 
-### Verify (from repo root)
-
-Standard commands are in **`README.md`** / **`CLAUDE.md`**:
-
-- `pnpm typecheck` — turbo fans out `@nimi/contract` + `@nimi/desktop`
-- `pnpm build` — electron-vite production bundles
-- `pnpm lint` — eslint; **pre-existing debt** in `packages/contract/src/api/generated/**` (hey-api) may fail a full-tree lint even when app code is clean
-
-### Running the desktop app in Cloud / headless VMs
-
-- **Display:** Cloud VMs usually expose `DISPLAY` (e.g. `:1`). D-Bus warnings in logs are normal and non-fatal.
-- **Electron binary:** If `electron-vite dev` fails with `Error: Electron uninstall`, the Electron binary was not downloaded yet. Run once: `node node_modules/electron/install.js` (or `pnpm exec electron --version`), then retry `pnpm dev`.
-- **Faster worker smoke (no HuggingFace model):** `NEEME_EMBEDDER=hash pnpm dev`
-- **Renderer still uses sample UI data** (`apps/desktop/src/renderer/src/nimi/data.ts`); on-device persistence is via `window.api.pipeline.*` (see `docs/INTEGRATION.md`). To smoke-test **pipeline + libSQL** without the UI, from `apps/desktop` import `initDb` and `pipelineService` under `src/main/` with `NEEME_EMBEDDER=hash` and a writable `NEEME_USER_DATA` directory (mkdir first), then call `captureText` / `match`.
-
-- **User data / DB:** `~/.config/@nimi/desktop/neeme.db` when running under Electron.
-
-### Dev server
-
-- Root: `pnpm dev` (turbo → `@nimi/desktop` → `electron-vite dev`)
-- Vite renderer only (no `window.api`): `http://localhost:5173/` while dev is running
-=======
-## Cursor Cloud specific instructions
-
-### Product
-
-Single runnable app: **nimi Desktop** (`@nimi/desktop`, Electron). `pnpm dev` from the repo root is the dev entry (turbo → `electron-vite dev`). The **neeme FastAPI backend** (sibling repo) and **Logto** are optional; local-first E2E is Electron + worker + embedded libSQL only.
-
 ### Verify (no runtime)
 
 From repo root: `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output).
 
-`pnpm test` runs 152 vitest tests in plain Node (no Electron, no model download): pipeline unit tests + integration tests for pipeline-service/todo-service/draft-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
+`pnpm test` fans out to `@nimi/desktop` vitest: 158 tests in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
 
 ### Run the desktop app
 
@@ -69,13 +41,22 @@ NEEME_USER_DATA=/tmp/nimi-smoke NEEME_EMBEDDER=hash pnpm exec tsx -e "
 import { initDb } from './src/main/db/index.ts';
 import { pipelineService } from './src/main/services/pipeline-service.ts';
 (async () => {
-  await initDb();
-  const cap = await pipelineService.captureText('smoke', 'test');
-  console.log('capture', cap.memory.id);
-  console.log('search', await pipelineService.match('smoke', 3));
+ await initDb();
+ const cap = await pipelineService.captureText('smoke', 'test');
+ console.log('capture', cap.memory.id);
+ console.log('search', await pipelineService.match('smoke', 3));
 })();
 "
 ```
+
+### GUI feature tests (uncovered-todos and other AI-inferred UI)
+
+Features that require `NEEME_ANTHROPIC_KEY` + a display are covered by runbooks in
+`docs/testing/`. Run them using a GUI-capable cloud agent.
+
+| Runbook | Feature | Needs |
+|---|---|---|
+| `docs/testing/uncovered-todos-gui-runbook.md` | Feed → "I spotted these to-dos" | `NEEME_ANTHROPIC_KEY`, `DISPLAY` |
 
 ### Scoped commands
 

@@ -26,6 +26,7 @@ Structural data is **served for real** from the on-device pipeline. **AI-generat
 | pin / dismiss context        | `window.api.todos.{pinContext,dismissContext}(id, itemId)` | `Task \| null`        |
 | "search more" context        | `window.api.todos.searchMoreContext(id)`                   | `Task \| null`        |
 | capture a note               | `window.api.pipeline.captureText(text, name?)`             | `{ memory, created }` |
+| capture a file               | `window.api.pipeline.captureFile(bytes, name, mime?)`      | `{ memory, created }` |
 
 `MEMORIES` is a `Record<id, Memory>`; `archive()` returns a `Memory[]`. Build the lookup with `Object.fromEntries(archive.map((m) => [m.id, m]))`.
 

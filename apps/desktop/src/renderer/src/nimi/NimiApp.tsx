@@ -127,6 +127,18 @@ export default function NimiApp(): JSX.Element {
     el.style.setProperty('--accent-deep', a.deep)
   }, [])
 
+  // Prevent Electron from navigating the window when a file is dropped on
+  // non-dropzone chrome. Each real dropzone handles its own events.
+  useEffect(() => {
+    const stop = (e: DragEvent): void => e.preventDefault()
+    window.addEventListener('dragover', stop)
+    window.addEventListener('drop', stop)
+    return () => {
+      window.removeEventListener('dragover', stop)
+      window.removeEventListener('drop', stop)
+    }
+  }, [])
+
   // Initial load: today's list, the backlog, and the archive (for ctx lookups).
   // setState lands inside the promise callback (never synchronously in the effect
   // body); `reloadKey` re-runs it for the error-retry path.

@@ -2,6 +2,8 @@ import { and, count, desc, eq, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '../db'
 import { todoContext, todos, type Todo as TodoRow, type TodoContextRow } from '../db/schema'
 import { pipelineService } from './pipeline-service'
+import { draftService, rowToTaskDraft } from './draft-service'
+import { drafter } from '../pipeline/draft'
 import {
   CAP_REACHED,
   type ContentType,
@@ -44,7 +46,8 @@ function toContextEntry(row: TodoContextRow): ContextEntry {
     sourceName: row.sourceName,
     contentType: row.contentType as ContentType | null,
     excerpt: row.excerpt,
-    state: row.state as ContextState
+    state: row.state as ContextState,
+    why: row.why ?? null
   }
 }
 
@@ -121,9 +124,11 @@ async function surfaceContext(todo: Todo): Promise<ContextEntry[]> {
   return listContext(todo.id)
 }
 
-/** Project a todo + its context pool into the UI `Task` shape (AI fields nulled). */
+/** Project a todo + its context pool + AI row into the UI `Task` shape. */
 async function taskOf(todo: Todo): Promise<Task> {
-  return toTask(todo, await listContext(todo.id))
+  const [context, aiRow] = await Promise.all([listContext(todo.id), draftService.read(todo.id)])
+  const ai = aiRow ? rowToTaskDraft(aiRow) : undefined
+  return toTask(todo, context, ai)
 }
 
 /** Re-read a todo by id and project it (used by mutators that return the task). */
@@ -144,7 +149,8 @@ export const todoService = {
       .values({ title, notes: notes ?? null, day, position })
       .returning()
     const todo = toTodo(created!)
-    await surfaceContext(todo)
+    const pool = await surfaceContext(todo)
+    await draftService.regenerate(todo, pool)
     return taskOf(todo)
   },
 
@@ -154,7 +160,22 @@ export const todoService = {
       .from(todos)
       .where(eq(todos.day, day))
       .orderBy(todos.position, todos.createdAt)
-    return Promise.all(rows.map((r) => taskOf(toTodo(r))))
+    const tasks = rows.map(toTodo)
+    // Opportunistic backfill: regenerate for todos missing an AI row (best-effort)
+    if (drafter.name !== 'null-drafter') {
+      await Promise.all(
+        tasks.map(async (todo) => {
+          const ai = await draftService.read(todo.id)
+          if (!ai) {
+            const pool = await listContext(todo.id)
+            await draftService
+              .regenerate(todo, pool)
+              .catch((e) => console.error('[draft] backfill failed for', todo.id, e))
+          }
+        })
+      )
+    }
+    return Promise.all(tasks.map((t) => taskOf(t)))
   },
 
   async backlog(): Promise<BacklogItem[]> {
@@ -163,7 +184,27 @@ export const todoService = {
       .from(todos)
       .where(and(isNull(todos.day), eq(todos.status, 'open')))
       .orderBy(desc(todos.createdAt))
-    return rows.map((r) => toBacklogItem(toTodo(r)))
+    const items = rows.map(toTodo)
+    // Opportunistic backfill for backlog items (conf scoring)
+    if (drafter.name !== 'null-drafter') {
+      await Promise.all(
+        items.map(async (todo) => {
+          const ai = await draftService.read(todo.id)
+          if (!ai) {
+            await draftService
+              .regenerate(todo, [])
+              .catch((e) => console.error('[draft] backlog backfill failed for', todo.id, e))
+          }
+        })
+      )
+    }
+    return Promise.all(
+      items.map(async (todo) => {
+        const aiRow = await draftService.read(todo.id)
+        const ai = aiRow ? rowToTaskDraft(aiRow) : undefined
+        return toBacklogItem(todo, ai)
+      })
+    )
   },
 
   async done(limit = 50): Promise<Todo[]> {
@@ -217,14 +258,20 @@ export const todoService = {
     if (!(await canAdd(day))) throw new Error(CAP_REACHED)
     const position = await countForDay(day)
     const [r] = await db.update(todos).set({ day, position }).where(eq(todos.id, id)).returning()
-    return r ? taskOf(toTodo(r)) : null
+    if (!r) return null
+    const todo = toTodo(r)
+    const pool = await listContext(todo.id)
+    await draftService.regenerate(todo, pool)
+    return taskOf(todo)
   },
 
   async searchMoreContext(id: string): Promise<Task | null> {
     const [r] = await db.select().from(todos).where(eq(todos.id, id)).limit(1)
     if (!r) return null
-    await surfaceContext(toTodo(r))
-    return taskOf(toTodo(r))
+    const todo = toTodo(r)
+    const pool = await surfaceContext(todo)
+    await draftService.regenerate(todo, pool)
+    return taskOf(todo)
   },
 
   async pinContext(id: string, itemId: string): Promise<Task | null> {
@@ -232,6 +279,11 @@ export const todoService = {
       .update(todoContext)
       .set({ state: 'pinned' })
       .where(and(eq(todoContext.todoId, id), eq(todoContext.itemId, itemId)))
+    const [r] = await db.select().from(todos).where(eq(todos.id, id)).limit(1)
+    if (!r) return null
+    const todo = toTodo(r)
+    const pool = await listContext(id)
+    await draftService.regenerate(todo, pool)
     return taskById(id)
   },
 
@@ -240,6 +292,11 @@ export const todoService = {
       .update(todoContext)
       .set({ state: 'dismissed' })
       .where(and(eq(todoContext.todoId, id), eq(todoContext.itemId, itemId)))
+    const [r] = await db.select().from(todos).where(eq(todos.id, id)).limit(1)
+    if (!r) return null
+    const todo = toTodo(r)
+    const pool = await listContext(id)
+    await draftService.regenerate(todo, pool)
     return taskById(id)
   }
 }

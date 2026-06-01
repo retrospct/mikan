@@ -7,6 +7,7 @@ import { kindIcon } from './iconKind'
 import { NimiMark, Dots } from './mark'
 import { VoiceRecorder } from './voice'
 import { data } from './api'
+import { captureFiles, kindOfFile } from './capture-file'
 import { TASK_SUGGESTIONS, uncoverTodos, nextTranscript } from './ui-stubs'
 import type { MemoryKind, UncoveredTodo, BacklogItem } from '@nimi/contract/views'
 
@@ -83,25 +84,13 @@ export function AddSheet({
   )
 }
 
-interface SampleFile {
-  name: string
-  kind: MemoryKind
-}
-// sample files Nimi "recognizes" on attach — rotates so you can stack a few
-const SAMPLE_FILES: SampleFile[] = [
-  { name: 'United-Promotions.pdf', kind: 'pdf' },
-  { name: 'auto-cli-screencap.mp4', kind: 'video' },
-  { name: 'Typography-refs.zip', kind: 'zip' },
-  { name: 'READ-ME-FIRST.txt', kind: 'txt' }
-]
-const SAMPLE_PHOTOS: SampleFile[] = [
-  { name: 'justin-headshot.jpg', kind: 'photo' },
-  { name: 'whiteboard-standup.png', kind: 'screenshot' }
-]
 const isImgKind = (k: MemoryKind): boolean => k === 'photo' || k === 'screenshot' || k === 'image'
 
-interface Attach extends SampleFile {
+interface Attach {
   id: string
+  file: File
+  name: string
+  kind: MemoryKind
   processing: boolean
 }
 
@@ -121,38 +110,41 @@ function FeedPane({
 }): JSX.Element {
   const [phase, setPhase] = useState<'input' | 'indexing' | 'done'>('input')
   const [mode, setMode] = useState<'note' | 'voice' | 'link'>('note')
-  const [attaches, setAttaches] = useState<Attach[]>([]) // auto-detected
+  const [attaches, setAttaches] = useState<Attach[]>([])
   const [text, setText] = useState('')
   const [conns, setConns] = useState(0)
   const [todos, setTodos] = useState<UncoveredTodo[]>([])
   const [added, setAdded] = useState<Set<string>>(new Set())
   const taRef = useRef<HTMLTextAreaElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const photoRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     taRef.current && taRef.current.focus()
   }, [])
 
   const hasAttach = attaches.length > 0
-  const pushAttach = (pool: SampleFile[]): void => {
-    const id = 'at_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
-    setAttaches((a) => {
-      const item = pool[a.filter((x) => pool.some((p) => p.name === x.name)).length % pool.length]
-      return [...a, { ...item, id, processing: true }]
-    })
-    setTimeout(
-      () => setAttaches((a) => a.map((x) => (x.id === id ? { ...x, processing: false } : x))),
-      1200
-    )
+
+  const pushFiles = (files: FileList | null): void => {
+    if (!files) return
+    const newAttaches: Attach[] = Array.from(files)
+      .filter((f) => f.size > 0)
+      .map((f) => ({
+        id: 'at_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        file: f,
+        name: f.name,
+        kind: kindOfFile(f),
+        processing: false
+      }))
+    setAttaches((a) => [...a, ...newAttaches])
   }
-  const detectFile = (): void => pushAttach(SAMPLE_FILES)
-  const detectPhoto = (): void => pushAttach(SAMPLE_PHOTOS)
+
   const removeAttach = (id: string): void => setAttaches((a) => a.filter((x) => x.id !== id))
 
   const pickMode = (m: 'note' | 'voice' | 'link'): void => {
     if (m === 'voice') {
       setMode('voice')
       setRecording(true)
-    } // jump straight into recording
-    else setMode(m)
+    } else setMode(m)
   }
   const stopRecording = (): void => {
     setRecording(false)
@@ -178,8 +170,11 @@ function FeedPane({
     if (!text.trim() && !hasAttach) return
     setPhase('indexing')
     onFed && onFed()
-    // real capture for typed/pasted/transcribed text (attaches are sample-only sim)
-    if (text.trim()) void data.pipeline.captureText(text.trim())
+    // capture text and files in parallel; AI-uncovered todos are still stubbed (roadmap #3)
+    const captures: Promise<unknown>[] = []
+    if (text.trim()) captures.push(data.pipeline.captureText(text.trim()))
+    if (hasAttach) captures.push(captureFiles(attaches.map((a) => a.file)))
+    void Promise.all(captures)
     const found = 2 + Math.floor(Math.random() * 4)
     let i = 0
     const tick = setInterval(() => {
@@ -203,6 +198,27 @@ function FeedPane({
           : 'Paste, type, or drop anything I should remember…'
     return (
       <>
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            pushFiles(e.target.files)
+            ;(e.target as HTMLInputElement).value = ''
+          }}
+        />
+        <input
+          ref={photoRef}
+          type="file"
+          multiple
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            pushFiles(e.target.files)
+            ;(e.target as HTMLInputElement).value = ''
+          }}
+        />
         <div className="sheet-body">
           <div className="composer" style={{ marginTop: '4px' }}>
             <div className="composer-inner">
@@ -273,10 +289,18 @@ function FeedPane({
               />
               <div className="cmp-bar">
                 <div className="cmp-cluster">
-                  <button className="tool-btn" aria-label="Attach file" onClick={detectFile}>
+                  <button
+                    className="tool-btn"
+                    aria-label="Attach file"
+                    onClick={() => fileRef.current?.click()}
+                  >
                     <NIcon name="paperclip" size={18} />
                   </button>
-                  <button className="tool-btn" aria-label="Add photo" onClick={detectPhoto}>
+                  <button
+                    className="tool-btn"
+                    aria-label="Add photo"
+                    onClick={() => photoRef.current?.click()}
+                  >
                     <NIcon name="camera" size={18} />
                   </button>
                   <button
@@ -421,6 +445,7 @@ function FeedPane({
             setConns(0)
             setTodos([])
             setAdded(new Set())
+            setAttaches([])
           }}
         >
           <NIcon name="plus" size={15} /> Feed more

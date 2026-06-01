@@ -19,6 +19,8 @@ type Handler = (args: unknown[]) => unknown | Promise<unknown>
 const handlers: Record<string, Handler> = {
   [IPC.pipelineCaptureText]: ([text, name]) =>
     pipelineService.captureText(text as string, name as string | undefined),
+  [IPC.pipelineCaptureFile]: ([bytes, name, mime]) =>
+    pipelineService.captureFile(bytes as Uint8Array, name as string, mime as string | undefined),
   [IPC.pipelineArchive]: () => pipelineService.archive(),
   [IPC.pipelineFeed]: () => pipelineService.feed(),
   [IPC.pipelineSearch]: ([query, topK]) =>

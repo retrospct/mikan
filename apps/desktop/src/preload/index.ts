@@ -7,6 +7,8 @@ const api: NimiApi = {
   pipeline: {
     captureText: (text: string, name?: string) =>
       ipcRenderer.invoke(IPC.pipelineCaptureText, text, name),
+    captureFile: (bytes: Uint8Array, name: string, mime?: string) =>
+      ipcRenderer.invoke(IPC.pipelineCaptureFile, bytes, name, mime),
     archive: () => ipcRenderer.invoke(IPC.pipelineArchive),
     feed: () => ipcRenderer.invoke(IPC.pipelineFeed),
     search: (query: string, topK?: number) => ipcRenderer.invoke(IPC.pipelineSearch, query, topK)

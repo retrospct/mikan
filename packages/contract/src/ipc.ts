@@ -14,6 +14,7 @@ import type { BacklogItem, FedItem, MatchHit, Memory, Task } from './views'
 export const IPC = {
   // Pipeline (on-device capture → extract → index → surface; runs in the worker)
   pipelineCaptureText: 'pipeline:capture-text',
+  pipelineCaptureFile: 'pipeline:capture-file',
   pipelineArchive: 'pipeline:archive',
   pipelineFeed: 'pipeline:feed',
   pipelineSearch: 'pipeline:search',
@@ -127,6 +128,8 @@ export interface ContextEntry {
   contentType: ContentType | null
   excerpt: string | null
   state: ContextState
+  /** AI-gap: why Nimi kept this beside the task. Populated by the drafter; null otherwise. */
+  why: string | null
 }
 
 /** Raised when adding would exceed the day's focus cap. */
@@ -159,6 +162,8 @@ export interface TodoApi {
 export interface PipelineApi {
   /** Quick text capture → the captured item as a `Memory` (+ whether newly created). */
   captureText: (text: string, name?: string) => Promise<CaptureResult>
+  /** Capture raw file bytes → content-hash store → extract → index. */
+  captureFile: (bytes: Uint8Array, name: string, mime?: string) => Promise<CaptureResult>
   /** The archive: every captured item, newest first (the UI's `MEMORIES`). */
   archive: () => Promise<Memory[]>
   /** The recent-capture feed (newest first). */

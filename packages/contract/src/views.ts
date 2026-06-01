@@ -76,6 +76,9 @@ export interface Task {
   note?: string | null
   /** Relevance per `ctx` id (0..1, higher = closer). Real — from search. */
   relMap?: Record<string, number>
+  /** AI-gap: per-ctx-id reason string ("why Nimi kept this beside the task"). Real when the
+   *  drafter is configured; `null`/absent otherwise. Mirrors `relMap`. */
+  whyMap?: Record<string, string>
   /** UI hint: just-added (the backend doesn't set this). */
   fresh?: boolean
   // ── task-detail "brief" + draft metadata — all AI-gap, not emitted yet ──

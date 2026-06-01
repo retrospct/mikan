@@ -25,18 +25,14 @@ Future: `apps/mobile` (RN/Expo) joins later and shares `@nimi/contract` (ADR 000
 
 ## Before you start (coordination)
 
-Two agents work this repo in parallel. **Lanes:** backend/pipeline =
-`apps/desktop/src/main/**` + `packages/contract/**`; frontend/UI =
-`apps/desktop/src/renderer/**`. Before starting a task or rebasing:
+2–3 agents may work this repo in parallel. **Lanes:** back = `apps/desktop/src/main/**` +
+`packages/contract/**`; front = `apps/desktop/src/renderer/**`. Two rules keep us from colliding:
 
-1. Read **`docs/agent-sync/INBOX.md`** (directives for you — a `@all hold` overrides
-   everything), **`docs/agent-sync/SYNC-BRIEF.md`** (branches, merge order, live conflicts),
-   and **`docs/INTEGRATION.md`** (the backend⇄UI contract + swap map).
-2. **Contract changes land in `packages/contract` first** — types are the boundary; the
-   compiler enforces agreement there. Update `docs/INTEGRATION.md` in the same change.
-3. Stay in your lane unless the contract says otherwise. Don't edit the other lane's files
-   beyond what a shared-type change forces. For desktop-internal detail, read
-   **`apps/desktop/CLAUDE.md`**.
+1. Check **`docs/agent-sync/INBOX.md`** for a `@all hold` before branching.
+2. **Contract changes land in `packages/contract` first** (the compiler enforces the boundary) —
+   update `docs/INTEGRATION.md` in the same change. Otherwise stay in your lane.
+
+For desktop-internal detail, read **`apps/desktop/CLAUDE.md`**.
 
 ## Architecture (process model)
 
@@ -58,20 +54,11 @@ Never set `sandbox:false`, `nodeIntegration:true`, `contextIsolation:false`, or
 
 ## The contract
 
-- `@nimi/contract` lives in `packages/contract`. Import it as a workspace package:
-  `import type { Task, Memory } from '@nimi/contract/views'`,
-  `import { IPC } from '@nimi/contract/ipc'`, `import { getHealth } from '@nimi/contract/api'`.
-- `packages/contract/src/views.ts` — the **view model** the UI renders (`Memory`/`Task`/
-  `BacklogItem`/`FedItem`/`MatchHit`). `packages/contract/src/ipc.ts` — the `window.api.*`
-  surface + channels.
-- It's consumed **from .ts source** (no build step): electron-vite excludes it from
-  externalization and bundles it; tsc resolves it via `paths`. Keep it free of Node/Electron
-  imports so the renderer (and a future RN/Expo app) can use it.
-- The worker projects its data model (`Item`/`Todo`/…) → the view model in
-  `apps/desktop/src/main/services/project.ts`. That's the one place the **AI-gap** lives.
-- **"Wire real, plain":** structural data is served for real; AI-generated fields
-  (`brief`/`draft`/`note`, `gathering`→`drafted`) come back `null`/empty until the LLM layer
-  lands, and the UI degrades gracefully.
+- `@nimi/contract` lives in `packages/contract`. Import: `import type { Task, Memory } from '@nimi/contract/views'`.
+- `packages/contract/src/views.ts` — the view model the UI renders. `packages/contract/src/ipc.ts` — the `window.api.*` surface + channels.
+- Consumed **from .ts source** (no build step) — keep it free of Node/Electron imports so the renderer and a future RN/Expo app can use it.
+- The worker projects its data model → the view model in `apps/desktop/src/main/services/project.ts` (the **AI-gap**). Details: `docs/INTEGRATION.md`.
+- **"Wire real, plain":** structural data is served for real; AI-generated fields come back `null`/empty until the LLM layer lands, and the UI degrades gracefully.
 
 ## Verify before you PR
 
@@ -84,20 +71,14 @@ pnpm lint        # eslint over the workspace; your changed files must be clean
 ```
 
 - Scope to one package with `--filter`, e.g. `pnpm --filter @nimi/desktop build`.
-- Pre-existing eslint debt lives in `packages/contract/src/api/generated/**` (hey-api
-  output) — not yours.
-- **No Electron runtime in CI/agents** → worker behavior (native `onnxruntime-node`, model
-  download, libSQL vector search) needs a live `pnpm dev` smoke test before merge.
-- Offline/dev fallback: `NEEME_EMBEDDER=hash pnpm dev` (skips the real model). `NEEME_*` and
-  `VITE_*` are declared in `turbo.json` `globalEnv` so they pass through turbo's strict env.
+- Pre-existing eslint debt lives in `packages/contract/src/api/generated/**` (hey-api output) — not yours.
+- **No Electron runtime in CI/agents** → worker behavior (native `onnxruntime-node`, model download, libSQL vector search) needs a live `pnpm dev` smoke test before merge.
+- Offline/dev fallback: `NEEME_EMBEDDER=hash pnpm dev` (skips the real model). `NEEME_*` and `VITE_*` are declared in `turbo.json` `globalEnv` so they pass through turbo's strict env.
 
 ## Stack & conventions
 
 - libSQL (`@libsql/client`) + Drizzle ORM; native vector search (`vector32`, `vector_distance_cos`).
-- Embeddings: transformers.js (MiniLM, 384-dim) behind the `Embedder` seam in
-  `apps/desktop/src/main/pipeline/embed.ts`.
+- Embeddings: transformers.js (MiniLM, 384-dim) behind the `Embedder` seam in `apps/desktop/src/main/pipeline/embed.ts`.
 - Auth: Logto OIDC + PKCE in the system browser (ADR 0002), inert until configured.
 - Git: branch off `main`; commit/push only when asked; PRs get a smoke-test note for worker changes.
-- Decisions of record: `docs/adr/0001` (sync/processing), `0002` (auth), `0003` (all-TS
-  on-device pipeline), `0004` (AI drafting model), `0005` (image/audio extraction),
-  `0006` (monorepo structure).
+- Decisions of record: `docs/adr/0001` (sync/processing), `0002` (auth), `0003` (all-TS on-device pipeline), `0004` (AI drafting model), `0005` (image/audio extraction), `0006` (monorepo structure).

@@ -1,8 +1,8 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { startWorker, call } from './worker/client'
+import { initTrayWindow, showWindow, setBadge } from './window/tray-window'
 import * as auth from './auth/logto'
 import { IPC } from '../shared/ipc'
 
@@ -22,11 +22,7 @@ if (!app.requestSingleInstanceLock()) {
 app.on('second-instance', (_event, argv) => {
   const url = argv.find((a) => a.startsWith('neeme://'))
   if (url) auth.handleCallback(url).catch((e) => console.error('auth callback failed', e))
-  const win = BrowserWindow.getAllWindows()[0]
-  if (win) {
-    if (win.isMinimized()) win.restore()
-    win.focus()
-  }
+  showWindow()
 })
 // macOS delivers the deep link via open-url.
 app.on('open-url', (event, url) => {
@@ -59,44 +55,9 @@ app.on('web-contents-created', (_event, contents) => {
   })
 })
 
-function createWindow(): void {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    // Neeme's UI is a single, mobile-shaped column centred on a wallpaper, so the
-    // window is taller than it is wide. Minimums keep the column and its bottom nav
-    // from getting cramped. (A frameless/tray-popout window is a later step.)
-    width: 1040,
-    height: 820,
-    minWidth: 720,
-    minHeight: 640,
-    show: false,
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      // Hardened renderer: sandboxed, context-isolated, no Node. All privileged
-      // work is behind the preload contextBridge → main → utilityProcess, so the
-      // renderer never needs Node and we keep Electron's default sandbox on.
-      sandbox: true,
-      contextIsolation: true,
-      nodeIntegration: false
-    }
-  })
-
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
-
-  // Navigation + window-open are locked down globally (see web-contents-created).
-
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
-}
+// The window is a frameless, tray-anchored menu-bar utility — created + managed in
+// ./window/tray-window (frame, position, hotkey, hide-on-blur, badge). Navigation +
+// window-open stay locked down globally (see web-contents-created above).
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -154,12 +115,14 @@ app.whenReady().then(async () => {
   ipcMain.handle(IPC.authGetToken, () => auth.getAccessToken())
   ipcMain.handle(IPC.authGetState, () => auth.getState())
 
-  createWindow()
+  // UI-only: renderer pushes the "waiting" count → tray + Dock badge.
+  ipcMain.handle(IPC.traySetBadge, (_e, count: number) => setBadge(count))
+
+  initTrayWindow()
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    // macOS Dock-icon click → reveal the tray window.
+    showWindow()
   })
 })
 

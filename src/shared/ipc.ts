@@ -35,7 +35,9 @@ export const IPC = {
   authGetToken: 'auth:get-token',
   authGetState: 'auth:get-state',
   /** main → renderer event: auth state / token changed (login, refresh, logout). */
-  authChanged: 'auth:changed'
+  authChanged: 'auth:changed',
+  // UI shell (tray/menu-bar window — see src/main/window/tray-window.ts)
+  traySetBadge: 'tray:set-badge'
 } as const
 
 // --- Pipeline (capture / surface) -----------------------------------------
@@ -170,9 +172,16 @@ export interface PipelineApi {
   listItems: () => Promise<Item[]>
 }
 
+/** UI-shell channels (no data) — drive the tray/menu-bar window from the renderer. */
+export interface UiApi {
+  /** Set the "waiting" count shown on the tray icon + Dock badge (0 clears it). */
+  setBadge: (count: number) => Promise<void>
+}
+
 export interface NeemeApi {
   memory: MemoryApi
   pipeline: PipelineApi
   todos: TodoApi
   auth: AuthApi
+  ui: UiApi
 }

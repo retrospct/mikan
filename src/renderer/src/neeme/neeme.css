@@ -4225,6 +4225,22 @@ html[data-theme='light'] .desk {
   }
 }
 
+/* frameless tray window: drag the app by its top bars; keep controls clickable.
+   `-webkit-app-region` is a no-op in a normal (framed) or browser window. */
+.hdr,
+.push-hd {
+  -webkit-app-region: drag;
+}
+button,
+input,
+textarea,
+a,
+.task,
+.slot,
+[role='button'] {
+  -webkit-app-region: no-drag;
+}
+
 /* density */
 html[data-density='compact'] .task-row {
   padding: 11px 13px;

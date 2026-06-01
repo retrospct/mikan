@@ -38,8 +38,13 @@ app.on('open-url', (event, url) => {
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    // Neeme's UI is a single, mobile-shaped column centred on a wallpaper, so the
+    // window is taller than it is wide. Minimums keep the column and its bottom nav
+    // from getting cramped. (A frameless/tray-popout window is a later step.)
+    width: 1040,
+    height: 820,
+    minWidth: 720,
+    minHeight: 640,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),

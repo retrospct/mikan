@@ -1,16 +1,28 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Electron</title>
+    <title>Neeme</title>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
          connect-src must list the Neeme API origin or the renderer's fetch() is
          blocked (CSP falls back to default-src 'self', which excludes it). Local
          dev points at http://localhost:8000 (VITE_NEEME_API_URL). When a deployed
-         backend lands (with auth), add its https origin here. -->
+         backend lands (with auth), add its https origin here.
+
+         The Neeme design uses Hanken Grotesk + JetBrains Mono from Google Fonts,
+         so style-src allows fonts.googleapis.com (the stylesheet) and font-src
+         allows fonts.gstatic.com (the font files). The system-font fallback stack
+         in neeme.css keeps the UI legible offline; bundling the fonts locally (e.g.
+         @fontsource) for a fully offline-first build is a follow-up. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:8000"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8000"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
     />
   </head>
 

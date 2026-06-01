@@ -17,3 +17,7 @@ out
 
 # Claude Code local worktrees/session data
 .claude/
+
+# Generated agent-sync brief (rewritten each routine run; local scratchpad — read it
+# to compose the paste you seed each agent with). The routine config is tracked.
+docs/agent-sync/SYNC-BRIEF.md

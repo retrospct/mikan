@@ -12,7 +12,8 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 - Electron security posture (sandbox / context-isolation / no-node, utilityProcess, nav lockdown) + tray-anchored frameless window.
 - Scaffold: auth (Logto, inert until configured).
 - AI drafting layer: `Drafter` seam + `CloudDrafter` (Anthropic BYO-key via `NEEME_ANTHROPIC_KEY`). All AI-gap fields (`brief`/`draft`/`note`/`noteKind`/`gathering→drafted`/`BacklogItem.conf`/per-context `whyMap`) backed; degrade to null without a key. Override model with `NEEME_DRAFTER_MODEL`.
-- Feed view + uncovered-todos: the Feed tab streams real captures (`pipeline.feed()`) and surfaces to-dos Nimi infers from the recent feed (`Drafter.uncover()` → `pipeline.uncoverTodos()`), cached in `meta`, "Add to backlog" wired. Degrades to no suggestions without a key.
+- `captureFile` over IPC + capture UX (#4): `pipelineCaptureFile` channel, `Uint8Array` over structured-clone, content-hash dedup in the backend, feed maw drag-drop + hidden file picker, add-sheet paperclip/camera inputs, window-level nav guard, browser-preview mock parity (`capture-file.ts`).
+- Feed view + uncovered-todos (#6): the Feed tab streams real captures (`pipeline.feed()`) and surfaces to-dos Nimi infers from the recent feed (`Drafter.uncover()` → `pipeline.uncoverTodos()`), cached in `meta`, "Add to backlog" wired. Degrades to no suggestions without a key.
 
 ## Punch list
 
@@ -24,10 +25,10 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 | 1   | Smoke-test integrated main (embedder + tray actually run)                                                | human        | confidence in the baseline                       | S    | now        |
 | 2   | **Wire UI → `window.api`** (retire mock `data.ts`; see `INTEGRATION.md`)                                 | front        | the app runs on real data — the headline         | L    | **P0**     |
 | 3   | ~~AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings)~~ ✅ | back         | every AI-gap field                               | L    | ✅ shipped  |
-| 4   | `captureFile` over IPC + capture UX (drag-drop / picker)                                                 | back + front | capturing PDFs/files, not just typed notes       | M    | P1         |
+| 4   | ~~`captureFile` over IPC + capture UX (drag-drop / picker)~~ ✅                                          | back + front | capturing PDFs/files, not just typed notes       | M    | ✅ shipped  |
 | 5   | Image + audio extraction (OCR / transcription)                                                           | back         | screenshots & voice memos as memories            | M–L  | P1 ⚠️      |
 | 6   | ~~Feed view + uncovered-todos (Nimi proposes todos from the feed)~~ ✅ **done**                            | back + front | the `FedItem` / `UncoveredTodo` surfaces         | M    | ✅ shipped  |
-| 7   | Worker-service tests (vitest)                                                                            | back         | guards pipeline/todo logic                       | M    | P1         |
+| 7   | ~~**Worker-service tests (vitest)**~~ ✅ **done**                                                        | back         | guards pipeline/todo logic                       | M    | ✅ shipped  |
 | 8   | Connectors / ingest (email, calendar, …)                                                                 | back         | automatic capture vs manual                      | L    | P2         |
 | 9   | Auth wired end-to-end (Logto configured, login tested)                                                   | back + front | real accounts                                    | M    | P2         |
 | 10  | Sync / cloud offload (Turso), multi-user                                                                 | back         | multi-device                                     | L    | P3         |

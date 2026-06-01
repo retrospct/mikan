@@ -18,8 +18,9 @@ Read-only. Output must fit on one screen (~20 lines). Speed > completeness.
 1. git fetch -p; gh pr list --state open --json number,title,headRefName
 2. Per open PR: git diff --name-only origin/main...<headRef>  (names only — do NOT read diffs)
 3. A collision = two PRs share a file. Only open a file if the shared file is in the
-   contract hotset: src/shared/**, src/main/index.ts, src/preload/**,
-   src/main/services/pipeline-service.ts, src/main/db/schema.ts. Otherwise just name it.
+   contract hotset: packages/contract/**, apps/desktop/src/main/index.ts,
+   apps/desktop/src/preload/**, apps/desktop/src/main/services/pipeline-service.ts,
+   apps/desktop/src/main/db/schema.ts. Otherwise just name it.
 4. Skip planning docs unless a hotset overlap is ambiguous on names alone.
 5. Write docs/agent-sync/SYNC-BRIEF.md in EXACTLY this shape — no prose sections:
 

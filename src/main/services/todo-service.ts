@@ -8,9 +8,10 @@ import {
   type ContextEntry,
   type ContextState,
   type Todo,
-  type TodoStatus,
-  type TodoWithContext
+  type TodoStatus
 } from '../../shared/ipc'
+import type { BacklogItem, Task } from '../../shared/views'
+import { toBacklogItem, toTask } from './project'
 
 /**
  * The daily focus to-do list + each todo's context pool (ported from the Python
@@ -120,14 +121,21 @@ async function surfaceContext(todo: Todo): Promise<ContextEntry[]> {
   return listContext(todo.id)
 }
 
-async function withContext(todo: Todo): Promise<TodoWithContext> {
-  return { ...todo, context: await listContext(todo.id) }
+/** Project a todo + its context pool into the UI `Task` shape (AI fields nulled). */
+async function taskOf(todo: Todo): Promise<Task> {
+  return toTask(todo, await listContext(todo.id))
+}
+
+/** Re-read a todo by id and project it (used by mutators that return the task). */
+async function taskById(id: string): Promise<Task | null> {
+  const [r] = await db.select().from(todos).where(eq(todos.id, id)).limit(1)
+  return r ? taskOf(toTodo(r)) : null
 }
 
 // --- service --------------------------------------------------------------
 
 export const todoService = {
-  async add(title: string, notes?: string): Promise<TodoWithContext> {
+  async add(title: string, notes?: string): Promise<Task> {
     const day = todayISO()
     if (!(await canAdd(day))) throw new Error(CAP_REACHED)
     const position = await countForDay(day)
@@ -137,25 +145,25 @@ export const todoService = {
       .returning()
     const todo = toTodo(created!)
     await surfaceContext(todo)
-    return withContext(todo)
+    return taskOf(todo)
   },
 
-  async today(day = todayISO()): Promise<TodoWithContext[]> {
+  async today(day = todayISO()): Promise<Task[]> {
     const rows = await db
       .select()
       .from(todos)
       .where(eq(todos.day, day))
       .orderBy(todos.position, todos.createdAt)
-    return Promise.all(rows.map((r) => withContext(toTodo(r))))
+    return Promise.all(rows.map((r) => taskOf(toTodo(r))))
   },
 
-  async backlog(): Promise<Todo[]> {
+  async backlog(): Promise<BacklogItem[]> {
     const rows = await db
       .select()
       .from(todos)
       .where(and(isNull(todos.day), eq(todos.status, 'open')))
       .orderBy(desc(todos.createdAt))
-    return rows.map(toTodo)
+    return rows.map((r) => toBacklogItem(toTodo(r)))
   },
 
   async done(limit = 50): Promise<Todo[]> {
@@ -168,27 +176,27 @@ export const todoService = {
     return rows.map(toTodo)
   },
 
-  async complete(id: string): Promise<Todo | null> {
+  async complete(id: string): Promise<Task | null> {
     const [r] = await db
       .update(todos)
       .set({ status: 'done', completedAt: new Date() })
       .where(eq(todos.id, id))
       .returning()
-    return r ? toTodo(r) : null
+    return r ? taskOf(toTodo(r)) : null
   },
 
-  async reopen(id: string): Promise<Todo | null> {
+  async reopen(id: string): Promise<Task | null> {
     const [r] = await db
       .update(todos)
       .set({ status: 'open', completedAt: null })
       .where(eq(todos.id, id))
       .returning()
-    return r ? toTodo(r) : null
+    return r ? taskOf(toTodo(r)) : null
   },
 
   /** Carry the `keep` open items onto `day`; sweep every other open scheduled
    *  item to the backlog. Done items stay in the done log. */
-  async plan(keep: string[], day = todayISO()): Promise<TodoWithContext[]> {
+  async plan(keep: string[], day = todayISO()): Promise<Task[]> {
     if (keep.length > CAP) throw new Error(CAP_REACHED)
     const scheduled = await db
       .select()
@@ -205,32 +213,33 @@ export const todoService = {
     return this.today(day)
   },
 
-  async schedule(id: string, day = todayISO()): Promise<Todo | null> {
+  async schedule(id: string, day = todayISO()): Promise<Task | null> {
     if (!(await canAdd(day))) throw new Error(CAP_REACHED)
     const position = await countForDay(day)
     const [r] = await db.update(todos).set({ day, position }).where(eq(todos.id, id)).returning()
-    return r ? toTodo(r) : null
+    return r ? taskOf(toTodo(r)) : null
   },
 
-  async searchMoreContext(id: string): Promise<ContextEntry[]> {
+  async searchMoreContext(id: string): Promise<Task | null> {
     const [r] = await db.select().from(todos).where(eq(todos.id, id)).limit(1)
-    if (!r) return []
-    return surfaceContext(toTodo(r))
+    if (!r) return null
+    await surfaceContext(toTodo(r))
+    return taskOf(toTodo(r))
   },
 
-  async pinContext(id: string, itemId: string): Promise<ContextEntry[]> {
+  async pinContext(id: string, itemId: string): Promise<Task | null> {
     await db
       .update(todoContext)
       .set({ state: 'pinned' })
       .where(and(eq(todoContext.todoId, id), eq(todoContext.itemId, itemId)))
-    return listContext(id)
+    return taskById(id)
   },
 
-  async dismissContext(id: string, itemId: string): Promise<ContextEntry[]> {
+  async dismissContext(id: string, itemId: string): Promise<Task | null> {
     await db
       .update(todoContext)
       .set({ state: 'dismissed' })
       .where(and(eq(todoContext.todoId, id), eq(todoContext.itemId, itemId)))
-    return listContext(id)
+    return taskById(id)
   }
 }

@@ -6,10 +6,11 @@ import NeemeApp from './neeme/NeemeApp'
 // and the all-done celebration. It runs on hand-authored sample data (see
 // src/renderer/src/neeme/data.ts).
 //
-// The backend API client (src/shared/api), the auth hook (src/renderer/src/hooks),
-// and the local libSQL seam (window.api.memory.* in main/preload) are intentionally
-// left in place but unwired — unifying these views with real local/backend storage
-// is a separate, parked decision (see ADR 0003 / the sync spike).
+// The auth hook (src/renderer/src/hooks) and the on-device data seam
+// (window.api.{pipeline,todos}.* in main/preload) are wired and ready; this view
+// still runs on sample data. Swapping data.ts → window.api.* is tracked in
+// docs/INTEGRATION.md (the contract returns the same view shapes; AI-only fields
+// come back null until the drafting layer lands). See ADR 0003.
 function App(): React.JSX.Element {
   return <NeemeApp />
 }

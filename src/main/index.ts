@@ -120,11 +120,10 @@ app.whenReady().then(async () => {
   // services. Start it (it inits the schema) before handlers can be called.
   await startWorker()
   const DATA_CHANNELS: string[] = [
-    IPC.memoryList,
-    IPC.memoryAdd,
     IPC.pipelineCaptureText,
+    IPC.pipelineArchive,
+    IPC.pipelineFeed,
     IPC.pipelineSearch,
-    IPC.pipelineList,
     IPC.todoAdd,
     IPC.todoToday,
     IPC.todoBacklog,

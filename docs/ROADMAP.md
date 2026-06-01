@@ -26,7 +26,7 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 | 4   | `captureFile` over IPC + capture UX (drag-drop / picker)                                                 | back + front | capturing PDFs/files, not just typed notes       | M    | P1         |
 | 5   | Image + audio extraction (OCR / transcription)                                                           | back         | screenshots & voice memos as memories            | M–L  | P1 ⚠️      |
 | 6   | Feed view + uncovered-todos (Nimi proposes todos from the feed)                                          | back + front | the `FedItem` / `UncoveredTodo` surfaces         | M    | P2         |
-| 7   | Worker-service tests (vitest)                                                                            | back         | guards pipeline/todo logic                       | M    | P1         |
+| 7   | ~~**Worker-service tests (vitest)**~~ ✅ **done**                                                        | back         | guards pipeline/todo logic                       | M    | ✅ shipped  |
 | 8   | Connectors / ingest (email, calendar, …)                                                                 | back         | automatic capture vs manual                      | L    | P2         |
 | 9   | Auth wired end-to-end (Logto configured, login tested)                                                   | back + front | real accounts                                    | M    | P2         |
 | 10  | Sync / cloud offload (Turso), multi-user                                                                 | back         | multi-device                                     | L    | P3         |

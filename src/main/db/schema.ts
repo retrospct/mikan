@@ -21,3 +21,26 @@ export const memories = sqliteTable('memories', {
 
 export type Memory = typeof memories.$inferSelect
 export type NewMemory = typeof memories.$inferInsert
+
+/**
+ * `items` — captured multi-modal input, content-addressed by sha256. The richer
+ * model the note above anticipated: provenance (source name/type), the
+ * normalized `text`, and an extraction `status`. The vector index lives in a
+ * separate `chunks` table (created in db/index.ts — it uses libSQL's native
+ * F32_BLOB type, so it's managed via raw SQL rather than the Drizzle schema).
+ */
+export const items = sqliteTable('items', {
+  id: text('id').primaryKey(), // sha256 of the raw bytes
+  sourceName: text('source_name').notNull(),
+  contentType: text('content_type').notNull(), // text | pdf | image | audio | other
+  sizeBytes: integer('size_bytes').notNull(),
+  storedPath: text('stored_path'),
+  text: text('text').notNull().default(''),
+  status: text('status').notNull(), // captured | extracted | pending | failed
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`)
+})
+
+export type Item = typeof items.$inferSelect
+export type NewItem = typeof items.$inferInsert

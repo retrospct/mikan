@@ -8,6 +8,12 @@ const api: NeemeApi = {
     list: () => ipcRenderer.invoke(IPC.memoryList),
     add: (content: string) => ipcRenderer.invoke(IPC.memoryAdd, content)
   },
+  pipeline: {
+    captureText: (text: string, name?: string) =>
+      ipcRenderer.invoke(IPC.pipelineCaptureText, text, name),
+    search: (query: string, topK?: number) => ipcRenderer.invoke(IPC.pipelineSearch, query, topK),
+    listItems: () => ipcRenderer.invoke(IPC.pipelineList)
+  },
   auth: {
     login: () => ipcRenderer.invoke(IPC.authLogin),
     logout: () => ipcRenderer.invoke(IPC.authLogout),

@@ -13,6 +13,10 @@ export interface Memory {
 export const IPC = {
   memoryList: 'memory:list',
   memoryAdd: 'memory:add',
+  // Pipeline (on-device capture → extract → index → search; main process)
+  pipelineCaptureText: 'pipeline:capture-text',
+  pipelineSearch: 'pipeline:search',
+  pipelineList: 'pipeline:list',
   // Auth (Logto OIDC flow lives in main; see src/main/auth/logto.ts)
   authLogin: 'auth:login',
   authLogout: 'auth:logout',
@@ -21,6 +25,38 @@ export const IPC = {
   /** main → renderer event: auth state / token changed (login, refresh, logout). */
   authChanged: 'auth:changed'
 } as const
+
+// --- Pipeline (capture / surface) -----------------------------------------
+
+export type ContentType = 'text' | 'pdf' | 'image' | 'audio' | 'other'
+export type ItemStatus = 'captured' | 'extracted' | 'pending' | 'failed'
+
+/** A captured item — content-addressed, normalized to `text` when possible. */
+export interface Item {
+  id: string
+  sourceName: string
+  contentType: ContentType
+  sizeBytes: number
+  status: ItemStatus
+  text: string
+  createdAt: Date
+}
+
+export interface CaptureResult {
+  item: Item
+  /** false if this exact content was already captured (idempotent). */
+  created: boolean
+}
+
+/** A semantic-search hit: a matching chunk, with its parent item's metadata. */
+export interface SearchHit {
+  itemId: string
+  chunkIdx: number
+  text: string
+  score: number // cosine distance (lower = closer)
+  sourceName: string
+  contentType: ContentType
+}
 
 /** Identity claims decoded from the id_token (display only). */
 export interface AuthClaims {
@@ -56,7 +92,18 @@ export interface AuthApi {
   onChanged: (cb: (state: AuthState, accessToken?: string) => void) => () => void
 }
 
+/** Capture + surface, backed by the on-device pipeline in the main process. */
+export interface PipelineApi {
+  /** Quick text capture → returns the item (+ whether it was newly created). */
+  captureText: (text: string, name?: string) => Promise<CaptureResult>
+  /** Semantic search over captured content. */
+  search: (query: string, topK?: number) => Promise<SearchHit[]>
+  /** Recently captured items (newest first). */
+  listItems: () => Promise<Item[]>
+}
+
 export interface NeemeApi {
   memory: MemoryApi
+  pipeline: PipelineApi
   auth: AuthApi
 }

@@ -15,20 +15,44 @@ import * as schema from './schema'
  */
 const dbPath = join(app.getPath('userData'), 'neeme.db')
 
-const client = createClient({ url: `file:${dbPath}` })
+// Exported so the pipeline can use libSQL's native vector functions
+// (vector32 / vector_distance_cos / libsql_vector_idx) via raw SQL — Drizzle's
+// query builder doesn't model the F32_BLOB type.
+export const client = createClient({ url: `file:${dbPath}` })
 
 export const db = drizzle(client, { schema })
+
+/** Embedding dimension for the chunk vector column (matches the embedder seam). */
+export const EMBED_DIM = 384
 
 /**
  * Bootstrap the schema. For the first slice we create tables directly; once the
  * schema stabilizes we switch to drizzle-kit generated migrations applied here.
  */
 export async function initDb(): Promise<void> {
-  await client.execute(`
+  await client.executeMultiple(`
     CREATE TABLE IF NOT EXISTS memories (
       id TEXT PRIMARY KEY,
       content TEXT NOT NULL,
       created_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
+    CREATE TABLE IF NOT EXISTS items (
+      id TEXT PRIMARY KEY,
+      source_name TEXT NOT NULL,
+      content_type TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL,
+      stored_path TEXT,
+      text TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    CREATE TABLE IF NOT EXISTS chunks (
+      item_id TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+      chunk_idx INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      embedding F32_BLOB(${EMBED_DIM}),
+      PRIMARY KEY (item_id, chunk_idx)
+    );
+    CREATE INDEX IF NOT EXISTS chunks_vec_idx ON chunks (libsql_vector_idx(embedding));
   `)
 }

@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { initDb } from './db'
 import { memoryService } from './services/memory-service'
+import { pipelineService } from './services/pipeline-service'
 import * as auth from './auth/logto'
 import { IPC } from '../shared/ipc'
 
@@ -88,6 +89,15 @@ app.whenReady().then(async () => {
   await initDb()
   ipcMain.handle(IPC.memoryList, () => memoryService.list())
   ipcMain.handle(IPC.memoryAdd, (_event, content: string) => memoryService.add(content))
+
+  // Pipeline — on-device capture / semantic search (see services/pipeline-service).
+  ipcMain.handle(IPC.pipelineCaptureText, (_e, text: string, name?: string) =>
+    pipelineService.captureText(text, name)
+  )
+  ipcMain.handle(IPC.pipelineSearch, (_e, query: string, topK?: number) =>
+    pipelineService.search(query, topK)
+  )
+  ipcMain.handle(IPC.pipelineList, () => pipelineService.listItems())
 
   // Auth (Logto) — broadcast changes to renderers, restore any saved session,
   // then expose login/logout/token over IPC. Inert until Logto env is configured.

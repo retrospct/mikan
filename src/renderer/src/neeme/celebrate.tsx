@@ -15,7 +15,7 @@ interface ConfPiece {
 // Randomised confetti scatter. Lives at module scope (not in render) so the
 // random draw is pure-by-the-rules; fed once through a useState lazy initializer.
 function makeConfetti(): ConfPiece[] {
-  return Array.from({ length: 18 }).map(() => ({
+  return Array.from({ length: 20 }).map(() => ({
     x: (Math.random() * 2 - 1) * 150,
     d: Math.random() * 0.5,
     r: (Math.random() * 2 - 1) * 320,
@@ -26,17 +26,20 @@ function makeConfetti(): ConfPiece[] {
 
 export function AllDone({
   count = 5,
+  titles = [],
   onPlan,
   onClose
 }: {
   count?: number
+  titles?: string[]
   onPlan: () => void
   onClose: () => void
 }): JSX.Element {
   const [conf] = useState(makeConfetti)
-  const shards = [0, 1, 2, 3, 4].map((i) => {
-    const ang = ((-90 + i * 72) * Math.PI) / 180
-    return { sx: Math.cos(ang) * 64, sy: Math.sin(ang) * 64 }
+  const items: Array<string | number> = (titles.length ? titles : [0, 1, 2, 3, 4]).slice(0, 5)
+  const shards = items.map((title, i) => {
+    const ang = ((-90 + i * (360 / items.length)) * Math.PI) / 180
+    return { title, sx: Math.cos(ang) * 150, sy: Math.sin(ang) * 92 }
   })
   return (
     <div className="win">
@@ -51,11 +54,18 @@ export function AllDone({
                 {
                   '--sx': s.sx + 'px',
                   '--sy': s.sy + 'px',
-                  animationDelay: i * 0.05 + 's'
+                  animationDelay: i * 0.08 + 's'
                 } as CSSProperties
               }
             >
-              <NeemeMark state="done" fill={9} size={22} />
+              <span className="win-shard-chip">
+                <NIcon name="check" size={11} stroke={2.6} />
+                {typeof s.title === 'string' && (
+                  <span className="win-shard-t">
+                    {s.title.length > 18 ? s.title.slice(0, 17) + '…' : s.title}
+                  </span>
+                )}
+              </span>
             </span>
           ))}
           <span className="win-big">
@@ -70,7 +80,7 @@ export function AllDone({
                   '--cx': c.x + 'px',
                   '--cr': c.r + 'deg',
                   '--cs': c.s,
-                  animationDelay: 0.55 + c.d + 's',
+                  animationDelay: 0.7 + c.d + 's',
                   animationDuration: c.dur + 's'
                 } as CSSProperties
               }
@@ -83,7 +93,7 @@ export function AllDone({
         </div>
         <div className="win-actions">
           <button className="btn primary" onClick={onPlan}>
-            <NIcon name="today" size={16} /> Plan tomorrow
+            <NIcon name="dayNext" size={16} /> Plan tomorrow
           </button>
           <button className="btn ghost" onClick={onClose}>
             Bask a moment

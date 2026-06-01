@@ -26,24 +26,31 @@ function dateLabel(): string {
 
 function AppHeader({
   neemeState,
+  badge,
+  onSearch,
   onTomorrow
 }: {
   neemeState: NeemeMarkState
+  badge: number
+  onSearch: () => void
   onTomorrow: () => void
 }): JSX.Element {
   return (
     <header className="hdr">
       <div className="hdr-l">
-        <NeemeMark state={neemeState} size={38} />
+        <span className="hdr-mark">
+          <NeemeMark state={neemeState} size={38} />
+          {badge > 0 && <span className="nm-badge">{badge}</span>}
+        </span>
         <div className="hdr-greet">
           <span className="hdr-hi">{greeting()}</span>
           <span className="hdr-date">{dateLabel()}</span>
         </div>
       </div>
       <div className="hdr-r">
-        <span className="priv-pill">
-          <NIcon name="lock" size={11} /> On device
-        </span>
+        <button className="hdr-btn" aria-label="Search your memory" onClick={onSearch}>
+          <NIcon name="search" size={18} />
+        </button>
         <button className="hdr-btn" aria-label="Plan tomorrow" onClick={onTomorrow}>
           <NIcon name="dayNext" size={18} />
         </button>
@@ -151,7 +158,6 @@ function TaskCard({
             <>
               {task.note && <NeemeNote kind={task.noteKind || 'gathered'}>{task.note}</NeemeNote>}
               <div className="ctx-strip">
-                <span className="ctx-orb" />
                 {ctxN > 0 && <CtxThumbs memIds={task.ctx} />}
                 <span className="ctx-txt">{ctxLabel}</span>
                 <span className="ctx-go">
@@ -189,11 +195,13 @@ interface TodayViewProps {
   planned: boolean
   carriedCount: number
   backlogCount: number
+  badge: number
   onOpen: (id: string) => void
   onToggle: (id: string) => void
   onAdd: () => void
   onPlan: () => void
   onTomorrow: () => void
+  onSearch: () => void
   onWeather: () => void
   neemeState: NeemeMarkState
 }
@@ -205,10 +213,12 @@ export function TodayView({
   planned,
   carriedCount,
   backlogCount,
+  badge,
   onOpen,
   onToggle,
   onPlan,
   onTomorrow,
+  onSearch,
   onWeather,
   neemeState
 }: TodayViewProps): JSX.Element {
@@ -220,7 +230,12 @@ export function TodayView({
     return (
       <div className="view">
         <div className="scroll">
-          <AppHeader neemeState={neemeState} onTomorrow={onPlan} />
+          <AppHeader
+            neemeState={neemeState}
+            badge={badge}
+            onSearch={onSearch}
+            onTomorrow={onPlan}
+          />
           <div className="dayzero">
             <NeemeMark state="idle" size={66} />
             <div className="dayzero-h">A fresh day</div>
@@ -243,7 +258,12 @@ export function TodayView({
   return (
     <div className="view">
       <div className="scroll">
-        <AppHeader neemeState={neemeState} onTomorrow={onTomorrow} />
+        <AppHeader
+          neemeState={neemeState}
+          badge={badge}
+          onSearch={onSearch}
+          onTomorrow={onTomorrow}
+        />
         <MemoryWeather
           count={tasks.reduce((a, t) => a + (t.ctx ? t.ctx.length : 0), 0)}
           onOpen={onWeather}

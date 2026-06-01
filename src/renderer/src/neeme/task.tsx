@@ -120,8 +120,12 @@ function MemoryCard({
             >
               <NIcon name={pinned ? 'pinFill' : 'pin'} size={15} />
             </button>
-            <button className="mem-act sweep" aria-label="Dismiss" onClick={stop(onSweep)}>
-              <NIcon name="close" size={15} />
+            <button
+              className="mem-act sweep"
+              aria-label="Sweep from this task"
+              onClick={stop(onSweep)}
+            >
+              <NIcon name="sweep" size={15} />
             </button>
           </div>
         </div>
@@ -155,9 +159,25 @@ function DraftCard({
 }): JSX.Element {
   const [used, setUsed] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
+
+  if (collapsed) {
+    return (
+      <button className="draft-strip" onClick={() => setCollapsed(false)}>
+        <span className="draft-strip-ico">
+          <NIcon name={typeIcon || 'sparkle'} size={15} />
+        </span>
+        <span className="draft-strip-tx">
+          <b>{typeLabel || 'A first draft'}</b> · tap to reopen
+        </span>
+        <NIcon name="chevDown" size={14} className="draft-strip-cv" />
+      </button>
+    )
+  }
+
   return (
     <div className="draft">
-      <div className="draft-hd">
+      <button className="draft-hd as-toggle" onClick={() => setCollapsed(true)}>
         <NeemeMark state="idle" size={24} />
         <div className="draft-hd-main">
           <div className="draft-hd-t">I took a crack at it</div>
@@ -165,17 +185,23 @@ function DraftCard({
             <NIcon name={typeIcon || 'sparkle'} size={11} /> {typeLabel || 'A first draft'}
           </div>
         </div>
-        <button
+        <span
           className="draft-copy"
-          aria-label="Copy"
-          onClick={() => {
+          role="button"
+          tabIndex={0}
+          aria-label={copied ? 'Copied' : 'Copy draft'}
+          onClick={(e) => {
+            e.stopPropagation()
             setCopied(true)
             setTimeout(() => setCopied(false), 1400)
           }}
         >
-          <NIcon name={copied ? 'check' : 'file'} size={14} /> {copied ? 'Copied' : 'Copy'}
-        </button>
-      </div>
+          <NIcon name={copied ? 'check' : 'copy'} size={16} />
+        </span>
+        <span className="draft-collapse">
+          <NIcon name="chevUp" size={14} />
+        </span>
+      </button>
       <div className="draft-paper">
         {draft.map((p, i) => (
           <p key={i}>{renderBold(p)}</p>
@@ -235,18 +261,18 @@ export function TaskDetail({
   task,
   onBack,
   onToggle,
-  onUpdate
+  onUpdate,
+  onDig
 }: {
   task: Task
   index: number
   onBack: () => void
   onToggle: (id: string) => void
   onUpdate?: (id: string, patch: Partial<Task>) => void
+  onDig: () => void
 }): JSX.Element {
   const [pinned, setPinned] = useState<Set<string>>(new Set(task.pinned || []))
   const [swept, setSwept] = useState<Set<string>>(new Set())
-  const [extra, setExtra] = useState<string[]>([])
-  const [searching, setSearching] = useState(false)
   const [drafting, setDrafting] = useState(false)
   const [draft, setDraft] = useState<string[] | null>(task.draft || null)
   const [open, setOpen] = useState(false)
@@ -275,8 +301,9 @@ export function TaskDetail({
     })
   }
 
-  const baseIds = (task.ctx || []).filter((id) => !swept.has(id))
-  const allIds = [...baseIds, ...extra.filter((id) => !swept.has(id))]
+  // context is just the task's saved ctx (minus what's been swept this session);
+  // "dig deeper" now adds memories via the app-level SearchOverlay → task.ctx.
+  const allIds = (task.ctx || []).filter((id) => !swept.has(id))
   const sorted = allIds.slice().sort((a, b) => {
     const pa = pinned.has(a) ? 1 : 0
     const pb = pinned.has(b) ? 1 : 0
@@ -294,19 +321,6 @@ export function TaskDetail({
     if (!pinned.has(id)) markFresh([id])
   }
   const sweep = (id: string): void => setSwept((s) => new Set(s).add(id))
-
-  const searchMore = (): void => {
-    setSearching(true)
-    setTimeout(() => {
-      const have = new Set([...allIds])
-      const pool = Object.keys(MEMORIES).filter((id) => !have.has(id))
-      const add = pool.sort(() => Math.random() - 0.5).slice(0, 2)
-      setExtra((e) => [...e, ...add])
-      setSearching(false)
-      setOpen(true)
-      markFresh(add)
-    }, 1400)
-  }
 
   const tryDraft = (): void => {
     setDrafting(true)
@@ -414,16 +428,6 @@ export function TaskDetail({
         {/* context Neeme gathered */}
         {!done && (
           <>
-            <div className="pool-hd">
-              <div className="pool-hd-l">
-                <span className="ctx-orb" />
-                <span className="pool-hd-t">Sources</span>
-              </div>
-              <span className="pool-hd-meta">
-                {keptCount} kept · {suggIds.length} more
-              </span>
-            </div>
-
             {keptCount > 0 ? (
               <>
                 <button
@@ -488,27 +492,18 @@ export function TaskDetail({
             {suggIds.length > 0 && (
               <>
                 <button
-                  className={
-                    'pool-review' + (open ? ' open' : '') + (freshSugg > 0 ? ' has-new' : '')
-                  }
+                  className={'pool-group-hd as-toggle' + (open ? ' open' : '')}
                   onClick={() => setOpen((o) => !o)}
                 >
-                  <span className="pr-l">
-                    <span className="pool-cloud sm">
-                      {Array.from({ length: Math.min(suggIds.length, 6) }).map((_, i) => (
-                        <span key={i} className={'pc' + (i < freshSugg ? ' fresh' : '')} />
-                      ))}
-                    </span>
-                    {open ? (
-                      <span>More I found — keep or sweep</span>
-                    ) : freshSugg > 0 ? (
-                      <span className="shimmer-text">{freshSugg} just surfaced — take a look</span>
-                    ) : (
-                      <span>{suggIds.length} more I think relate</span>
-                    )}
-                  </span>
-                  <span className="pr-r">
-                    {open ? 'Tuck away' : 'Review'} <NIcon name="chevDown" size={14} />
+                  <NIcon name="layers" size={11} />
+                  {freshSugg > 0 && !open ? (
+                    <span className="shimmer-text">{freshSugg} just surfaced</span>
+                  ) : (
+                    <span>{suggIds.length} more memories</span>
+                  )}
+                  <span className="ln" />
+                  <span className="kept-toggle">
+                    {open ? 'Tuck away' : 'Review'} <NIcon name="chevDown" size={13} />
                   </span>
                 </button>
                 {open &&
@@ -559,19 +554,10 @@ export function TaskDetail({
         >
           <NeemeMark state="idle" size={26} />
         </button>
-        <button className="dt-dig" onClick={searchMore} disabled={searching}>
-          {searching ? (
-            <NeemeSay state="thinking" size={20}>
-              Searching your memory
-              <Dots />
-            </NeemeSay>
-          ) : (
-            <>
-              <NIcon name="search" size={17} />
-              <span className="dt-dig-tx">Dig deeper in your memory</span>
-              <NIcon name="arrowRight" size={15} />
-            </>
-          )}
+        <button className="dt-dig" onClick={onDig}>
+          <NIcon name="search" size={17} />
+          <span className="dt-dig-tx">Dig deeper in your memory</span>
+          <NIcon name="arrowRight" size={15} />
         </button>
       </div>
 

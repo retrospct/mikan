@@ -3,10 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <title>Electron</title>
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+         connect-src must list the Neeme API origin or the renderer's fetch() is
+         blocked (CSP falls back to default-src 'self', which excludes it). Local
+         dev points at http://localhost:8000 (VITE_NEEME_API_URL). When a deployed
+         backend lands (with auth), add its https origin here. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:8000"
     />
   </head>
 

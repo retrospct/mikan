@@ -12,7 +12,7 @@ is compiler-enforced, so this doc only needs to carry the things types can't: wh
 - **`src/shared/views.ts`** — the view model: `Memory`, `Task`, `BacklogItem`,
   `FedItem`, `MatchHit` (+ `MemoryKind`/`TaskStatus`/`NoteKind`). Lifted **verbatim**
   from `renderer/src/neeme/data.ts`, so swapping is a mechanical import change.
-- **`src/shared/ipc.ts`** — the `window.api.*` surface (`NeemeApi`) + channels.
+- **`src/shared/ipc.ts`** — the `window.api.*` surface (`NimiApi`) + channels.
 - Import from the new alias: `import type { Task, Memory } from '@shared/views'`.
 
 ## "Wire real, plain"

@@ -172,7 +172,7 @@ export interface UiApi {
   setBadge: (count: number) => Promise<void>
 }
 
-export interface NeemeApi {
+export interface NimiApi {
   pipeline: PipelineApi
   todos: TodoApi
   auth: AuthApi

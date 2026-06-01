@@ -1,4 +1,4 @@
-// tray-window.ts — Neeme as a frameless, tray-anchored menu-bar utility.
+// tray-window.ts — Nimi as a frameless, tray-anchored menu-bar utility.
 //
 // Owns the single app window + the tray icon + the global toggle hotkey, keeping
 // src/main/index.ts a thin router. Behavior:
@@ -156,10 +156,10 @@ export function initTrayWindow(): void {
   const img = nativeImage.createFromPath(trayIconAsset)
   if (process.platform === 'darwin') img.setTemplateImage(true)
   tray = new Tray(img)
-  tray.setToolTip('Neeme')
+  tray.setToolTip('Nimi')
 
   const template: MenuItemConstructorOptions[] = [
-    { label: 'Show Neeme', click: () => showAnchored() },
+    { label: 'Show Nimi', click: () => showAnchored() },
     {
       label: 'Pin on top',
       type: 'checkbox',
@@ -167,7 +167,7 @@ export function initTrayWindow(): void {
       click: (mi: MenuItem) => setPinned(mi.checked)
     }
   ]
-  // Opt-in: hide the Dock icon (macOS) so Neeme is a pure menu-bar utility. Default
+  // Opt-in: hide the Dock icon (macOS) so Nimi is a pure menu-bar utility. Default
   // off — the Dock stays unless you choose this, and the tray icon + hotkey always
   // summon the window, so it can't get "lost".
   if (process.platform === 'darwin') {
@@ -181,7 +181,7 @@ export function initTrayWindow(): void {
   template.push(
     { type: 'separator' },
     {
-      label: 'Quit Neeme',
+      label: 'Quit Nimi',
       accelerator: 'CommandOrControl+Q',
       click: () => {
         quitting = true

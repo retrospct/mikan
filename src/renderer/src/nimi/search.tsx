@@ -1,9 +1,9 @@
-// search.tsx — "Dig deeper": a universal search across everything you've fed Neeme.
+// search.tsx — "Dig deeper": a universal search across everything you've fed Nimi.
 import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NeemeMark, NeemeSay, Dots } from './mark'
+import { NimiMark, NimiSay, Dots } from './mark'
 import { MEMORIES } from './data'
 
 function memSearch(q: string): string[] {
@@ -47,7 +47,7 @@ export function SearchOverlay({
     inputRef.current && inputRef.current.focus()
   }, [])
 
-  // a beat of "Neeme is searching" when the query settles. We debounce the input
+  // a beat of "Nimi is searching" when the query settles. We debounce the input
   // into `settledQ` — the only setState lives inside the timeout, so it never fires
   // synchronously in the effect body — and derive `thinking` from the gap.
   useEffect(() => {
@@ -88,7 +88,7 @@ export function SearchOverlay({
 
       {contextTitle && (
         <div className="search-scope">
-          <NeemeMark state={thinking ? 'thinking' : 'idle'} size={18} />
+          <NimiMark state={thinking ? 'thinking' : 'idle'} size={18} />
           <span>
             Looking across your memory for <b>“{contextTitle}”</b>
           </span>
@@ -107,10 +107,10 @@ export function SearchOverlay({
         )}
         <div className="search-meta">
           {thinking ? (
-            <NeemeSay state="thinking" size={18}>
+            <NimiSay state="thinking" size={18}>
               Searching
               <Dots />
-            </NeemeSay>
+            </NimiSay>
           ) : q ? (
             `${results.length} result${results.length === 1 ? '' : 's'} in your memory`
           ) : (
@@ -160,7 +160,7 @@ export function SearchOverlay({
 
         {!thinking && q && results.length === 0 && (
           <div className="search-empty">
-            <NeemeMark state="idle" size={30} />
+            <NimiMark state="idle" size={30} />
             <div className="search-empty-t">Nothing on that yet</div>
             <div className="search-empty-s">
               Try fewer words — or feed me more and it&apos;ll be here next time.

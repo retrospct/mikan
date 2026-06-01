@@ -1,7 +1,7 @@
 // data.ts — sample archive, seed tasks, the matcher, and shared types.
 //
-// Ported verbatim from the design bundle (neeme-data.jsx + the BACKLOG that lived
-// in neeme-plan.jsx). This is hand-authored placeholder content that gives the
+// Ported verbatim from the design bundle (nimi-data.jsx + the BACKLOG that lived
+// in nimi-plan.jsx). This is hand-authored placeholder content that gives the
 // gather/draft flows a real, personal feel. Wiring these views to the backend API
 // (or the parked local libSQL seam) is a separate decision — see src/renderer/src/App.tsx.
 
@@ -52,7 +52,7 @@ export interface Task {
   note?: string | null
   relMap?: Record<string, number>
   fresh?: boolean
-  // task-detail "brief" fields (the summary Neeme prepared) + draft metadata
+  // task-detail "brief" fields (the summary Nimi prepared) + draft metadata
   brief?: string
   draftFor?: string
   draftType?: string
@@ -88,7 +88,7 @@ export interface FedItem {
   status: 'done' | 'pending'
 }
 
-// ── the memory archive (what you've "fed" Neeme) ────────────────────────────
+// ── the memory archive (what you've "fed" Nimi) ────────────────────────────
 export const MEMORIES: Record<string, Memory> = {
   m_cabin_note: {
     id: 'm_cabin_note',
@@ -283,7 +283,7 @@ export const REL: Record<string, Record<string, number>> = {
 export const relOf = (taskId: string, memId: string): number =>
   (REL[taskId] && REL[taskId][memId]) || 0.5
 
-// why Neeme kept each memory beside a task — a short reason in its voice
+// why Nimi kept each memory beside a task — a short reason in its voice
 export const CTX_WHY: Record<string, Record<string, string>> = {
   t_cabin: {
     m_cabin_mail: "Her ask — this is what you're replying to",
@@ -398,7 +398,7 @@ export function matchTask(text: string): MatchHit[] {
   return chosen.map((x, i) => ({ id: x.id, rel: Math.max(0.5, 0.92 - i * 0.13) }))
 }
 
-// ── candidate to-dos Neeme uncovers while indexing fed content ──────────────
+// ── candidate to-dos Nimi uncovers while indexing fed content ──────────────
 // Each fed item surfaces 1–2 of these, ranked by confidence.
 export const UNCOVERED_TODOS: UncoveredTodo[] = [
   {

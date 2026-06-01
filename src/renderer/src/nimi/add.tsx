@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NeemeMark, Dots } from './mark'
+import { NimiMark, Dots } from './mark'
 import { VoiceRecorder } from './voice'
 import { TASK_SUGGESTIONS, matchTask, uncoverTodos, nextTranscript } from './data'
 import type { MemoryKind, UncoveredTodo, BacklogItem } from './data'
@@ -44,9 +44,9 @@ export function AddSheet({
           <>
             <div className="sheet-hd">
               <div className="sheet-hd-l">
-                <NeemeMark state="idle" size={28} />
+                <NimiMark state="idle" size={28} />
                 <div>
-                  <div className="sheet-ttl">Add to Neeme</div>
+                  <div className="sheet-ttl">Add to Nimi</div>
                   <div className="sheet-sub">Feed me something — or jot a to-do</div>
                 </div>
               </div>
@@ -86,7 +86,7 @@ interface SampleFile {
   name: string
   kind: MemoryKind
 }
-// sample files Neeme "recognizes" on attach — rotates so you can stack a few
+// sample files Nimi "recognizes" on attach — rotates so you can stack a few
 const SAMPLE_FILES: SampleFile[] = [
   { name: 'United-Promotions.pdf', kind: 'pdf' },
   { name: 'auto-cli-screencap.mp4', kind: 'video' },
@@ -307,7 +307,7 @@ function FeedPane({
         </div>
         <div className="sheet-foot">
           <button className="btn primary" onClick={feed}>
-            <NIcon name="arrowUp" size={16} stroke={2.2} /> Feed it to Neeme
+            <NIcon name="arrowUp" size={16} stroke={2.2} /> Feed it to Nimi
           </button>
         </div>
       </>
@@ -317,7 +317,7 @@ function FeedPane({
   if (phase === 'indexing') {
     return (
       <div className="add-stage">
-        <NeemeMark state="gathering" size={66} />
+        <NimiMark state="gathering" size={66} />
         <div className="add-stage-t">
           Reading it in
           <Dots />
@@ -338,7 +338,7 @@ function FeedPane({
     <>
       <div className="sheet-body">
         <div className="add-done-head">
-          <NeemeMark state="done" fill={9} size={30} />
+          <NimiMark state="done" fill={9} size={30} />
           <div>
             <div className="add-done-t">
               Filed away — {conns} connection{conns === 1 ? '' : 's'} found
@@ -469,7 +469,7 @@ function TodoPane({
   if (phase === 'ranking') {
     return (
       <div className="add-stage">
-        <NeemeMark state="thinking" size={66} />
+        <NimiMark state="thinking" size={66} />
         <div className="add-stage-t">
           Sizing it up
           <Dots />
@@ -481,7 +481,7 @@ function TodoPane({
   if (phase === 'done') {
     return (
       <div className="add-stage">
-        <NeemeMark state="done" fill={9} size={66} />
+        <NimiMark state="done" fill={9} size={66} />
         <div className="add-stage-t">Added to your backlog</div>
         <div className="add-stage-s">
           {kept > 0 ? (

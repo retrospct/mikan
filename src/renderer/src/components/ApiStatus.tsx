@@ -5,9 +5,9 @@ type Health = { status?: string; backends?: Record<string, boolean> }
 type State = { kind: 'loading' } | { kind: 'ok'; data: Health } | { kind: 'error'; message: string }
 
 /**
- * Smoke test of the typed HTTP client: calls GET /health on the Neeme API and
+ * Smoke test of the typed HTTP client: calls GET /health on the Nimi API and
  * renders the result. Proves the renderer → FastAPI round-trip end-to-end.
- * Start the backend with: cd neeme && uv run python -m uvicorn neeme.api:app
+ * Start the backend with: cd nimi && uv run python -m uvicorn nimi.api:app
  */
 function ApiStatus(): React.JSX.Element {
   const [state, setState] = useState<State>({ kind: 'loading' })
@@ -34,7 +34,7 @@ function ApiStatus(): React.JSX.Element {
       </div>
       {state.kind === 'error' && (
         <p className="text-xs text-neutral-500">
-          {state.message} — is the backend running? (<code>uvicorn neeme.api:app</code>)
+          {state.message} — is the backend running? (<code>uvicorn nimi.api:app</code>)
         </p>
       )}
       {state.kind === 'ok' && state.data.backends && (

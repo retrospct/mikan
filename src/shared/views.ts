@@ -47,13 +47,13 @@ export interface Memory {
 // ── tasks (a daily-focus todo + its context pool, projected) ─────────────────
 
 /**
- * `gathering`/`drafted` are **AI-gap** states (Neeme is still pulling context, or
+ * `gathering`/`drafted` are **AI-gap** states (Nimi is still pulling context, or
  * has written a draft). Until the AI layer lands the backend only emits the two
  * structural states: `gathered` (open, context surfaced) and `done`.
  */
 export type TaskStatus = 'gathering' | 'gathered' | 'drafted' | 'done'
 
-/** AI-gap: the kind of note Neeme leaves beside a task. Not emitted yet. */
+/** AI-gap: the kind of note Nimi leaves beside a task. Not emitted yet. */
 export type NoteKind = 'ready' | 'ask' | 'wait' | 'gathered' | 'done'
 
 export interface Task {
@@ -72,7 +72,7 @@ export interface Task {
   draftNote: string | null
   /** AI-gap: not emitted yet. */
   noteKind?: NoteKind
-  /** AI-gap: Neeme's voice note beside the task. `null` until then. */
+  /** AI-gap: Nimi's voice note beside the task. `null` until then. */
   note?: string | null
   /** Relevance per `ctx` id (0..1, higher = closer). Real — from search. */
   relMap?: Record<string, number>
@@ -96,13 +96,13 @@ export interface BacklogItem {
   /** Structural: the user's own note on the todo (`''` if none). */
   hint: string
   ctx: string[]
-  /** AI-gap: confidence Neeme can cover this. `null` until the AI layer lands. */
+  /** AI-gap: confidence Nimi can cover this. `null` until the AI layer lands. */
   conf?: number | null
   fresh?: boolean
 }
 
 /**
- * AI-gap: a todo Neeme *infers* from the feed (not user-entered). The backend
+ * AI-gap: a todo Nimi *infers* from the feed (not user-entered). The backend
  * does not emit these yet — `window.api` returns `[]` until the inference layer
  * lands. Kept here so the UI type matches.
  */

@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NeemeMark, NeemeNote } from './mark'
+import { NimiMark, NimiNote } from './mark'
 import { MEMORIES } from './data'
 import type { Task } from './data'
-import type { NeemeMarkState } from './types'
+import type { NimiMarkState } from './types'
 
 function greeting(): string {
   const h = new Date().getHours()
@@ -25,12 +25,12 @@ function dateLabel(): string {
 }
 
 function AppHeader({
-  neemeState,
+  nimiState,
   badge,
   onSearch,
   onTomorrow
 }: {
-  neemeState: NeemeMarkState
+  nimiState: NimiMarkState
   badge: number
   onSearch: () => void
   onTomorrow: () => void
@@ -39,7 +39,7 @@ function AppHeader({
     <header className="hdr">
       <div className="hdr-l">
         <span className="hdr-mark">
-          <NeemeMark state={neemeState} size={38} />
+          <NimiMark state={nimiState} size={38} />
           {badge > 0 && <span className="nm-badge">{badge}</span>}
         </span>
         <div className="hdr-greet">
@@ -153,10 +153,10 @@ function TaskCard({
         <div className="task-main">
           <div className="task-title">{task.title}</div>
           {task.done ? (
-            <NeemeNote kind="done">Done — nice work.</NeemeNote>
+            <NimiNote kind="done">Done — nice work.</NimiNote>
           ) : (
             <>
-              {task.note && <NeemeNote kind={task.noteKind || 'gathered'}>{task.note}</NeemeNote>}
+              {task.note && <NimiNote kind={task.noteKind || 'gathered'}>{task.note}</NimiNote>}
               <div className="ctx-strip">
                 {ctxN > 0 && <CtxThumbs memIds={task.ctx} />}
                 <span className="ctx-txt">{ctxLabel}</span>
@@ -203,7 +203,7 @@ interface TodayViewProps {
   onTomorrow: () => void
   onSearch: () => void
   onWeather: () => void
-  neemeState: NeemeMarkState
+  nimiState: NimiMarkState
 }
 
 export function TodayView({
@@ -220,7 +220,7 @@ export function TodayView({
   onTomorrow,
   onSearch,
   onWeather,
-  neemeState
+  nimiState
 }: TodayViewProps): JSX.Element {
   const filled = tasks.length
   const open = Math.max(0, cap - filled)
@@ -230,14 +230,9 @@ export function TodayView({
     return (
       <div className="view">
         <div className="scroll">
-          <AppHeader
-            neemeState={neemeState}
-            badge={badge}
-            onSearch={onSearch}
-            onTomorrow={onPlan}
-          />
+          <AppHeader nimiState={nimiState} badge={badge} onSearch={onSearch} onTomorrow={onPlan} />
           <div className="dayzero">
-            <NeemeMark state="idle" size={66} />
+            <NimiMark state="idle" size={66} />
             <div className="dayzero-h">A fresh day</div>
             <div className="dayzero-s">
               Let&apos;s choose the five things that matter today. I kept yesterday&apos;s leftovers
@@ -259,7 +254,7 @@ export function TodayView({
     <div className="view">
       <div className="scroll">
         <AppHeader
-          neemeState={neemeState}
+          nimiState={nimiState}
           badge={badge}
           onSearch={onSearch}
           onTomorrow={onTomorrow}
@@ -292,7 +287,7 @@ export function TodayView({
           ))}
           {open === 0 && (
             <div className="empty-note">
-              That&apos;s a full, honest day. Neeme will keep the rest in the backlog.
+              That&apos;s a full, honest day. Nimi will keep the rest in the backlog.
             </div>
           )}
         </div>

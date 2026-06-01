@@ -1,5 +1,5 @@
 {
-  "name": "neeme-desktop",
+  "name": "nimi",
   "version": "1.0.0",
   "description": "neeme — a privacy-first, local-first personal memory desktop app",
   "main": "./out/main/index.js",

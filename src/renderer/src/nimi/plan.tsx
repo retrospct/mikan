@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
-import { NeemeMark } from './mark'
+import { NimiMark } from './mark'
 import { BACKLOG, REL } from './data'
 import type { BacklogItem, Task } from './data'
 
@@ -71,7 +71,7 @@ export function PlanRitual({
 
       <div className="plan-body">
         <div className="plan-intro">
-          <NeemeMark state="idle" size={56} />
+          <NimiMark state="idle" size={56} />
           <div className="plan-intro-h">
             {fresh ? 'Good morning, Jordan' : 'A clean slate for today'}
           </div>

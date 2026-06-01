@@ -2,7 +2,7 @@ import type { CreateClientConfig } from './generated/client.gen'
 import { getToken } from './token-store'
 
 /**
- * Runtime configuration for the generated Neeme API client.
+ * Runtime configuration for the generated Nimi API client.
  *
  * hey-api calls this before constructing the client, so it's the right place
  * for values the generated code can't hardcode. It survives `pnpm gen:api`

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NeemeMark } from './mark'
+import { NimiMark } from './mark'
 import { VoiceRecorder } from './voice'
 import { FED_RECENT } from './data'
 import type { FedItem, MemoryKind } from './data'
@@ -98,7 +98,7 @@ export function FeedView({
             onMouseEnter={() => !busy.current && setOver(true)}
             onMouseLeave={() => setOver(false)}
           >
-            <NeemeMark
+            <NimiMark
               className="maw-mark"
               state={eating ? 'gathering' : over ? 'thinking' : 'idle'}
               size={64}
@@ -171,7 +171,7 @@ export function FeedView({
 
       {toast && (
         <div className="toast">
-          <NeemeMark state="happy" size={22} />
+          <NimiMark state="happy" size={22} />
           <span>{toast.msg}</span>
         </div>
       )}

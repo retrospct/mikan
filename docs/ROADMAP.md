@@ -31,7 +31,7 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 | 6   | ~~Feed view + uncovered-todos (Nimi proposes todos from the feed)~~ ✅ **done**                            | back + front | the `FedItem` / `UncoveredTodo` surfaces         | M    | ✅ shipped  |
 | 7   | ~~**Worker-service tests (vitest)**~~ ✅ **done**                                                        | back         | guards pipeline/todo logic                       | M    | ✅ shipped  |
 | 8   | Connectors / ingest (email, calendar, …)                                                                 | back         | automatic capture vs manual                      | L    | P2         |
-| 9   | Auth wired end-to-end (Logto configured, login tested)                                                   | back + front | real accounts                                    | M    | P2         |
+| 9   | Auth end-to-end: UI control + id_token JWKS-verify done; **pending live login test** w/ tenant            | back + front | real accounts                                    | M    | P2         |
 | 10  | Sync / cloud offload (Turso), multi-user                                                                 | back         | multi-device                                     | L    | P3         |
 | 11  | Vuln cleanup + CSP tighten                                                                               | back         | the dependabot alerts + hardening                | S    | P1 (quick) |
 | 12  | Auto-updater (electron-updater)                                                                          | back/dist    | testers auto-get each pushed build               | M    | P1         |

@@ -14,26 +14,38 @@
  * entry point no-ops or throws a friendly error, and the app stays unauthenticated
  * (local-first; auth is deferred behind sync — see docs/adr/0002-authentication.md).
  *
- * NOTE: the access token is consumed by our own backend, which verifies it via
- * Logto's JWKS. We intentionally don't cryptographically validate the id_token
- * here (it's used only for display claims); harden with a JWKS check or swap in
- * `openid-client` if this graduates past a scaffold.
+ * The id_token is signature-verified against Logto's JWKS (iss/aud/exp + the
+ * nonce we bind on the authorize request) before its display claims are trusted
+ * — see ./oidc.ts. The access token is opaque to us; our backend remains the
+ * trust boundary that verifies it (still deferred — no backend yet).
  */
 import { app, safeStorage, shell } from 'electron'
-import { createHash, randomBytes } from 'node:crypto'
+import { createRemoteJWKSet } from 'jose'
 import { readFile, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { AuthClaims, AuthState } from '@nimi/contract/ipc'
+import {
+  buildAuthorizeUrl,
+  claimsFromPayload,
+  pkceChallenge,
+  randomNonce,
+  randomState,
+  randomVerifier,
+  verifyIdToken
+} from './oidc'
 
 const REDIRECT_URI = 'neeme://callback'
 const SCOPE = 'openid profile offline_access'
 
 type Listener = (state: AuthState, accessToken?: string) => void
+type JwksResolver = ReturnType<typeof createRemoteJWKSet>
 
 interface OidcConfig {
   authorization_endpoint: string
   token_endpoint: string
   end_session_endpoint?: string
+  jwks_uri: string
+  issuer: string
 }
 interface TokenResponse {
   access_token: string
@@ -53,30 +65,13 @@ const appId = import.meta.env.MAIN_VITE_LOGTO_APP_ID ?? ''
 const resource = import.meta.env.MAIN_VITE_LOGTO_RESOURCE || undefined
 
 let discovery: OidcConfig | null = null
+let jwks: JwksResolver | null = null
 let session: Session | null = null
-let pending: { verifier: string; state: string } | null = null
+let pending: { verifier: string; state: string; nonce: string } | null = null
 let listener: Listener | null = null
 
 export function isConfigured(): boolean {
   return Boolean(endpoint && appId)
-}
-
-function base64url(buf: Buffer): string {
-  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-function decodeClaims(idToken?: string): AuthClaims | null {
-  if (!idToken) return null
-  try {
-    const json = Buffer.from(
-      idToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'),
-      'base64'
-    ).toString('utf8')
-    const c = JSON.parse(json) as Record<string, string>
-    return { sub: c.sub, email: c.email, name: c.name, picture: c.picture }
-  } catch {
-    return null
-  }
 }
 
 function sessionFile(): string {
@@ -104,7 +99,18 @@ async function discover(): Promise<OidcConfig> {
   return discovery
 }
 
-async function exchange(body: URLSearchParams): Promise<void> {
+/** Lazily build (and cache) the remote JWKS resolver — it handles key rotation. */
+function getJwks(cfg: OidcConfig): JwksResolver {
+  if (!jwks) jwks = createRemoteJWKSet(new URL(cfg.jwks_uri))
+  return jwks
+}
+
+/**
+ * Run a token grant, then (when an id_token is returned) verify it before
+ * trusting its claims. `expectedNonce` is the nonce from the authorize request
+ * on the code grant; refresh grants pass none (and often omit the id_token).
+ */
+async function exchange(body: URLSearchParams, expectedNonce?: string): Promise<void> {
   const cfg = await discover()
   if (resource) body.set('resource', resource)
   const res = await fetch(cfg.token_endpoint, {
@@ -114,11 +120,21 @@ async function exchange(body: URLSearchParams): Promise<void> {
   })
   if (!res.ok) throw new Error(`Logto token request failed (HTTP ${res.status})`)
   const t = (await res.json()) as TokenResponse
+  let claims: AuthClaims | null = session?.claims ?? null
+  if (t.id_token) {
+    const payload = await verifyIdToken(t.id_token, {
+      jwks: getJwks(cfg),
+      issuer: cfg.issuer,
+      audience: appId,
+      nonce: expectedNonce
+    })
+    claims = claimsFromPayload(payload)
+  }
   session = {
     accessToken: t.access_token,
     refreshToken: t.refresh_token ?? session?.refreshToken,
     expiresAt: Date.now() + (t.expires_in ?? 3600) * 1000,
-    claims: decodeClaims(t.id_token) ?? session?.claims ?? null
+    claims
   }
   await persist()
   emit()
@@ -143,22 +159,22 @@ export async function startLogin(): Promise<void> {
     )
   }
   const cfg = await discover()
-  const verifier = base64url(randomBytes(32))
-  const challenge = base64url(createHash('sha256').update(verifier).digest())
-  const state = base64url(randomBytes(16))
-  pending = { verifier, state }
+  const verifier = randomVerifier()
+  const state = randomState()
+  const nonce = randomNonce()
+  pending = { verifier, state, nonce }
 
-  const url = new URL(cfg.authorization_endpoint)
-  url.searchParams.set('client_id', appId)
-  url.searchParams.set('redirect_uri', REDIRECT_URI)
-  url.searchParams.set('response_type', 'code')
-  url.searchParams.set('scope', SCOPE)
-  url.searchParams.set('code_challenge', challenge)
-  url.searchParams.set('code_challenge_method', 'S256')
-  url.searchParams.set('state', state)
-  url.searchParams.set('prompt', 'consent')
-  if (resource) url.searchParams.set('resource', resource)
-  await shell.openExternal(url.toString())
+  const url = buildAuthorizeUrl({
+    authorizationEndpoint: cfg.authorization_endpoint,
+    clientId: appId,
+    redirectUri: REDIRECT_URI,
+    scope: SCOPE,
+    challenge: pkceChallenge(verifier),
+    state,
+    nonce,
+    resource
+  })
+  await shell.openExternal(url)
 }
 
 /** Handle the `neeme://callback?code=...&state=...` deep link from the browser. */
@@ -179,7 +195,8 @@ export async function handleCallback(callbackUrl: string): Promise<void> {
       redirect_uri: REDIRECT_URI,
       client_id: appId,
       code_verifier: expected.verifier
-    })
+    }),
+    expected.nonce
   )
 }
 

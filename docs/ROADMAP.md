@@ -57,15 +57,15 @@ AI layer** once a model is chosen. Everything else parallelizes around that.
 
 ## ⚠️ Decisions that gate work
 
-ADR-worthy; settle each before starting the items it gates.
+Each is written up as an ADR — settle (ratify) each before starting the items it gates.
 
-1. **AI model (gates #3):** on-device LLM (llama.cpp / small local model) vs cloud API vs hybrid.
-   The on-device-first ↔ capability trade-off.
-2. **OCR / ASR (gates #5):** on-device (tesseract / whisper.cpp) vs cloud. Same trade-off.
-3. **Repo structure (gates #14):** adding an RN/Expo app in-repo turns this into a multi-app
-   repo — decide the layout now (turborepo/pnpm workspaces with `desktop` + `mobile` + a shared
-   `packages/contract` lifted from `src/shared`, vs a looser sibling). Cheaper to choose before
-   the Expo scaffold than to restructure after.
+1. **AI model (gates #3):** → [ADR 0004](adr/0004-ai-drafting-model.md)
+   _(accepted: **cloud (BYO-key) behind a `Drafter` seam** to ship; on-device LLM is an
+   optional parked spike, not a committed path)_.
+2. **OCR / ASR (gates #5):** on-device vs cloud → [ADR 0005](adr/0005-image-audio-extraction.md)
+   _(proposed: on-device default, macOS-native fast path, cloud as later offload)_.
+3. **Repo structure (gates #14):** flat vs monorepo → [ADR 0006](adr/0006-repo-structure.md)
+   _(accepted: stay flat now, migrate to a workspace monorepo when the Expo app starts)_.
 
 **Native-packaging note (#13):** `onnxruntime-node` ships per-platform prebuilt binaries. macOS
 is the happy path; the Windows build is a deliberate canary to see _how_ it breaks. Fallback if

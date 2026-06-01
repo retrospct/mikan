@@ -1,6 +1,7 @@
-# ADR 0006 — Repo structure: flat now, monorepo when mobile lands
+# ADR 0006 — Repo structure: migrate to a monorepo now, before parallel workstreams
 
-**Status:** Accepted (flat single-app repo now; migrate to a workspace monorepo when the Expo app starts)
+**Status:** Accepted — **migrate to a pnpm-workspace monorepo NOW**, in the quiet window (0 open
+PRs, pre-agent-ramp), _ahead_ of Expo. Supersedes the original "defer until Expo starts" timing (see Decision).
 **Date:** 2026-06-01
 **Context owners:** jlee (+ Claude)
 **Related:** corrects the timing in [[0003-all-typescript-on-device-pipeline]] (which pencilled in a turborepo "now"); gates roadmap #14 (RN/Expo)
@@ -29,10 +30,16 @@ Legend: ✅ strong · ⚠️ caveats · ❌ poor
 
 ## Decision
 
-**A — stay flat.** Keep `nimi` as a single-app repo. The contract already lives in
-`src/shared` and is the compiler-enforced seam between lanes; that's enough sharing for one
-app. **Migrate to a workspace monorepo when the Expo app is actually started (#14)** — not
-before.
+**Migrate to a pnpm-workspace monorepo _now_** — before the parallel workstreams ramp back up,
+even though Expo hasn't started.
+
+The original "defer until Expo" call (option A) weighed tooling-overhead vs later-churn and
+missed the decisive factor: the migration is a repo-wide `git mv src → apps/desktop/src` that
+rewrites nearly **every path**, so it conflicts with **every open branch**. Done amid parallel
+agent work it's a merge nightmare — the same one the Neeme→Nimi rename would have been mid-flight.
+Done **now** (0 open PRs, single worktree) it's a clean one-shot reshuffle. The quiet window is
+worth far more than a few weeks of "premature" workspace tooling. (`nimi` is already at the
+would-be root name, so this is a pure structural reshuffle, not a re-identity.)
 
 ### Target layout (when we migrate)
 
@@ -53,11 +60,34 @@ nimi/                      ← repo root (already renamed)
 - `packages/contract` is just `src/shared` promoted — the move is mechanical because the
   contract was already isolated there.
 
-### Migration trigger
+### When — now, the pre-ramp quiet window
 
-The first commit of real Expo work. Doing it _with_ that work means the monorepo earns its
-keep immediately (two real consumers of `packages/contract`), and the desktop app moves in
-one clean `git mv` of `src → apps/desktop/src`.
+**Before** restarting the parallel workstreams, not at the first Expo commit. `apps/mobile` is
+added later when Expo actually starts; this migration just stands up the _structure_
+(`apps/desktop` + `packages/contract` + workspace root) into the empty window, so all future
+work — desktop, mobile, parallel agents — branches off an already-monorepo'd `main`.
+
+### Migration checklist (the fiddly bits)
+
+The `git mv` is the easy part; the config rewiring is where it bites. Rough order:
+
+1. `pnpm-workspace.yaml` (`apps/*`, `packages/*`); split the root `package.json` (workspace
+   scripts) from `apps/desktop/package.json` (the app's deps + scripts).
+2. `git mv src apps/desktop/src`, and move `electron.vite.config.ts`, `electron-builder.yml`,
+   `dev-app-update.yml`, `tsconfig*.json`, `index.html`, `resources/`, `build/`, `scripts/` →
+   `apps/desktop/`.
+3. **Lift `src/shared` → `packages/contract`** (own `package.json` + `tsconfig`), make it a
+   workspace dep of desktop, and repoint the `@shared` alias (electron-vite renderer + tsconfig
+   `paths`) at the package (`@nimi/contract`).
+4. **electron-vite:** the multi-entry `input` (main + worker `index.ts`) paths are now relative
+   to `apps/desktop`; confirm the worker fork path (`out/main/worker.js`) still resolves at runtime.
+5. **tsconfig project references** between `desktop` and `contract` (composite).
+6. **electron-builder** `directories`/`files`/`appId` paths from the new app root.
+7. Per-package `CLAUDE.md` (root spine stays; `apps/desktop` gets its own) — see hygiene below.
+8. **Verify:** `pnpm -r typecheck` + full `electron-vite build` green, `pnpm dev` boots and the
+   worker forks. `NEEME_*` env vars are unaffected.
+
+Do it in a worktree on one branch, merged before anything else branches.
 
 ### Agent-context hygiene (the real monorepo risk)
 

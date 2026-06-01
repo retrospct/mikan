@@ -1,92 +1,20 @@
-// data.ts — sample archive, seed tasks, the matcher, and shared types.
+// mock.ts — the browser-preview seed + an in-memory `window.api` stand-in.
 //
-// Ported verbatim from the design bundle (nimi-data.jsx + the BACKLOG that lived
-// in nimi-plan.jsx). This is hand-authored placeholder content that gives the
-// gather/draft flows a real, personal feel. Wiring these views to the backend API
-// (or the parked local libSQL seam) is a separate decision — see src/renderer/src/App.tsx.
+// Ported from the design bundle (nimi-data.jsx + the BACKLOG that lived in
+// nimi-plan.jsx). This is hand-authored placeholder content. The view-model
+// types now live in `@nimi/contract/views` — this file only holds sample data
+// and `makeMockApi()`, the adapter `api.ts` falls back to when `window.api` is
+// absent (i.e. running in a plain browser, not Electron). It mutates module-local
+// arrays and returns the updated view shapes, mirroring the real worker so the
+// browser preview behaves like the app.
+import type { BacklogItem, FedItem, MatchHit, Memory, Task } from '@nimi/contract/views'
+import { CAP_REACHED, type CaptureResult, type NimiApi, type Todo } from '@nimi/contract/ipc'
 
-// ── shared types ────────────────────────────────────────────────────────────
-export type MemoryKind =
-  | 'note'
-  | 'text'
-  | 'pdf'
-  | 'doc'
-  | 'txt'
-  | 'image'
-  | 'photo'
-  | 'screenshot'
-  | 'voice'
-  | 'audio'
-  | 'video'
-  | 'mp4'
-  | 'zip'
-  | 'email'
-  | 'calendar'
-  | 'event'
-  | 'link'
-  | 'web'
+type MockApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui'>
 
-export interface Memory {
-  id: string
-  kind: MemoryKind
-  title: string
-  snip: string
-  src: string
-  when: string
-}
-
-export type TaskStatus = 'gathering' | 'gathered' | 'drafted' | 'done'
-export type NoteKind = 'ready' | 'ask' | 'wait' | 'gathered' | 'done'
-
-export interface Task {
-  id: string
-  title: string
-  when: string
-  status: TaskStatus
-  done: boolean
-  ctx: string[]
-  pinned: string[]
-  draft: string[] | null
-  draftNote: string | null
-  noteKind?: NoteKind
-  note?: string | null
-  relMap?: Record<string, number>
-  fresh?: boolean
-  // task-detail "brief" fields (the summary Nimi prepared) + draft metadata
-  brief?: string
-  draftFor?: string
-  draftType?: string
-  draftIcon?: string
-  useLabel?: string
-  useNote?: string
-  useDone?: string
-}
-
-export interface BacklogItem {
-  id: string
-  title: string
-  hint: string
-  ctx: string[]
-  conf?: number | null
-  fresh?: boolean
-}
-
-export interface UncoveredTodo {
-  id?: string
-  title: string
-  why: string
-  conf: number
-  ctxN: number
-  ctx?: string[]
-}
-
-export interface FedItem {
-  id: string
-  kind: MemoryKind
-  title: string
-  when: string
-  status: 'done' | 'pending'
-}
+// The day's focus cap (mirrors NimiApp's CAP) — lets the mock raise CAP_REACHED
+// so the add-todo → backlog fallback is exercisable in the browser.
+const CAP = 5
 
 // ── the memory archive (what you've "fed" Nimi) ────────────────────────────
 export const MEMORIES: Record<string, Memory> = {
@@ -216,8 +144,15 @@ export const MEMORIES: Record<string, Memory> = {
   }
 }
 
+// relevance score shown on each memory chip, derived deterministically per task
+const REL: Record<string, Record<string, number>> = {
+  t_cabin: { m_cabin_note: 0.95, m_cabin_mail: 0.9, m_cabin_cal: 0.82, m_cabin_pic: 0.55 },
+  t_q3: { m_q3_mail: 0.93, m_q3_pdf: 0.88, m_q3_note: 0.78 },
+  t_dinner: { m_rest_note: 0.9, m_rest_shot: 0.74, m_mom_pic: 0.52, m_gift_voice: 0.6 }
+}
+
 // ── seed tasks for Today (cap 5 → 3 filled + 2 open slots) ──────────────────
-export const SEED_TASKS: Task[] = [
+const SEED_TASKS: Task[] = [
   {
     id: 't_cabin',
     title: 'Reply to Sarah about the cabin weekend',
@@ -274,48 +209,25 @@ export const SEED_TASKS: Task[] = [
   }
 ]
 
-// relevance score shown on each memory chip, derived deterministically per task
-export const REL: Record<string, Record<string, number>> = {
-  t_cabin: { m_cabin_note: 0.95, m_cabin_mail: 0.9, m_cabin_cal: 0.82, m_cabin_pic: 0.55 },
-  t_q3: { m_q3_mail: 0.93, m_q3_pdf: 0.88, m_q3_note: 0.78 },
-  t_dinner: { m_rest_note: 0.9, m_rest_shot: 0.74, m_mom_pic: 0.52, m_gift_voice: 0.6 }
-}
-export const relOf = (taskId: string, memId: string): number =>
-  (REL[taskId] && REL[taskId][memId]) || 0.5
-
-// why Nimi kept each memory beside a task — a short reason in its voice
-export const CTX_WHY: Record<string, Record<string, string>> = {
-  t_cabin: {
-    m_cabin_mail: "Her ask — this is what you're replying to",
-    m_cabin_note: 'The two date options she floated',
-    m_cabin_cal: "Confirms you're free Apr 18–20",
-    m_cabin_pic: 'From the last trip — nice to reference'
+// ── the daily-planning backlog ───────────────────────────────────────────────
+const BACKLOG: BacklogItem[] = [
+  {
+    id: 'b_dentist',
+    title: 'Book the overdue dentist cleaning',
+    ctx: [],
+    hint: 'Dr. Okafor texts to confirm'
   },
-  t_q3: {
-    m_q3_mail: "Priya's ask, with the Friday deadline",
-    m_q3_pdf: 'Your draft — slide 4 still open',
-    m_q3_note: 'The three takeaways to lead with'
+  {
+    id: 'b_flight',
+    title: 'Use the United travel credit before Jun 30',
+    ctx: [],
+    hint: '$214, expiring'
   },
-  t_dinner: {
-    m_rest_note: 'The places your mom likes',
-    m_rest_shot: "Live availability at T'alula's",
-    m_mom_pic: "Last year's dinner, for the vibe",
-    m_gift_voice: "Gift ideas, while you're at it"
-  }
-}
-export const whyOf = (taskId: string, memId: string): string | null =>
-  (CTX_WHY[taskId] && CTX_WHY[taskId][memId]) || null
-
-// ── suggestions on the compose sheet ────────────────────────────────────────
-export const TASK_SUGGESTIONS = [
-  'Draft a thank-you to Grandma',
-  "Plan Saturday's grocery run",
-  'Pick the book club book',
-  'Follow up on the dentist appt'
+  { id: 'b_book', title: 'Pick the next book club book', ctx: [], hint: "We're on the Le Guin" }
 ]
 
 // ── recently-fed items for the Feed view ────────────────────────────────────
-export const FED_RECENT: FedItem[] = [
+const FED_RECENT: FedItem[] = [
   {
     id: 'f1',
     kind: 'screenshot',
@@ -340,23 +252,6 @@ export const FED_RECENT: FedItem[] = [
   }
 ]
 
-// ── the daily-planning backlog ───────────────────────────────────────────────
-export const BACKLOG: BacklogItem[] = [
-  {
-    id: 'b_dentist',
-    title: 'Book the overdue dentist cleaning',
-    ctx: [],
-    hint: 'Dr. Okafor texts to confirm'
-  },
-  {
-    id: 'b_flight',
-    title: 'Use the United travel credit before Jun 30',
-    ctx: [],
-    hint: '$214, expiring'
-  },
-  { id: 'b_book', title: 'Pick the next book club book', ctx: [], hint: "We're on the Le Guin" }
-]
-
 // ── matcher: rank archive memories for an arbitrary typed task ───────────────
 const KEYS: Record<string, string> = {
   m_cabin_note: 'sarah cabin weekend trip hike boots dates april',
@@ -376,17 +271,13 @@ const KEYS: Record<string, string> = {
   m_article: 'mornings focus reading anchor task work'
 }
 
-export interface MatchHit {
-  id: string
-  rel: number
-}
-
-export function matchTask(text: string): MatchHit[] {
+function matchTask(text: string): MatchHit[] {
   const q = (text || '')
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter((w) => w.length > 2)
   const scored = Object.keys(KEYS)
+    .filter((id) => MEMORIES[id]) // only rank memories still in the archive
     .map((id) => {
       let s = 0
       for (const w of q) if (KEYS[id].includes(w)) s += 1
@@ -398,63 +289,141 @@ export function matchTask(text: string): MatchHit[] {
   return chosen.map((x, i) => ({ id: x.id, rel: Math.max(0.5, 0.92 - i * 0.13) }))
 }
 
-// ── candidate to-dos Nimi uncovers while indexing fed content ──────────────
-// Each fed item surfaces 1–2 of these, ranked by confidence.
-export const UNCOVERED_TODOS: UncoveredTodo[] = [
-  {
-    title: 'Reply to Sarah with a cabin date',
-    why: "She's waiting on which weekend works",
-    conf: 0.88,
-    ctxN: 3
-  },
-  {
-    title: 'Add the retention chart to the Q3 deck',
-    why: 'Slide 4 is still marked TODO',
-    conf: 0.81,
-    ctxN: 2
-  },
-  {
-    title: "Reserve a table for mom's birthday",
-    why: "T'alula's showed two open Saturday slots",
-    conf: 0.76,
-    ctxN: 3
-  },
-  {
-    title: 'Confirm the dentist cleaning',
-    why: 'Overdue since November — they text to confirm',
-    conf: 0.7,
-    ctxN: 1
-  },
-  { title: 'Use the United travel credit', why: '$214 expires Jun 30', conf: 0.66, ctxN: 1 },
-  {
-    title: 'Pick the next book club book',
-    why: "Group's been waiting on the Le Guin",
-    conf: 0.58,
-    ctxN: 1
-  }
-]
-// a believable transcript so the voice recorder's "stop" lands you somewhere real to edit
-const VOICE_TRANSCRIPTS = [
-  "Remind me that Sarah's free either weekend for the cabin — she just needs a date to book it.",
-  'Mom mentioned that pottery class again, and her gardening gloves are basically done. Gift ideas.',
-  "For the Q3 wrap: retention's finally turning, enterprise pipeline tripled, support load down after the docs revamp.",
-  'Book club is on the Le Guin, second Tuesday at Reyna’s. Don’t forget to actually finish it this time.'
-]
-let _vtIdx = 0
-export function nextTranscript(): string {
-  const t = VOICE_TRANSCRIPTS[_vtIdx % VOICE_TRANSCRIPTS.length]
-  _vtIdx++
-  return t
-}
+// ── the mock window.api: shared mutable state behind the real surface ────────
+export function makeMockApi(): MockApi {
+  let tasks: Task[] = SEED_TASKS.map((t) => ({ ...t, relMap: REL[t.id] ?? {} }))
+  let backlog: BacklogItem[] = BACKLOG.map((b) => ({ ...b }))
+  let feed: FedItem[] = FED_RECENT.map((f) => ({ ...f }))
 
-let _uncIdx = 0
-export function uncoverTodos(): UncoveredTodo[] {
-  // rotate through the pool so repeat feeds feel alive; surface 1–2
-  const n = 1 + (Math.random() < 0.55 ? 1 : 0)
-  const out: UncoveredTodo[] = []
-  for (let i = 0; i < n; i++) {
-    out.push(UNCOVERED_TODOS[_uncIdx % UNCOVERED_TODOS.length])
-    _uncIdx++
+  let _seq = 0
+  const uid = (prefix: string): string => prefix + (++_seq).toString(36) + Date.now().toString(36)
+  const find = (id: string): Task | undefined => tasks.find((t) => t.id === id)
+  const clone = (t: Task): Task => ({ ...t, ctx: [...t.ctx], pinned: [...t.pinned] })
+
+  return {
+    pipeline: {
+      captureText: async (text: string, name?: string): Promise<CaptureResult> => {
+        const id = uid('m_')
+        const title = name || text.trim().slice(0, 40) || 'Quick note'
+        const memory: Memory = {
+          id,
+          kind: 'note',
+          title,
+          snip: text.trim().slice(0, 140),
+          src: name || 'Quick note',
+          when: 'Just now'
+        }
+        MEMORIES[id] = memory
+        feed = [{ id: uid('f_'), kind: 'note', title, when: 'Just now', status: 'done' }, ...feed]
+        return { memory: { ...memory }, created: true }
+      },
+      archive: async (): Promise<Memory[]> => Object.values(MEMORIES).map((m) => ({ ...m })),
+      feed: async (): Promise<FedItem[]> => feed.map((f) => ({ ...f })),
+      search: async (query: string, topK?: number): Promise<MatchHit[]> => {
+        const hits = matchTask(query)
+        return topK ? hits.slice(0, topK) : hits
+      }
+    },
+    todos: {
+      add: async (title: string, notes?: string): Promise<Task> => {
+        if (tasks.length >= CAP) throw new Error(CAP_REACHED)
+        const task: Task = {
+          id: uid('t_'),
+          title,
+          when: 'today',
+          status: 'gathered',
+          done: false,
+          ctx: [],
+          pinned: [],
+          draft: null,
+          draftNote: null,
+          note: notes ?? null,
+          noteKind: 'gathered',
+          relMap: {},
+          fresh: true
+        }
+        tasks = [...tasks, task]
+        return clone(task)
+      },
+      today: async (): Promise<Task[]> => tasks.map(clone),
+      backlog: async (): Promise<BacklogItem[]> => backlog.map((b) => ({ ...b })),
+      done: async (): Promise<Todo[]> => [],
+      complete: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.done = true
+        t.status = 'done'
+        return clone(t)
+      },
+      reopen: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.done = false
+        t.status = 'gathered'
+        return clone(t)
+      },
+      plan: async (keep: string[]): Promise<Task[]> => {
+        const keepSet = new Set(keep)
+        // sweep non-kept OPEN tasks back to the backlog
+        const swept = tasks.filter((t) => !keepSet.has(t.id) && !t.done)
+        backlog = [
+          ...swept.map((t) => ({
+            id: uid('b_'),
+            title: t.title,
+            hint: '',
+            ctx: [...t.ctx],
+            conf: null
+          })),
+          ...backlog
+        ]
+        tasks = tasks.filter((t) => keepSet.has(t.id)).map((t) => ({ ...t, fresh: false }))
+        return tasks.map(clone)
+      },
+      schedule: async (id: string): Promise<Task | null> => {
+        const b = backlog.find((x) => x.id === id)
+        if (!b) return null
+        if (tasks.length >= CAP) throw new Error(CAP_REACHED)
+        backlog = backlog.filter((x) => x.id !== id)
+        const n = b.ctx?.length ?? 0
+        const task: Task = {
+          id: uid('t_'),
+          title: b.title,
+          when: 'today',
+          status: 'gathered',
+          done: false,
+          ctx: [...(b.ctx ?? [])],
+          pinned: [],
+          draft: null,
+          draftNote: null,
+          note: n ? `Kept ${n} thing${n === 1 ? '' : 's'} for you.` : null,
+          noteKind: 'gathered',
+          relMap: {},
+          fresh: true
+        }
+        tasks = [...tasks, task]
+        return clone(task)
+      },
+      searchMoreContext: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        return t ? clone(t) : null
+      },
+      pinContext: async (id: string, itemId: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        if (!t.ctx.includes(itemId)) t.ctx = [...t.ctx, itemId]
+        if (!t.pinned.includes(itemId)) t.pinned = [...t.pinned, itemId]
+        return clone(t)
+      },
+      dismissContext: async (id: string, itemId: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.ctx = t.ctx.filter((x) => x !== itemId)
+        t.pinned = t.pinned.filter((x) => x !== itemId)
+        return clone(t)
+      }
+    },
+    ui: {
+      setBadge: async (): Promise<void> => {}
+    }
   }
-  return out.map((t, i) => ({ ...t, id: 'u_' + Date.now() + '_' + i }))
 }

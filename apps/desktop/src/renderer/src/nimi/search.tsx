@@ -1,32 +1,11 @@
 // search.tsx — "Dig deeper": a universal search across everything you've fed Nimi.
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { NimiMark, NimiSay, Dots } from './mark'
-import { MEMORIES } from './data'
-
-function memSearch(q: string): string[] {
-  const ids = Object.keys(MEMORIES)
-  const words = q
-    .toLowerCase()
-    .split(/[^a-z0-9']+/)
-    .filter((w) => w.length > 1)
-  if (!words.length) return ids
-  return ids
-    .map((id) => {
-      const m = MEMORIES[id]
-      const hay = (m.title + ' ' + m.snip + ' ' + m.kind + ' ' + (m.src || '')).toLowerCase()
-      let s = 0
-      for (const w of words) if (hay.includes(w)) s += 1
-      return { id, s }
-    })
-    .filter((x) => x.s > 0)
-    .sort((a, b) => b.s - a.s)
-    .map((x) => x.id)
-}
-
-const SEARCH_SUGGEST = ['cabin weekend', "mom's birthday", 'Q3 numbers', 'dentist', 'book club']
+import { data, MemoryContext } from './api'
+import { SEARCH_SUGGEST } from './ui-stubs'
 
 export function SearchOverlay({
   contextTitle,
@@ -39,8 +18,10 @@ export function SearchOverlay({
   onKeep?: ((id: string) => void) | null
   onClose: () => void
 }): JSX.Element {
+  const mem = useContext(MemoryContext)
   const [q, setQ] = useState('')
   const [settledQ, setSettledQ] = useState('')
+  const [hits, setHits] = useState<string[]>([])
   const [kept, setKept] = useState<Set<string>>(new Set(keptIds || []))
   const inputRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
@@ -56,8 +37,26 @@ export function SearchOverlay({
     return () => clearTimeout(id)
   }, [q, settledQ])
 
+  // settled query → real semantic search (ranked ids). All setState lands inside
+  // the async callback (after the await), never synchronously in the effect body.
+  // Stale responses are dropped via the cancel flag. Empty queries show "recent"
+  // and ignore `hits` entirely, so there's nothing to clear synchronously.
+  useEffect(() => {
+    if (!settledQ.trim()) return undefined
+    let cancelled = false
+    const run = async (): Promise<void> => {
+      const r = await data.pipeline.search(settledQ).catch(() => [])
+      if (!cancelled) setHits(r.map((h) => h.id))
+    }
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [settledQ])
+
+  const recent = useMemo(() => Object.keys(mem).slice(0, 6), [mem])
   const thinking = q.trim() !== '' && settledQ !== q
-  const results = q.trim() ? memSearch(q) : Object.keys(MEMORIES).slice(0, 6)
+  const results = q.trim() ? hits : recent
   const keep = (id: string): void => {
     setKept((s) => new Set(s).add(id))
     onKeep && onKeep(id)
@@ -120,7 +119,8 @@ export function SearchOverlay({
 
         {!thinking &&
           results.map((id, i) => {
-            const m = MEMORIES[id]
+            const m = mem[id]
+            if (!m) return null
             const isImg = m.kind === 'photo' || m.kind === 'screenshot' || m.kind === 'image'
             const isKept = kept.has(id)
             return (

@@ -10,7 +10,7 @@
 //   • closing hides (the app lives in the tray); Quit (tray menu / Cmd-Q) exits.
 // Keeps the macOS Dock icon for now (hiding it is a punch-listed preference).
 import { app, BrowserWindow, Tray, Menu, globalShortcut, screen, nativeImage } from 'electron'
-import type { MenuItem } from 'electron'
+import type { MenuItem, MenuItemConstructorOptions } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import trayIconAsset from '../../../resources/trayTemplate.png?asset'
@@ -157,14 +157,27 @@ export function initTrayWindow(): void {
   tray = new Tray(img)
   tray.setToolTip('Neeme')
 
-  const menu = Menu.buildFromTemplate([
+  const template: MenuItemConstructorOptions[] = [
     { label: 'Show Neeme', click: () => showAnchored() },
     {
       label: 'Pin on top',
       type: 'checkbox',
       checked: pinned,
       click: (mi: MenuItem) => setPinned(mi.checked)
-    },
+    }
+  ]
+  // Opt-in: hide the Dock icon (macOS) so Neeme is a pure menu-bar utility. Default
+  // off — the Dock stays unless you choose this, and the tray icon + hotkey always
+  // summon the window, so it can't get "lost".
+  if (process.platform === 'darwin') {
+    template.push({
+      label: 'Hide Dock icon',
+      type: 'checkbox',
+      checked: false,
+      click: (mi: MenuItem) => (mi.checked ? app.dock?.hide() : app.dock?.show())
+    })
+  }
+  template.push(
     { type: 'separator' },
     {
       label: 'Quit Neeme',
@@ -174,7 +187,8 @@ export function initTrayWindow(): void {
         app.quit()
       }
     }
-  ])
+  )
+  const menu = Menu.buildFromTemplate(template)
   // Left-click toggles; right-click opens the menu. (setContextMenu would hijack
   // the left click on macOS, so wire them separately.)
   tray.on('click', () => {

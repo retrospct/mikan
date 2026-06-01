@@ -35,13 +35,17 @@ The mutators return the **updated `Task`**, so drop the result straight back int
 
 **Real now:** all ids/titles/timestamps; the context pool (`Task.ctx`, `Task.pinned`, `Task.relMap`); semantic search ranking; capture → archive → feed; the daily cap / plan ritual; pin/dismiss persistence.
 
-**AI-gap (null/empty until the LLM layer):**
+**Real when `NEEME_ANTHROPIC_KEY` is set (null/empty otherwise — graceful degradation still applies):**
 
-- `Task.brief`, `Task.draft`, `Task.draftNote`, `Task.note`, `Task.noteKind`, and the `draftFor`/`draftType`/`draftIcon`/`useLabel`/`useNote`/`useDone` detail fields.
-- `Task.status` is only ever `'gathered'` (open) or `'done'` — never `'gathering'` / `'drafted'` yet.
-- `BacklogItem.conf` is `null`; `BacklogItem.ctx` is `[]`.
-- Feed-inferred `UncoveredTodo`s aren't emitted yet (treat as `[]`).
-- `relOf`/`whyOf` (the per-context reason) — `relMap` gives the real score; the "why" string is AI-gap.
+- `Task.brief`, `Task.draft`, `Task.draftNote`, `Task.note`, `Task.noteKind`, and the `draftFor`/`draftType`/`draftIcon`/`useLabel`/`useNote`/`useDone` detail fields — all populated by the `Drafter` seam (`apps/desktop/src/main/pipeline/draft.ts`) and persisted in the `todo_ai` table.
+- `Task.status` advances to `'gathering'` while the draft runs and `'drafted'` once it lands (still `'done'` when the todo is done).
+- `Task.whyMap` — per-context reason strings; read as `task.whyMap?.[id]` in the renderer (replaces the mock `whyOf()` from `data.ts` — a #2 follow-up).
+- `BacklogItem.conf` — populated by the drafter even for backlog items (search-backed context).
+
+**Still AI-gap (not yet wired):**
+
+- Feed-inferred `UncoveredTodo`s — not emitted yet (treat as `[]`). Gated on #6.
+- `BacklogItem.ctx` — still `[]` until a backlog item is scheduled onto a day.
 
 ## Invariant the UI relies on
 

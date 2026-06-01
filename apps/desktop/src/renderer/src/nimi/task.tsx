@@ -1,17 +1,17 @@
 // task.tsx — task detail. Reads like a brief Nimi prepared for you:
 // a summary in its voice, the draft it took a crack at, then the sources it used.
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import type { JSX, ReactNode } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { NimiMark, NimiSay, Dots } from './mark'
-import { MEMORIES, relOf, whyOf } from './data'
-import type { Memory, Task } from './data'
+import { data, MemoryContext } from './api'
+import type { Memory, Task } from '@nimi/contract/views'
 
+// Relevance is real (`Task.relMap` from search); fall back to a neutral fit when
+// a ctx id has no score yet.
 function relFor(task: Task, id: string): number {
-  if (task.relMap && task.relMap[id] != null) return task.relMap[id]
-  const r = relOf(task.id, id)
-  return r || 0.6
+  return task.relMap?.[id] ?? 0.6
 }
 
 // Render **bold** spans as <b> without dropping to dangerouslySetInnerHTML — drafts
@@ -273,6 +273,7 @@ export function TaskDetail({
   onDig: () => void
   onSearch: () => void
 }): JSX.Element {
+  const mem = useContext(MemoryContext)
   const [pinned, setPinned] = useState<Set<string>>(new Set(task.pinned || []))
   const [swept, setSwept] = useState<Set<string>>(new Set())
   const [drafting, setDrafting] = useState(false)
@@ -314,15 +315,27 @@ export function TaskDetail({
   })
 
   const toggleKeep = (id: string): void => {
+    const willPin = !pinned.has(id)
     setPinned((s) => {
       const n = new Set(s)
-      n.has(id) ? n.delete(id) : n.add(id)
+      willPin ? n.add(id) : n.delete(id)
       onUpdate && onUpdate(task.id, { pinned: [...n] })
       return n
     })
-    if (!pinned.has(id)) markFresh([id])
+    // Persist pins (the contract has no "un-pin", so unpinning stays local-only).
+    if (willPin) {
+      markFresh([id])
+      void data.todos.pinContext(task.id, id).then((t) => {
+        if (t) onUpdate && onUpdate(task.id, { ctx: t.ctx, pinned: t.pinned })
+      })
+    }
   }
-  const sweep = (id: string): void => setSwept((s) => new Set(s).add(id))
+  const sweep = (id: string): void => {
+    setSwept((s) => new Set(s).add(id))
+    void data.todos.dismissContext(task.id, id).then((t) => {
+      if (t) onUpdate && onUpdate(task.id, { ctx: t.ctx, pinned: t.pinned })
+    })
+  }
 
   const tryDraft = (): void => {
     setDrafting(true)
@@ -443,25 +456,30 @@ export function TaskDetail({
                   </span>
                 </button>
                 {keptOpen ? (
-                  keptIds.map((id, i) => (
-                    <MemoryCard
-                      key={id}
-                      m={MEMORIES[id]}
-                      rel={relFor(task, id)}
-                      why={whyOf(task.id, id)}
-                      pinned
-                      swept={swept.has(id)}
-                      fresh={fresh.has(id)}
-                      delay={i * 0.04}
-                      onKeep={() => toggleKeep(id)}
-                      onSweep={() => sweep(id)}
-                    />
-                  ))
+                  keptIds.map((id, i) => {
+                    const m = mem[id]
+                    if (!m) return null
+                    return (
+                      <MemoryCard
+                        key={id}
+                        m={m}
+                        rel={relFor(task, id)}
+                        why={null}
+                        pinned
+                        swept={swept.has(id)}
+                        fresh={fresh.has(id)}
+                        delay={i * 0.04}
+                        onKeep={() => toggleKeep(id)}
+                        onSweep={() => sweep(id)}
+                      />
+                    )
+                  })
                 ) : (
                   <button className="kept-strip" onClick={() => setKeptOpen(true)}>
                     <span className="kept-chips">
                       {keptIds.map((id) => {
-                        const m = MEMORIES[id]
+                        const m = mem[id]
+                        if (!m) return null
                         const isImg =
                           m.kind === 'photo' || m.kind === 'screenshot' || m.kind === 'image'
                         return (
@@ -509,20 +527,24 @@ export function TaskDetail({
                   </span>
                 </button>
                 {open &&
-                  suggIds.map((id, i) => (
-                    <MemoryCard
-                      key={id}
-                      m={MEMORIES[id]}
-                      rel={relFor(task, id)}
-                      why={whyOf(task.id, id)}
-                      pinned={false}
-                      swept={swept.has(id)}
-                      fresh={fresh.has(id)}
-                      delay={i * 0.04}
-                      onKeep={() => toggleKeep(id)}
-                      onSweep={() => sweep(id)}
-                    />
-                  ))}
+                  suggIds.map((id, i) => {
+                    const m = mem[id]
+                    if (!m) return null
+                    return (
+                      <MemoryCard
+                        key={id}
+                        m={m}
+                        rel={relFor(task, id)}
+                        why={null}
+                        pinned={false}
+                        swept={swept.has(id)}
+                        fresh={fresh.has(id)}
+                        delay={i * 0.04}
+                        onKeep={() => toggleKeep(id)}
+                        onSweep={() => sweep(id)}
+                      />
+                    )
+                  })}
               </>
             )}
 

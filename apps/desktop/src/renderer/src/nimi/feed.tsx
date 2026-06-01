@@ -5,8 +5,8 @@ import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { NimiMark } from './mark'
 import { VoiceRecorder } from './voice'
-import { FED_RECENT } from './data'
-import type { FedItem, MemoryKind } from './data'
+import { data } from './api'
+import type { FedItem, MemoryKind } from '@nimi/contract/views'
 import type { IconName } from './icons'
 
 interface FeedKind {
@@ -45,7 +45,7 @@ export function FeedView({
   onCaptured?: () => void
   onRecordingChange?: (v: boolean) => void
 }): JSX.Element {
-  const [fed, setFed] = useState<FedItem[]>(FED_RECENT)
+  const [fed, setFed] = useState<FedItem[]>([])
   const [morsel, setMorsel] = useState<FeedKind | null>(null)
   const [eating, setEating] = useState(false)
   const [over, setOver] = useState(false)
@@ -55,6 +55,19 @@ export function FeedView({
   useEffect(() => {
     onRecordingChange && onRecordingChange(recording)
   }, [recording, onRecordingChange])
+
+  // the real recent-capture feed (remounts on each tab switch, so it picks up
+  // captures made elsewhere). The quick-feed buttons below stay an optimistic
+  // prepend — they're a zero-input demo affordance with no content to persist.
+  useEffect(() => {
+    let cancelled = false
+    void data.pipeline.feed().then((items) => {
+      if (!cancelled) setFed(items)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const feedOne = (kind: MemoryKind): void => {
     if (busy.current) return

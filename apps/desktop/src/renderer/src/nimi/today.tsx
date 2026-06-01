@@ -1,11 +1,11 @@
 // today.tsx — header, memory weather, Today list, task cards, bottom nav.
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { NimiMark, NimiNote } from './mark'
-import { MEMORIES } from './data'
-import type { Task } from './data'
+import { MemoryContext } from './api'
+import type { Task } from '@nimi/contract/views'
 import type { NimiMarkState } from './types'
 
 function greeting(): string {
@@ -75,11 +75,12 @@ function MemoryWeather({ count, onOpen }: { count: number; onOpen: () => void })
 
 // stacked mini-thumbnails for the ambient strip
 function CtxThumbs({ memIds }: { memIds: string[] }): JSX.Element {
+  const mem = useContext(MemoryContext)
   const ids = memIds.slice(0, 3)
   return (
     <div className="ctx-thumbs">
       {ids.map((id) => {
-        const m = MEMORIES[id]
+        const m = mem[id]
         const isImg = m && (m.kind === 'photo' || m.kind === 'screenshot' || m.kind === 'image')
         return (
           <span key={id} className={'ct' + (isImg ? ' img' : '')}>

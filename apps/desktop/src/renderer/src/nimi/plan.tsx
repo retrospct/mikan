@@ -3,8 +3,7 @@ import { useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { NimiMark } from './mark'
-import { BACKLOG, REL } from './data'
-import type { BacklogItem, Task } from './data'
+import type { BacklogItem, Task } from '@nimi/contract/views'
 
 export function PlanRitual({
   tasks,
@@ -19,9 +18,10 @@ export function PlanRitual({
   fresh: boolean
   backlog: BacklogItem[]
   onClose: () => void
-  onApply: (next: Task[]) => void
+  // hand up the kept task ids + chosen backlog ids; NimiApp drives plan()+schedule()
+  onApply: (keep: string[], add: string[]) => void
 }): JSX.Element {
-  const pool = backlog || BACKLOG
+  const pool = backlog
   const [decide, setDecide] = useState<Record<string, 'keep' | 'drop'>>(() => {
     const d: Record<string, 'keep' | 'drop'> = {}
     tasks.forEach((t) => (d[t.id] = t.done ? 'drop' : 'keep'))
@@ -34,27 +34,8 @@ export function PlanRitual({
   const room = cap - total
 
   const apply = (): void => {
-    const kept = tasks.filter((t) => decide[t.id] === 'keep').map((t) => ({ ...t, fresh: false }))
-    const added: Task[] = [...add].map((id) => {
-      const b = pool.find((x) => x.id === id) as BacklogItem
-      const ctx = b.ctx || []
-      return {
-        id: 't_' + id,
-        title: b.title,
-        when: 'today',
-        status: 'gathered',
-        done: false,
-        ctx,
-        pinned: [],
-        draft: null,
-        draftNote: null,
-        fresh: true,
-        note: ctx.length ? `Kept ${ctx.length} thing${ctx.length === 1 ? '' : 's'} for you.` : null,
-        noteKind: 'gathered',
-        relMap: REL[id] || {}
-      }
-    })
-    onApply([...kept, ...added].slice(0, cap))
+    const keep = tasks.filter((t) => decide[t.id] === 'keep').map((t) => t.id)
+    onApply(keep, [...add].slice(0, Math.max(0, cap - keep.length)))
   }
 
   return (

@@ -20,9 +20,7 @@
             "title": "Tags"
           }
         },
-        "required": [
-          "file"
-        ],
+        "required": ["file"],
         "title": "Body_ingest_ingest_post",
         "type": "object"
       },
@@ -49,10 +47,7 @@
             "$ref": "#/components/schemas/ItemSummary"
           }
         },
-        "required": [
-          "created",
-          "item"
-        ],
+        "required": ["created", "item"],
         "title": "IngestResponse",
         "type": "object"
       },
@@ -116,12 +111,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "id",
-          "content_type",
-          "created_at",
-          "extraction_status"
-        ],
+        "required": ["id", "content_type", "created_at", "extraction_status"],
         "title": "ItemSummary",
         "type": "object"
       },
@@ -157,9 +147,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "NoteIn",
         "type": "object"
       },
@@ -173,9 +161,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "items"
-        ],
+        "required": ["items"],
         "title": "RecentResponse",
         "type": "object"
       },
@@ -234,10 +220,7 @@
             "title": "Source Filename"
           }
         },
-        "required": [
-          "id",
-          "score"
-        ],
+        "required": ["id", "score"],
         "title": "SearchHitView",
         "type": "object"
       },
@@ -255,10 +238,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "query",
-          "hits"
-        ],
+        "required": ["query", "hits"],
         "title": "SearchResponse",
         "type": "object"
       },
@@ -291,9 +271,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "title"
-        ],
+        "required": ["title"],
         "title": "TodoIn",
         "type": "object"
       },
@@ -390,18 +368,14 @@
             "type": "string"
           }
         },
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError",
         "type": "object"
       }
     }
   },
   "info": {
-    "title": "Neeme API",
+    "title": "Nimi API",
     "version": "0.1.0"
   },
   "openapi": "3.1.0",

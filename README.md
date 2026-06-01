@@ -1,4 +1,4 @@
-# neeme-desktop
+# nimi
 
 The desktop client for **neeme** — a privacy-first, local-first personal memory system. _Your personal AI, not a corporation's._
 
@@ -15,13 +15,13 @@ pnpm typecheck  # types only (node + web)
 
 ## Architecture
 
-neeme-desktop is **local-first**: your data lives on your device, not in the cloud.
+nimi is **local-first**: your data lives on your device, not in the cloud.
 
 - **Three processes** (electron-vite): `src/main` (Node/Electron — owns data), `src/preload` (the secure `contextBridge`), `src/renderer` (the React UI). Context isolation is on; the renderer never touches the database directly.
 - **Data layer** — `src/main/db` uses **Drizzle ORM** over **libSQL** (a SQLite fork), as a plain on-device `file:` database in Electron's `userData` dir. libSQL is deliberate: the same driver later enables **Turso embedded-replica sync** without rewriting the data layer.
 - **IPC seam** — `src/shared/ipc.ts` defines the typed contract (channel names + types) shared by all three processes. The renderer calls `window.api.memory.*`, which routes through preload → `ipcMain.handle` → `src/main/services` → Drizzle.
 
-## API client (the Neeme HTTP backend)
+## API client (the Nimi HTTP backend)
 
 Remote services (capture, search, todos) are served by the **FastAPI backend** in the sibling [`neeme`](https://github.com/retrospct/neeme) repo (the backend + mobile app). The desktop app talks to it through a **typed client generated from the backend's OpenAPI spec** with [`@hey-api/openapi-ts`](https://heyapi.dev/) — so client types can't drift from the server.
 
@@ -34,8 +34,8 @@ The client is plain `fetch` (no Electron/Node imports), so it's reusable as-is i
 
 ```bash
 # Regenerate the client after the backend's API changes:
-cd ../neeme && .venv/bin/python scripts/export_openapi.py ../neeme-desktop/openapi.json
-cd ../neeme-desktop && pnpm gen:api
+cd ../neeme && .venv/bin/python scripts/export_openapi.py ../nimi/openapi.json
+cd ../nimi && pnpm gen:api
 
 # Run the backend locally so the app can reach it (uv-managed venv):
 cd ../neeme && uv pip install -e ".[api]" && neeme serve   # serves on :8000
@@ -44,6 +44,7 @@ cd ../neeme && uv pip install -e ".[api]" && neeme serve   # serves on :8000
 > Today the renderer calls the API directly (plain `fetch`, the same path RN will use). Once auth tokens exist, sensitive calls can move behind Electron **main**/IPC so tokens live in `safeStorage` — the env-agnostic client makes that a non-breaking change. Local libSQL data stays on the IPC path; HTTP is a separate concern.
 
 ### Deferred (opt-in, later)
+
 - **Sync** — Turso embedded replicas; will only ever push **end-to-end-encrypted** data.
 - **Auth / at-rest encryption** — currently Tier 1 (protected by the OS account, no app lock). Electron `safeStorage` / SQLCipher slot into `src/main/db` when added.
 - **Vector index** (LanceDB / sqlite-vec) and enrichment, mirroring the broader neeme pipeline.

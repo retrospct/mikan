@@ -1,6 +1,6 @@
 // voice.tsx — the voice capture recorder. Uniform bars do a staggered
 // scaleY wave (the envelope that reads as "listening"), with REC + timer.
-// Lifted from the Mr. Matcha composer the team liked, restyled for Neeme.
+// Lifted from the Mr. Matcha composer the team liked, restyled for Nimi.
 import { useEffect, useState } from 'react'
 import type { CSSProperties, JSX, ReactNode } from 'react'
 import { NIcon } from './icons'

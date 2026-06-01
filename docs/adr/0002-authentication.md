@@ -14,9 +14,10 @@ neeme has **no authentication today** — every endpoint is open and app data (i
 deployed use.
 
 Two constraints now shape the choice:
+
 1. **Managed only — no self-hosting.** Keep it easy to start; we don't want to operate an auth
    service. (This rules out self-hosted Better Auth, which rev. 2 had weighed.)
-2. **Must serve both clients: Electron desktop (the flagship) *and* React Native (planned mobile).**
+2. **Must serve both clients: Electron desktop (the flagship) _and_ React Native (planned mobile).**
 
 ## Two reframes that make this low-stakes
 
@@ -24,7 +25,7 @@ Two constraints now shape the choice:
   local-first and the on-device store is the source of truth, the **local experience needs no
   login at all.** Auth only matters once we add **accounts / cross-device sync / cloud offload**.
   So this is not on the critical path — pick something reasonable and move on.
-- **No provider has a real "Electron SDK."** Desktop auth is the *same pattern everywhere*: OIDC
+- **No provider has a real "Electron SDK."** Desktop auth is the _same pattern everywhere_: OIDC
   **Authorization Code + PKCE** in the **system browser** (never an embedded webview), with a
   **loopback** (`127.0.0.1`) or **custom-scheme** (`neeme://`) redirect, via a generic client lib
   (`openid-client` / AppAuth-JS). Token in OS keychain (`safeStorage`) → the existing
@@ -36,15 +37,15 @@ Two constraints now shape the choice:
 
 Legend: ✅ strong · ⚠️ caveats · ❌ poor
 
-| Option | React Native | Electron (all via OIDC/PKCE) | DX / ease | Price posture | Notes |
-|---|---|---|---|---|---|
-| **A. Kinde** | ✅ RN + web SDKs | ⚠️ shared OIDC flow | ✅✅ very easy, modern | ✅ generous free, simple | Consumer-app focused; strong easy-start pick |
-| **B. Logto Cloud** | ✅ RN SDK | ✅ OIDC-purist → cleanest desktop flow | ✅ clean | ✅ cheap/modern | Managed **and** OSS — "managed now, self-host someday" stays open, no re-platform |
-| **C. Auth0** | ✅ first-class (`react-native-auth0`) | ⚠️ documented desktop sample | ⚠️ powerful but heavy | ⚠️ **7.5k MAU free; per-MAU +~300% ($0.023→$0.07)** | Safe known quantity; cost ceiling at scale; busy console (Okta-owned) |
-| **D. Clerk** | ✅ first-class Expo | ❌ **not first-class for Electron** | ✅✅ best DX | ⚠️ Pro $25/mo+ | Dreamy for mobile/web; weak on the desktop flagship → not the fit here |
-| **E. Neon Auth (managed Better Auth)** | ⚠️ via BA client | ⚠️ no public-client/device plugin on managed; client-SDK-in-Electron unproven | ✅ if it fits | ✅ in our Neon DB | Branchable users in our DB, but the desktop path is the *least proven* (rev. 2) |
-| ~~Self-hosted Better Auth~~ | — | — | — | — | **Ruled out** — we won't operate auth infra |
-| ~~Roll-your-own~~ | — | — | — | — | **Rejected** — security footgun |
+| Option                                 | React Native                          | Electron (all via OIDC/PKCE)                                                  | DX / ease              | Price posture                                       | Notes                                                                             |
+| -------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **A. Kinde**                           | ✅ RN + web SDKs                      | ⚠️ shared OIDC flow                                                           | ✅✅ very easy, modern | ✅ generous free, simple                            | Consumer-app focused; strong easy-start pick                                      |
+| **B. Logto Cloud**                     | ✅ RN SDK                             | ✅ OIDC-purist → cleanest desktop flow                                        | ✅ clean               | ✅ cheap/modern                                     | Managed **and** OSS — "managed now, self-host someday" stays open, no re-platform |
+| **C. Auth0**                           | ✅ first-class (`react-native-auth0`) | ⚠️ documented desktop sample                                                  | ⚠️ powerful but heavy  | ⚠️ **7.5k MAU free; per-MAU +~300% ($0.023→$0.07)** | Safe known quantity; cost ceiling at scale; busy console (Okta-owned)             |
+| **D. Clerk**                           | ✅ first-class Expo                   | ❌ **not first-class for Electron**                                           | ✅✅ best DX           | ⚠️ Pro $25/mo+                                      | Dreamy for mobile/web; weak on the desktop flagship → not the fit here            |
+| **E. Neon Auth (managed Better Auth)** | ⚠️ via BA client                      | ⚠️ no public-client/device plugin on managed; client-SDK-in-Electron unproven | ✅ if it fits          | ✅ in our Neon DB                                   | Branchable users in our DB, but the desktop path is the _least proven_ (rev. 2)   |
+| ~~Self-hosted Better Auth~~            | —                                     | —                                                                             | —                      | —                                                   | **Ruled out** — we won't operate auth infra                                       |
+| ~~Roll-your-own~~                      | —                                     | —                                                                             | —                      | —                                                   | **Rejected** — security footgun                                                   |
 
 ### Notes
 
@@ -57,12 +58,12 @@ Legend: ✅ strong · ⚠️ caveats · ❌ poor
   shrank to **7,500 MAU**, per-user price **rose ~300%**, and the console is heavy. Fine to start;
   a cost ceiling later. The "boring, known" choice.
 - **D. Clerk** — Best DX and first-class Expo/RN, but **Electron isn't a first-class target**.
-  Since neeme-desktop is the flagship, that weakness disqualifies it as the primary pick (revisit
+  Since nimi is the flagship, that weakness disqualifies it as the primary pick (revisit
   if mobile/web ever leads).
 - **E. Neon Auth / Better Auth (managed)** — Tempting (users branch with our Neon DB, JWKS for
   backend verify), but rev. 2 found the **desktop path least proven**: managed Neon Auth doesn't
-  expose the public-client/device plugins, so you'd run the Better Auth client SDK *inside
-  Electron*, which isn't documented. Keep as a "watch the roadmap" option, not the starting pick.
+  expose the public-client/device plugins, so you'd run the Better Auth client SDK _inside
+  Electron_, which isn't documented. Keep as a "watch the roadmap" option, not the starting pick.
 
 ## When auth does get built — the three layers
 

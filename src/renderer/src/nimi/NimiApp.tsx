@@ -1,6 +1,6 @@
-// NeemeApp.tsx — the Neeme desktop surface: state, navigation, screens.
+// NimiApp.tsx — the Nimi desktop surface: state, navigation, screens.
 //
-// Ported from the design bundle's neeme-app.jsx. Two deliberate changes from the
+// Ported from the design bundle's nimi-app.jsx. Two deliberate changes from the
 // prototype, per the implementation brief:
 //   1. The desktop fills the real Electron window — the prototype's simulated macOS
 //      menu bar + tray popover are dropped (the OS provides real chrome; real
@@ -23,8 +23,8 @@ import { AllDone } from './celebrate'
 import { SearchOverlay } from './search'
 import { SEED_TASKS, REL, BACKLOG } from './data'
 import type { BacklogItem, Task } from './data'
-import type { NeemeMarkState } from './types'
-import './neeme.css'
+import type { NimiMarkState } from './types'
+import './nimi.css'
 
 const CAP = 5
 
@@ -59,12 +59,12 @@ function seedTasks(): Task[] {
   return SEED_TASKS.map((t) => ({ ...t, relMap: REL[t.id] || {} }))
 }
 
-export default function NeemeApp(): JSX.Element {
+export default function NimiApp(): JSX.Element {
   const [tasks, setTasks] = useState<Task[]>(seedTasks)
   const [tab, setTab] = useState<'today' | 'feed'>('today')
   const [overlay, setOverlay] = useState<'add' | 'plan' | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
-  const [headState, setHeadState] = useState<NeemeMarkState>('idle')
+  const [headState, setHeadState] = useState<NimiMarkState>('idle')
   const [planned, setPlanned] = useState(true) // a fresh day starts unplanned
   const [yesterday, setYesterday] = useState<Task[]>([]) // leftovers to carry over
   const [showWin, setShowWin] = useState(false)
@@ -209,7 +209,7 @@ export default function NeemeApp(): JSX.Element {
                 tasks={tasks}
                 cap={CAP}
                 layout={TWEAKS.todayLayout}
-                neemeState={headState}
+                nimiState={headState}
                 planned={planned}
                 carriedCount={carriedCount}
                 backlogCount={backlog.length}

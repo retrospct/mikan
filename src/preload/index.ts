@@ -1,9 +1,9 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { IPC, type AuthState, type NeemeApi } from '../shared/ipc'
+import { IPC, type AuthState, type NimiApi } from '../shared/ipc'
 
 // Custom APIs for renderer — the only data surface the renderer can reach.
-const api: NeemeApi = {
+const api: NimiApi = {
   pipeline: {
     captureText: (text: string, name?: string) =>
       ipcRenderer.invoke(IPC.pipelineCaptureText, text, name),

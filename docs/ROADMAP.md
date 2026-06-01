@@ -1,4 +1,4 @@
-# Neeme roadmap
+# Nimi roadmap
 
 The shared punch list. Both lanes pull from this — keep it current as items move.
 **Baseline:** `main` @ all of #12–#15 merged (pipeline + embedder + contract + tray + docs).
@@ -20,22 +20,22 @@ Lanes (see `CLAUDE.md`): **back** = `src/main` + `src/shared`; **front** = `src/
 
 ## Punch list
 
-| # | Item | Lane | Unblocks | Size | When |
-|---|------|------|----------|------|------|
-| 1 | Smoke-test integrated main (embedder + tray actually run) | human | confidence in the baseline | S | now |
-| 2 | **Wire UI → `window.api`** (retire mock `data.ts`; see `INTEGRATION.md`) | front | the app runs on real data — the headline | L | **P0** |
-| 3 | AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings) | back | every AI-gap field | L | P1 ⚠️ |
-| 4 | `captureFile` over IPC + capture UX (drag-drop / picker) | back + front | capturing PDFs/files, not just typed notes | M | P1 |
-| 5 | Image + audio extraction (OCR / transcription) | back | screenshots & voice memos as memories | M–L | P1 ⚠️ |
-| 6 | Feed view + uncovered-todos (Neeme proposes todos from the feed) | back + front | the `FedItem` / `UncoveredTodo` surfaces | M | P2 |
-| 7 | Worker-service tests (vitest) | back | guards pipeline/todo logic | M | P1 |
-| 8 | Connectors / ingest (email, calendar, …) | back | automatic capture vs manual | L | P2 |
-| 9 | Auth wired end-to-end (Logto configured, login tested) | back + front | real accounts | M | P2 |
-| 10 | Sync / cloud offload (Turso), multi-user | back | multi-device | L | P3 |
-| 11 | Vuln cleanup + CSP tighten | back | the dependabot alerts + hardening | S | P1 (quick) |
-| 12 | Auto-updater (electron-updater — not the Squirrel built-in) | back/dist | testers auto-get each pushed build | M | P1 |
-| 13 | Package macOS (build + notarize) + a Windows build (expected-fail canary for native `onnxruntime-node`) | back/dist | shipping signed builds to testers | M | P1 |
-| 14 | Start an RN + Expo app in-repo (mobile companion) | mobile | the mobile surface — makes this a multi-app repo | L | P2 |
+| #   | Item                                                                                                     | Lane         | Unblocks                                         | Size | When       |
+| --- | -------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------ | ---- | ---------- |
+| 1   | Smoke-test integrated main (embedder + tray actually run)                                                | human        | confidence in the baseline                       | S    | now        |
+| 2   | **Wire UI → `window.api`** (retire mock `data.ts`; see `INTEGRATION.md`)                                 | front        | the app runs on real data — the headline         | L    | **P0**     |
+| 3   | AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings) | back         | every AI-gap field                               | L    | P1 ⚠️      |
+| 4   | `captureFile` over IPC + capture UX (drag-drop / picker)                                                 | back + front | capturing PDFs/files, not just typed notes       | M    | P1         |
+| 5   | Image + audio extraction (OCR / transcription)                                                           | back         | screenshots & voice memos as memories            | M–L  | P1 ⚠️      |
+| 6   | Feed view + uncovered-todos (Nimi proposes todos from the feed)                                          | back + front | the `FedItem` / `UncoveredTodo` surfaces         | M    | P2         |
+| 7   | Worker-service tests (vitest)                                                                            | back         | guards pipeline/todo logic                       | M    | P1         |
+| 8   | Connectors / ingest (email, calendar, …)                                                                 | back         | automatic capture vs manual                      | L    | P2         |
+| 9   | Auth wired end-to-end (Logto configured, login tested)                                                   | back + front | real accounts                                    | M    | P2         |
+| 10  | Sync / cloud offload (Turso), multi-user                                                                 | back         | multi-device                                     | L    | P3         |
+| 11  | Vuln cleanup + CSP tighten                                                                               | back         | the dependabot alerts + hardening                | S    | P1 (quick) |
+| 12  | Auto-updater (electron-updater — not the Squirrel built-in)                                              | back/dist    | testers auto-get each pushed build               | M    | P1         |
+| 13  | Package macOS (build + notarize) + a Windows build (expected-fail canary for native `onnxruntime-node`)  | back/dist    | shipping signed builds to testers                | M    | P1         |
+| 14  | Start an RN + Expo app in-repo (mobile companion)                                                        | mobile       | the mobile surface — makes this a multi-app repo | L    | P2         |
 
 ## Suggested split
 
@@ -68,5 +68,5 @@ ADR-worthy; settle each before starting the items it gates.
    the Expo scaffold than to restructure after.
 
 **Native-packaging note (#13):** `onnxruntime-node` ships per-platform prebuilt binaries. macOS
-is the happy path; the Windows build is a deliberate canary to see *how* it breaks. Fallback if
+is the happy path; the Windows build is a deliberate canary to see _how_ it breaks. Fallback if
 it fights packaging: the WASM backend (`onnxruntime-web`) — portable, slower, needs wasm bundling.

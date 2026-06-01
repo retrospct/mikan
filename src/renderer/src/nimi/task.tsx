@@ -1,10 +1,10 @@
-// task.tsx — task detail. Reads like a brief Neeme prepared for you:
+// task.tsx — task detail. Reads like a brief Nimi prepared for you:
 // a summary in its voice, the draft it took a crack at, then the sources it used.
 import { useEffect, useRef, useState } from 'react'
 import type { JSX, ReactNode } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NeemeMark, NeemeSay, Dots } from './mark'
+import { NimiMark, NimiSay, Dots } from './mark'
 import { MEMORIES, relOf, whyOf } from './data'
 import type { Memory, Task } from './data'
 
@@ -178,7 +178,7 @@ function DraftCard({
   return (
     <div className="draft">
       <button className="draft-hd as-toggle" onClick={() => setCollapsed(true)}>
-        <NeemeMark state="idle" size={24} />
+        <NimiMark state="idle" size={24} />
         <div className="draft-hd-main">
           <div className="draft-hd-t">I took a crack at it</div>
           <div className="draft-type">
@@ -279,7 +279,7 @@ export function TaskDetail({
   const [draft, setDraft] = useState<string[] | null>(task.draft || null)
   const [open, setOpen] = useState(false)
   const [keptOpen, setKeptOpen] = useState(false) // kept cards collapse into icons once filed
-  const [chat, setChat] = useState(false) // ask-Neeme conversation about this task
+  const [chat, setChat] = useState(false) // ask-Nimi conversation about this task
   const [fresh, setFresh] = useState<Set<string>>(new Set())
   const freshTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   useEffect(() => () => Object.values(freshTimers.current).forEach(clearTimeout), [])
@@ -381,10 +381,10 @@ export function TaskDetail({
           </div>
         </div>
 
-        {/* Neeme's brief — what it did, what's needed */}
+        {/* Nimi's brief — what it did, what's needed */}
         {task.brief && !done && (
           <div className="brief">
-            <NeemeMark state="idle" size={22} />
+            <NimiMark state="idle" size={22} />
             <div className="brief-tx">{renderBold(task.brief)}</div>
           </div>
         )}
@@ -406,7 +406,7 @@ export function TaskDetail({
           />
         ) : drafting ? (
           <div className="draft draft-working">
-            <NeemeMark state="drafting" size={30} />
+            <NimiMark state="drafting" size={30} />
             <div className="draft-working-tx">
               Taking a crack at it
               <Dots />
@@ -415,7 +415,7 @@ export function TaskDetail({
         ) : (
           !done && (
             <button className="draft draft-cta" onClick={tryDraft}>
-              <NeemeMark state="idle" size={30} />
+              <NimiMark state="idle" size={30} />
               <div className="draft-cta-main">
                 <div className="draft-cta-t">Want me to take a crack at it?</div>
                 <div className="draft-cta-s">I&apos;ll draft a start from what you kept</div>
@@ -427,7 +427,7 @@ export function TaskDetail({
           )
         )}
 
-        {/* context Neeme gathered */}
+        {/* context Nimi gathered */}
         {!done && (
           <>
             {keptCount > 0 ? (
@@ -536,7 +536,7 @@ export function TaskDetail({
 
         {done && (
           <div className="dt-donebanner">
-            <NeemeMark state="done" fill={9} size={30} />
+            <NimiMark state="done" fill={9} size={30} />
             <div>
               <div className="dt-doneb-t">Done — nice work.</div>
               <div className="dt-doneb-s">
@@ -551,10 +551,10 @@ export function TaskDetail({
         <button
           className="dt-ask"
           onClick={() => setChat(true)}
-          aria-label="Ask Neeme"
-          title="Ask Neeme"
+          aria-label="Ask Nimi"
+          title="Ask Nimi"
         >
-          <NeemeMark state="idle" size={26} />
+          <NimiMark state="idle" size={26} />
         </button>
         <button className="dt-dig" onClick={onDig}>
           <NIcon name="search" size={17} />
@@ -568,7 +568,7 @@ export function TaskDetail({
   )
 }
 
-// Ask Neeme — a lightweight chat about this task, anchored to its context
+// Ask Nimi — a lightweight chat about this task, anchored to its context
 const CHAT_SUGGESTIONS = [
   'Make the draft warmer',
   'What am I still missing?',
@@ -584,7 +584,7 @@ const CHAT_REPLIES: Record<string, string> = {
 }
 
 interface ChatMsg {
-  from: 'neeme' | 'me'
+  from: 'nimi' | 'me'
   text: string
 }
 
@@ -599,7 +599,7 @@ function TaskChat({
 }): JSX.Element {
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     {
-      from: 'neeme',
+      from: 'nimi',
       text: `Ask me anything about this — I've got the ${poolCount} source${poolCount === 1 ? '' : 's'} right here.`
     }
   ])
@@ -624,7 +624,7 @@ function TaskChat({
       const reply =
         CHAT_REPLIES[q] ||
         'Got it — I pulled what I have on that and tucked it into the sources below. Want me to fold it into the draft?'
-      setMsgs((m) => [...m, { from: 'neeme', text: reply }])
+      setMsgs((m) => [...m, { from: 'nimi', text: reply }])
       setThinking(false)
     }, 1200)
   }
@@ -636,9 +636,9 @@ function TaskChat({
         <div className="sheet-grab" />
         <div className="sheet-hd">
           <div className="sheet-hd-l">
-            <NeemeMark state={thinking ? 'thinking' : 'idle'} size={28} />
+            <NimiMark state={thinking ? 'thinking' : 'idle'} size={28} />
             <div>
-              <div className="sheet-ttl">Ask Neeme</div>
+              <div className="sheet-ttl">Ask Nimi</div>
               <div className="sheet-sub">
                 About “{task.title.length > 26 ? task.title.slice(0, 25) + '…' : task.title}”
               </div>
@@ -652,18 +652,18 @@ function TaskChat({
         <div className="chat-thread" ref={threadRef}>
           {msgs.map((m, i) => (
             <div key={i} className={'chat-msg ' + (m.from === 'me' ? 'me' : 'ai')}>
-              {m.from === 'neeme' && <NeemeMark state="idle" size={20} />}
+              {m.from === 'nimi' && <NimiMark state="idle" size={20} />}
               <div className="chat-bubble">{m.text}</div>
             </div>
           ))}
           {thinking && (
             <div className="chat-msg ai">
-              <NeemeMark state="thinking" size={20} />
+              <NimiMark state="thinking" size={20} />
               <div className="chat-bubble">
-                <NeemeSay state="thinking" size={0}>
+                <NimiSay state="thinking" size={0}>
                   Thinking
                   <Dots />
-                </NeemeSay>
+                </NimiSay>
               </div>
             </div>
           )}

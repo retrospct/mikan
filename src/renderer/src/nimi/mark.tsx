@@ -1,9 +1,9 @@
-// mark.tsx — the Neeme mark: a monoline rounded-diamond node whose dot-grid
+// mark.tsx — the Nimi mark: a monoline rounded-diamond node whose dot-grid
 // fills in as it thinks; the frame rotates subtly while it's working.
 // states: idle | thinking | gathering | drafting | happy | done
 import { useEffect, useState } from 'react'
 import type { CSSProperties, JSX, ReactNode } from 'react'
-import type { NeemeMarkState } from './types'
+import type { NimiMarkState } from './types'
 
 const NM_DOTS: Array<[number, number]> = [
   [7.7, 7.7],
@@ -20,21 +20,21 @@ const NM_QUINCUNX = new Set([0, 2, 4, 6, 8])
 // center-out fill order: center, corners (→ quincunx), then edges (→ full grid)
 const NM_FILL_ORDER = [4, 0, 2, 6, 8, 1, 3, 5, 7]
 
-interface NeemeMarkProps {
-  state?: NeemeMarkState
+interface NimiMarkProps {
+  state?: NimiMarkState
   size?: number
   fill?: number | null
   style?: CSSProperties
   className?: string
 }
 
-export function NeemeMark({
+export function NimiMark({
   state = 'idle',
   size = 34,
   fill = null,
   style,
   className = ''
-}: NeemeMarkProps): JSX.Element {
+}: NimiMarkProps): JSX.Element {
   const fixed = fill != null
   const onSet = fixed ? new Set(NM_FILL_ORDER.slice(0, Math.max(0, Math.min(9, fill)))) : null
   return (
@@ -79,27 +79,27 @@ export function NeemeMark({
   )
 }
 
-// A small "Neeme is thinking…" status line with the mark + animated copy.
-export function NeemeSay({
+// A small "Nimi is thinking…" status line with the mark + animated copy.
+export function NimiSay({
   state = 'thinking',
   size = 22,
   children
 }: {
-  state?: NeemeMarkState
+  state?: NimiMarkState
   size?: number
   children: ReactNode
 }): JSX.Element {
   return (
     <span className="nm-status">
-      <NeemeMark state={state} size={size} />
+      <NimiMark state={state} size={size} />
       <span className="lbl">{children}</span>
     </span>
   )
 }
 
-// A quiet line in Neeme's voice: ready / open question / waiting on content.
+// A quiet line in Nimi's voice: ready / open question / waiting on content.
 // kind: ready | ask | wait | gathered | done
-export function NeemeNote({
+export function NimiNote({
   kind = 'gathered',
   children
 }: {
@@ -109,7 +109,7 @@ export function NeemeNote({
   const done = kind === 'ready' || kind === 'done'
   return (
     <span className={'nnote nnote-' + kind}>
-      <NeemeMark state={done ? 'done' : 'idle'} fill={done ? 9 : null} size={14} />
+      <NimiMark state={done ? 'done' : 'idle'} fill={done ? 9 : null} size={14} />
       <span className="nnote-tx">{children}</span>
     </span>
   )

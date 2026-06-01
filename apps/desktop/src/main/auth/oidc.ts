@@ -94,12 +94,11 @@ export async function verifyIdToken(
   opts: VerifyIdTokenOptions
 ): Promise<JWTPayload> {
   const claims = { issuer: opts.issuer, audience: opts.audience }
-  // Two jwtVerify overloads — a key resolver (prod JWKS) vs. a concrete key
-  // (tests). Narrow on `function` so each call binds to a single overload.
-  const { payload } =
-    typeof opts.jwks === 'function'
-      ? await jwtVerify(idToken, opts.jwks, claims)
-      : await jwtVerify(idToken, opts.jwks, claims)
+  // `jose` splits `jwtVerify` into separate overloads for a key resolver (prod
+  // JWKS) and a concrete key (tests). Both are valid at runtime — jose branches
+  // on `typeof key === 'function'` internally — so assert past the overload
+  // split rather than calling with two identical branches.
+  const { payload } = await jwtVerify(idToken, opts.jwks as JWTVerifyGetKey, claims)
   if (opts.nonce && payload.nonce !== opts.nonce) {
     throw new Error('id_token nonce mismatch')
   }

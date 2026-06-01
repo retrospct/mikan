@@ -1,19 +1,20 @@
 # Integration contract (backend ⇄ UI)
 
-The sync surface between the two of us. **The types are the contract** — `src/shared`
-is compiler-enforced, so this doc only needs to carry the things types can't: which
-`window.api.*` call replaces which mock, what's real vs. stubbed, and the invariants.
+The sync surface between the two of us. **The types are the contract** — the
+`@nimi/contract` package (`packages/contract`) is compiler-enforced, so this doc only
+needs to carry the things types can't: which `window.api.*` call replaces which mock,
+what's real vs. stubbed, and the invariants.
 
 > Keep this short. It exists so we don't have to trade plan files. If something here
-> drifts from `src/shared`, the code wins — fix the doc.
+> drifts from `@nimi/contract`, the code wins — fix the doc.
 
 ## Where the contract lives
 
-- **`src/shared/views.ts`** — the view model: `Memory`, `Task`, `BacklogItem`,
+- **`packages/contract/src/views.ts`** — the view model: `Memory`, `Task`, `BacklogItem`,
   `FedItem`, `MatchHit` (+ `MemoryKind`/`TaskStatus`/`NoteKind`). Lifted **verbatim**
   from `renderer/src/neeme/data.ts`, so swapping is a mechanical import change.
-- **`src/shared/ipc.ts`** — the `window.api.*` surface (`NimiApi`) + channels.
-- Import from the new alias: `import type { Task, Memory } from '@shared/views'`.
+- **`packages/contract/src/ipc.ts`** — the `window.api.*` surface (`NimiApi`) + channels.
+- Import from the workspace package: `import type { Task, Memory } from '@nimi/contract/views'`.
 
 ## "Wire real, plain"
 
@@ -76,7 +77,7 @@ See `docs/SECURITY.md`.
 
 ## How we stay in sync
 
-1. Contract changes land in `src/shared` first (typecheck breaks at the boundary if we
-   disagree — that's the point).
+1. Contract changes land in `packages/contract` first (typecheck breaks at the boundary
+   if we disagree — that's the point).
 2. Update the swap map above in the same change.
 3. That's the whole protocol. No plan-file trading.

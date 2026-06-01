@@ -1,0 +1,22 @@
+{
+  // Self-contained: the contract is pure types + a plain-fetch HTTP client, so it
+  // carries no @electron-toolkit base. It's consumed *from source* by the apps
+  // (electron-vite excludes it from externalization and bundles the .ts), so this
+  // config is typecheck-only — there's no emit step.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    // The generated hey-api client imports its runtime config as '../runtime.ts'
+    // (the path is pasted verbatim). Real bundling is esbuild/Vite in the apps,
+    // which resolve .ts natively; this lets tsc do likewise for typecheck.
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src/**/*"]
+}

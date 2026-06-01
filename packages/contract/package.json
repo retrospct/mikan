@@ -1,0 +1,24 @@
+{
+  "name": "@nimi/contract",
+  "version": "1.0.0",
+  "description": "The nimi backend⇄UI contract: IPC channels, view-model types, and the shared HTTP API client. Consumed from source by the desktop app (and a future RN/Expo app).",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./ipc": "./src/ipc.ts",
+    "./views": "./src/views.ts",
+    "./api": "./src/api/index.ts",
+    "./api/token-store": "./src/api/token-store.ts",
+    "./api/runtime": "./src/api/runtime.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "gen:api": "openapi-ts"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.97.3",
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6"
+  }
+}

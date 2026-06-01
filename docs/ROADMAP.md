@@ -3,32 +3,36 @@
 The shared punch list. Both lanes pull from this — keep it current as items move.
 **Baseline:** `main` @ all of #12–#15 merged (pipeline + embedder + contract + tray + docs).
 
-Lanes (see `CLAUDE.md`): **back** = `src/main` + `src/shared`; **front** = `src/renderer`.
+Lanes (see `CLAUDE.md`): **back** = `apps/desktop/src/main` + `packages/contract`; **front**
+= `apps/desktop/src/renderer`.
 
 ## Shipped
 
+- **Monorepo migration (#0):** flat → `apps/desktop` + `packages/contract` (`@nimi/contract`),
+  pnpm workspaces + turborepo. The contract is consumed from .ts source (electron-vite
+  externalize-exclude + tsconfig `paths`). `pnpm typecheck`/`build`/`lint` run via turbo from
+  the root. See [ADR 0006](adr/0006-repo-structure.md).
 - On-device pipeline: capture (text + file) → content-hash store → extract (text/PDF) →
   chunk → embed → libSQL vector search.
 - Real on-device embedder (transformers.js / MiniLM) behind a swappable seam.
 - Daily focus todos: cap-5 + finish-the-list latch, plan/carry-over, per-todo context
   pool (surface / pin / dismiss).
 - View-model IPC contract (`Memory`/`Task`/`FedItem`/`BacklogItem`/`MatchHit`),
-  `window.api.*`, projection layer (`src/main/services/project.ts`).
+  `window.api.*`, projection layer (`apps/desktop/src/main/services/project.ts`).
 - Electron security posture (sandbox / context-isolation / no-node, utilityProcess,
   nav lockdown) + tray-anchored frameless window.
 - Scaffold: auth (Logto, inert until configured); coordination docs.
 
 ## Punch list
 
-> **DO FIRST (#0): monorepo migration** — `git mv src → apps/desktop/src` + lift `src/shared` →
-> `packages/contract` + pnpm workspaces. It rewrites nearly every path, so it must land in the
-> **quiet window (0 open PRs, pre-ramp)** before any parallel workstream branches — else it's a
-> merge nightmare. See [ADR 0006](adr/0006-repo-structure.md) for the checklist. Everything below
-> branches off the already-monorepo'd `main`.
+> **#0 monorepo migration — ✅ DONE** (see Shipped). The repo is now `apps/desktop` +
+> `packages/contract` on pnpm workspaces + turborepo. Everything below branches off the
+> already-monorepo'd `main`; paths in older notes that say `src/…` now live under
+> `apps/desktop/src/…`, and the contract is `packages/contract` (`@nimi/contract`).
 
 | #   | Item                                                                                                     | Lane         | Unblocks                                         | Size | When       |
 | --- | -------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------ | ---- | ---------- |
-| 0   | **Monorepo migration** (flat → `apps/desktop` + `packages/contract`, pnpm workspaces)                    | back/struct  | a clean root everyone branches off; unblocks #14 | M    | **FIRST**  |
+| 0   | ~~**Monorepo migration** (flat → `apps/desktop` + `packages/contract`, pnpm + turborepo)~~ ✅ **done**   | back/struct  | a clean root everyone branches off; unblocks #14 | M    | ✅ shipped  |
 | 1   | Smoke-test integrated main (embedder + tray actually run)                                                | human        | confidence in the baseline                       | S    | now        |
 | 2   | **Wire UI → `window.api`** (retire mock `data.ts`; see `INTEGRATION.md`)                                 | front        | the app runs on real data — the headline         | L    | **P0**     |
 | 3   | AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings) | back         | every AI-gap field                               | L    | P1 ⚠️      |
@@ -51,10 +55,10 @@ Lanes (see `CLAUDE.md`): **back** = `src/main` + `src/shared`; **front** = `src/
   #7 tests → #8 connectors.
 - **Distribution (back):** #13 macOS package/notarize + the Windows canary → #12 auto-updater
   (so testers self-update). Roughly parallel to the feature work once there's a build to ship.
-- **Mobile (new lane):** #14 — scaffold RN + Expo. Shares the `src/shared` contract/types with
-  desktop, which is the lever for it being in-repo.
+- **Mobile (new lane):** #14 — scaffold RN + Expo as `apps/mobile`. Shares the
+  `@nimi/contract` package with desktop, which is the lever for it being in-repo.
 
-The tracks meet at the contract (`src/shared`) and run mostly parallel: #2 needs nothing
+The tracks meet at the contract (`packages/contract`) and run mostly parallel: #2 needs nothing
 new from the backend; #3/#5 fill in the `null`s the UI already degrades around.
 
 ## Critical path
@@ -72,8 +76,8 @@ Each is written up as an ADR — settle (ratify) each before starting the items 
 2. **OCR / ASR (gates #5):** on-device vs cloud → [ADR 0005](adr/0005-image-audio-extraction.md)
    _(proposed: on-device default, macOS-native fast path, cloud as later offload)_.
 3. **Repo structure (gates #14):** → [ADR 0006](adr/0006-repo-structure.md)
-   _(accepted: **migrate to a monorepo NOW** (item #0), before parallel workstreams — the
-   quiet-window beats the premature-tooling cost; supersedes the defer-until-Expo timing)_.
+   _(accepted **and done** (item #0): migrated to a pnpm + turborepo monorepo in the quiet
+   window, ahead of Expo. `@nimi/contract` is the shared seam #14 will consume)_.
 
 **Native-packaging note (#13):** `onnxruntime-node` ships per-platform prebuilt binaries. macOS
 is the happy path; the Windows build is a deliberate canary to see _how_ it breaks. Fallback if

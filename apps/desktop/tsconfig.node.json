@@ -1,0 +1,14 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
+  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*"],
+  "compilerOptions": {
+    "composite": true,
+    "types": ["electron-vite/node"],
+    "baseUrl": ".",
+    // Resolve the contract from source. main/preload import only `ipc`/`views`,
+    // so the renderer-only api client is never pulled into the node typecheck.
+    "paths": {
+      "@nimi/contract/*": ["../../packages/contract/src/*"]
+    }
+  }
+}

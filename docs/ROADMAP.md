@@ -60,8 +60,8 @@ AI layer** once a model is chosen. Everything else parallelizes around that.
 Each is written up as an ADR — settle (ratify) each before starting the items it gates.
 
 1. **AI model (gates #3):** → [ADR 0004](adr/0004-ai-drafting-model.md)
-   _(accepted direction: `Drafter` seam, **cloud-first** (BYO-key) to ship the UX, on-device
-   benchmarked fast-follow for the latency/privacy win; device-breadth deferred)_.
+   _(accepted: **cloud (BYO-key) behind a `Drafter` seam** to ship; on-device LLM is an
+   optional parked spike, not a committed path)_.
 2. **OCR / ASR (gates #5):** on-device vs cloud → [ADR 0005](adr/0005-image-audio-extraction.md)
    _(proposed: on-device default, macOS-native fast path, cloud as later offload)_.
 3. **Repo structure (gates #14):** flat vs monorepo → [ADR 0006](adr/0006-repo-structure.md)

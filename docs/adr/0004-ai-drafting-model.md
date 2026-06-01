@@ -1,6 +1,6 @@
 # ADR 0004 — AI drafting / chat model (the "AI-gap" layer)
 
-**Status:** Proposed (recommends a provider seam + hybrid: on-device default, cloud offload by BYO-key)
+**Status:** Accepted direction — **on-device happy path, benchmark-gated; cloud as the measured worst-case cutover** (per-capability). Open: local model choice, managed-vs-BYO key (below).
 **Date:** 2026-06-01
 **Context owners:** jlee (+ Claude)
 **Related:** fills the AI-gap left by the contract convergence (`docs/INTEGRATION.md`); extends [[0003-all-typescript-on-device-pipeline]] (cloud = offload); touches [[0002-authentication]] (only if we host a managed key)
@@ -56,8 +56,27 @@ Legend: ✅ strong · ⚠️ caveats · ❌ poor
 - The projection layer (`src/main/services/project.ts`) already isolates every AI-gap field
   — the Drafter feeds exactly those, so the UI keeps degrading gracefully when AI is off.
 
-Pragmatic v1: wire the **cloud BYO-key path first** (fastest route to the actual experience;
-local-LLM packaging is heavy), with the seam in place so the local impl is a fast-follow.
+### Sequencing — happy path first, measure, cut over only if needed
+
+The call (consistent with 0003's "spike + measure before committing"): **build the on-device
+path first and benchmark it.** Local is not just the principled default — it's _quicker_ for
+the common case (no network round-trip; 0003's speed/latency/offline driver). Only build the
+cloud path and cut over **where the numbers say local isn't good enough** — and that cutover
+is **per-capability, not wholesale**.
+
+**The "good enough" bar (define before building):** acceptable draft quality on real tasks
+(reply-to-email, one-pager brief) + a latency target on a **low-end device**, not just Apple
+Silicon. Measure each capability against it.
+
+Likely outcome by capability (to be confirmed by benchmark, not assumed):
+
+- **Cheap/structured — stays local:** `note`/`noteKind`, `brief` over the context pool,
+  `BacklogItem.conf`, feed→`UncoveredTodo` inference. Short, templated, latency-sensitive.
+- **Long-form `draft` + "Ask Nimi" — the most likely to fail the bar** → the first/only
+  capability that cuts over to cloud offload (opt-in, BYO-key) if local can't clear it.
+
+So: ship local, benchmark, and let the bar — per capability — decide what (if anything)
+graduates to cloud. Worst case is "long drafts go cloud"; best case is "all local."
 
 ## Consequences
 
@@ -69,8 +88,9 @@ local-LLM packaging is heavy), with the seam in place so the local impl is a fas
 
 ## Open questions
 
-- Which local model (size vs quality vs download) — and do we even ship local in v1 or
-  seam-only + cloud-first?
+- Which local model (size vs quality vs download), and what's the per-capability bar that
+  triggers a cloud cutover? (Decided: local ships first and gets benchmarked — this is the
+  one to actually measure.)
 - Managed key (we proxy, simplest UX, but cost + an auth need → re-opens [[0002]]) vs strict
   BYO-key (zero cost, more friction)?
 - Streaming "Ask Nimi" over IPC — chunked events on the existing `window.api` seam.
@@ -80,6 +100,8 @@ local-LLM packaging is heavy), with the seam in place so the local impl is a fas
 ## Action items
 
 1. [ ] Define the `Drafter` interface + a `NIMI_DRAFTER` env seam (mirror `embed.ts`).
-2. [ ] Wire one path end-to-end (cloud BYO-key) feeding `brief` + `draft` for one task.
-3. [ ] Settings: provider + key + local/cloud toggle + the consent copy.
-4. [ ] Decide local model + lazy-download story (or defer local to a follow-up).
+2. [ ] Set the "good enough" bar: real-task quality + a latency target on a low-end device.
+3. [ ] Build the **on-device** Drafter first (`node-llama-cpp`, lazy model) → benchmark
+       `brief` + `draft` against the bar, per capability.
+4. [ ] Only for capabilities that miss the bar: add the cloud offload (opt-in, BYO-key) +
+       the consent/settings surface, and cut those over.

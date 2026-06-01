@@ -56,6 +56,11 @@ Legend: ✅ strong · ⚠️ caveats · ❌ poor
 This keeps the most privacy-sensitive captures (photos, voice) **on the device** by default,
 exactly the on-device-first intent of 0003, while leaving a quality escape hatch.
 
+Same **measure-first** rule as 0004: ship on-device, benchmark against a quality bar (clean
+screenshot OCR accuracy, clear-speech WER, latency on a low-end device), and cut a capability
+to cloud only where it misses. On-device OCR/ASR is mature, so the bar should clear easily —
+unlike drafting, this is the case least likely to ever need the cloud fallback.
+
 ## Consequences
 
 - **Easier:** image/audio become first-class searchable memories; feed `pending → done`

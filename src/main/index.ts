@@ -34,6 +34,31 @@ app.on('open-url', (event, url) => {
   auth.handleCallback(url).catch((e) => console.error('auth callback failed', e))
 })
 
+// --- Security: lock down navigation + window creation (Electron checklist) ---
+// Only https/mailto links escape to the system browser; the renderer may never
+// open its own windows or navigate away from the app's own content.
+function isSafeExternal(url: string): boolean {
+  try {
+    const { protocol } = new URL(url)
+    return protocol === 'https:' || protocol === 'mailto:'
+  } catch {
+    return false
+  }
+}
+function isAppUrl(url: string): boolean {
+  const devUrl = process.env['ELECTRON_RENDERER_URL']
+  return (!!devUrl && url.startsWith(devUrl)) || url.startsWith('file://')
+}
+app.on('web-contents-created', (_event, contents) => {
+  contents.setWindowOpenHandler(({ url }) => {
+    if (isSafeExternal(url)) void shell.openExternal(url)
+    return { action: 'deny' }
+  })
+  contents.on('will-navigate', (event, url) => {
+    if (!isAppUrl(url)) event.preventDefault()
+  })
+})
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -49,7 +74,12 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      // Hardened renderer: sandboxed, context-isolated, no Node. All privileged
+      // work is behind the preload contextBridge → main → utilityProcess, so the
+      // renderer never needs Node and we keep Electron's default sandbox on.
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false
     }
   })
 
@@ -57,10 +87,7 @@ function createWindow(): void {
     mainWindow.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+  // Navigation + window-open are locked down globally (see web-contents-created).
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.

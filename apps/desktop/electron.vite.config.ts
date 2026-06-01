@@ -9,6 +9,12 @@ import tailwindcss from '@tailwindcss/vite'
 // bundled, or Node would try to `require()` a .ts file at runtime. Exclude it.
 const CONTRACT = '@nimi/contract'
 
+// The preload runs sandboxed (sandbox:true, a hard security invariant), so it
+// CANNOT `require()` npm modules by name at runtime — they must be bundled in.
+// `@electron-toolkit/preload` is pure JS; bundle it (like the contract) or the
+// built preload throws "module not found" and `window.api` never loads.
+const PRELOAD_BUNDLE = [CONTRACT, '@electron-toolkit/preload']
+
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin({ exclude: [CONTRACT] })],
@@ -24,7 +30,7 @@ export default defineConfig({
     }
   },
   preload: {
-    plugins: [externalizeDepsPlugin({ exclude: [CONTRACT] })]
+    plugins: [externalizeDepsPlugin({ exclude: PRELOAD_BUNDLE })]
   },
   renderer: {
     resolve: {

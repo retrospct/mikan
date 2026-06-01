@@ -14,11 +14,14 @@
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
+    "test:smoke": "tsx test/smoke/capture-file.ts",
+    "test:e2e": "playwright test",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:linux": "electron-vite build && electron-builder --linux",
+    "build:mac-helper": "swiftc resources/mac/nimi-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/nimi-extract && echo 'nimi-extract compiled'"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -28,10 +31,14 @@
     "@nimi/contract": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "electron-updater": "^6.3.9",
+    "ffmpeg-static": "^5.3.0",
+    "heic-convert": "^2.1.0",
+    "tesseract.js": "^7.0.0",
     "unpdf": "^1.6.2"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^2.0.0",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.3.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.2.7",

@@ -1,5 +1,7 @@
 import { extractText as pdfText, getDocumentProxy } from 'unpdf'
 import type { ContentType, ItemStatus } from '@nimi/contract/ipc'
+import { ocr } from './ocr'
+import { asr } from './asr'
 
 // Suffix wins, then MIME prefix (ported from the Python content_types.py).
 const BY_EXT: Record<string, ContentType> = {
@@ -67,4 +69,27 @@ export async function extract(contentType: ContentType, bytes: Uint8Array): Prom
     }
   }
   return { text: '', status: 'pending' }
+}
+
+/**
+ * Extract text from a media file (image → OCR, audio → ASR). Runs in the
+ * background after capture; the raw file must already be on disk at `filePath`.
+ * Returns `extracted` even for blank content (extraction ran; just no text).
+ * Returns `failed` on a hard error.
+ */
+export async function extractMedia(
+  contentType: 'image' | 'audio',
+  filePath: string,
+  mime?: string
+): Promise<ExtractResult> {
+  try {
+    const text =
+      contentType === 'image'
+        ? await ocr.extract(filePath, mime)
+        : await asr.extract(filePath, mime)
+    return { text, status: 'extracted' }
+  } catch (err) {
+    console.error('[extract-media] failed', contentType, filePath, err)
+    return { text: '', status: 'failed', error: String(err) }
+  }
 }

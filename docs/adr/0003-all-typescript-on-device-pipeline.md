@@ -98,6 +98,23 @@ Legend: ✅ strong · ⚠️ caveats · ❌ poor
 - ⚠️ **Naming collision:** the Rust→Node binding crate **Neon** (neon-bindings) is *not* **Neon**
   the database / Neon Auth. Never write bare "Neon" for the binding in this codebase.
 
+## Repo strategy
+
+- **Turborepo monorepo** for the TypeScript surface — `apps/desktop` (this Electron app),
+  `apps/expo` (planned mobile), shared `packages/*` (db/Drizzle, pipeline, api/tRPC, ui, auth). This
+  is the home the all-TS + shared-code direction implies, and aligns with the `create-t3-turbo`
+  skeleton the team is standing up — **this repo becomes `apps/desktop`** within it.
+- **Steal the structure, keep our spine:** T3-Turbo defaults are web-centric (Next/TanStack server)
+  and ship Better Auth in `packages/auth`. We keep the **on-device-first** shape (pipeline as a
+  shared package consumed by the Electron *main process*; the web/server is an **offload/sync**
+  layer, not the center) and treat `packages/auth` as **deferred + swappable** (see
+  [[0002-authentication]] — pencilled in: Logto Cloud).
+- **Legacy Python backend stays a separate repo until retired** — no need to migrate it in just to
+  delete it.
+- **Agent-context hygiene** (a real concern with monorepos): per-package `CLAUDE.md`, root agents at
+  the app/package under work, and use worktrees — so a desktop task isn't polluted by mobile/server
+  code. Monorepo gives the *option* to share; scoping stays per-task.
+
 ## Consequences
 
 - **Easier:** one language across desktop + future mobile + any backend; the auth story collapses

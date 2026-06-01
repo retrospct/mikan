@@ -9,7 +9,7 @@
  * projects them to the view model (see
  * `apps/desktop/src/main/services/project.ts`).
  */
-import type { BacklogItem, FedItem, MatchHit, Memory, Task } from './views'
+import type { BacklogItem, FedItem, MatchHit, Memory, Task, UncoveredTodo } from './views'
 
 export const IPC = {
   // Pipeline (on-device capture → extract → index → surface; runs in the worker)
@@ -17,6 +17,7 @@ export const IPC = {
   pipelineCaptureFile: 'pipeline:capture-file',
   pipelineArchive: 'pipeline:archive',
   pipelineFeed: 'pipeline:feed',
+  pipelineUncoverTodos: 'pipeline:uncover-todos',
   pipelineSearch: 'pipeline:search',
   // Todos (daily focus list: cap/plan + the per-todo context pool)
   todoAdd: 'todo:add',
@@ -168,6 +169,9 @@ export interface PipelineApi {
   archive: () => Promise<Memory[]>
   /** The recent-capture feed (newest first). */
   feed: () => Promise<FedItem[]>
+  /** AI-gap: candidate to-dos Nimi infers from the recent feed. `[]` until the
+   *  drafter is configured (`NEEME_ANTHROPIC_KEY`); cached between feed changes. */
+  uncoverTodos: () => Promise<UncoveredTodo[]>
   /** Rank archive memories for a typed task/query (the UI's `matchTask`). */
   search: (query: string, topK?: number) => Promise<MatchHit[]>
 }

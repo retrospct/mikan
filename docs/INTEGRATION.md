@@ -16,6 +16,7 @@ Structural data is **served for real** from the on-device pipeline. **AI-generat
 | ---------------------------- | ---------------------------------------------------------- | --------------------- |
 | `MEMORIES` (archive lookup)  | `await window.api.pipeline.archive()`                      | `Memory[]`            |
 | `FED_RECENT`                 | `await window.api.pipeline.feed()`                         | `FedItem[]`           |
+| `uncoverTodos()` (stub)      | `await window.api.pipeline.uncoverTodos()`                 | `UncoveredTodo[]`     |
 | `matchTask(text)`            | `await window.api.pipeline.search(text)`                   | `MatchHit[]`          |
 | `SEED_TASKS`                 | `await window.api.todos.today()`                           | `Task[]`              |
 | `BACKLOG`                    | `await window.api.todos.backlog()`                         | `BacklogItem[]`       |
@@ -42,10 +43,10 @@ The mutators return the **updated `Task`**, so drop the result straight back int
 - `Task.status` advances to `'gathering'` while the draft runs and `'drafted'` once it lands (still `'done'` when the todo is done).
 - `Task.whyMap` — per-context reason strings; read as `task.whyMap?.[id]` in the renderer (replaces the mock `whyOf()` from `data.ts` — a #2 follow-up).
 - `BacklogItem.conf` — populated by the drafter even for backlog items (search-backed context).
+- `pipeline.uncoverTodos()` — `UncoveredTodo[]` inferred from the recent feed by `Drafter.uncover()` (`apps/desktop/src/main/services/uncover-service.ts`). Cached in the `meta` table keyed by an inputs-hash of the feed window, so it re-calls the API only when the feed changes. `[]` without a key. Surfaced in the Feed tab.
 
 **Still AI-gap (not yet wired):**
 
-- Feed-inferred `UncoveredTodo`s — not emitted yet (treat as `[]`). Gated on #6.
 - `BacklogItem.ctx` — still `[]` until a backlog item is scheduled onto a day.
 
 ## Invariant the UI relies on

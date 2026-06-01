@@ -28,7 +28,7 @@ export interface Asr {
 const DEFAULT_WHISPER_MODEL = 'Xenova/whisper-tiny'
 
 type AsrPipeline = (
-  input: { data: Float32Array; sampling_rate: number },
+  input: Float32Array,
   opts?: { chunk_length_s?: number; stride_length_s?: number }
 ) => Promise<{ text: string }>
 
@@ -84,7 +84,10 @@ export class WhisperAsr implements Asr {
           return
         }
         const buf = Buffer.concat(chunks)
-        resolve(new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4))
+        // Copy into a fresh ArrayBuffer — a Node Buffer's .buffer is a shared pool
+        // slab with a non-zero byteOffset, which breaks typed-array ops in ONNX.
+        const view = new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4)
+        resolve(new Float32Array(view))
       })
     })
   }
@@ -92,10 +95,9 @@ export class WhisperAsr implements Asr {
   async extract(filePath: string): Promise<string> {
     const [ffmpegBin, pipe] = await Promise.all([this.loadFfmpeg(), this.loadPipeline()])
     const pcm = await this.decodePcm(filePath, ffmpegBin)
-    const result = await pipe(
-      { data: pcm, sampling_rate: 16000 },
-      { chunk_length_s: 30, stride_length_s: 5 }
-    )
+    // v4 AudioInput = Float32Array directly (not { data, sampling_rate }).
+    // The feature extractor reads sampling_rate from the model config (16kHz for Whisper).
+    const result = await pipe(pcm, { chunk_length_s: 30, stride_length_s: 5 })
     return result.text.trim()
   }
 }

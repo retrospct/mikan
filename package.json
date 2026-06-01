@@ -9,6 +9,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
     "lint": "eslint --cache .",
     "format": "prettier --write .",
     "gen:api": "pnpm --filter @nimi/contract gen:api"

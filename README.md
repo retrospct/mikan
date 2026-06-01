@@ -23,7 +23,7 @@ neeme-desktop is **local-first**: your data lives on your device, not in the clo
 
 ## API client (the Neeme HTTP backend)
 
-Remote services (capture, search, todos) are served by the **FastAPI backend** in the sibling `mr-matcha` repo. The desktop app talks to it through a **typed client generated from the backend's OpenAPI spec** with [`@hey-api/openapi-ts`](https://heyapi.dev/) — so client types can't drift from the server.
+Remote services (capture, search, todos) are served by the **FastAPI backend** in the sibling [`neeme`](https://github.com/retrospct/neeme) repo (the backend + mobile app). The desktop app talks to it through a **typed client generated from the backend's OpenAPI spec** with [`@hey-api/openapi-ts`](https://heyapi.dev/) — so client types can't drift from the server.
 
 - `openapi.json` — committed snapshot of the backend's OpenAPI spec.
 - `src/shared/api/generated/**` — generated SDK (committed; do not hand-edit).
@@ -34,11 +34,11 @@ The client is plain `fetch` (no Electron/Node imports), so it's reusable as-is i
 
 ```bash
 # Regenerate the client after the backend's API changes:
-cd ../mr-matcha && .venv/bin/python scripts/export_openapi.py ../neeme-desktop/openapi.json
+cd ../neeme && .venv/bin/python scripts/export_openapi.py ../neeme-desktop/openapi.json
 cd ../neeme-desktop && pnpm gen:api
 
-# Run the backend locally so the app can reach it:
-cd ../mr-matcha && pip install -e ".[api]" && neeme serve   # serves on :8000
+# Run the backend locally so the app can reach it (uv-managed venv):
+cd ../neeme && uv pip install -e ".[api]" && neeme serve   # serves on :8000
 ```
 
 > Today the renderer calls the API directly (plain `fetch`, the same path RN will use). Once auth tokens exist, sensitive calls can move behind Electron **main**/IPC so tokens live in `safeStorage` — the env-agnostic client makes that a non-breaking change. Local libSQL data stays on the IPC path; HTTP is a separate concern.

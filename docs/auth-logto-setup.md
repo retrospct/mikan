@@ -72,6 +72,25 @@ to the app (the known dev limitation).
 
 **Reset to a clean slate:** `rm "$HOME/Library/Application Support/nimi/neeme-auth.bin"`, relaunch.
 
+## Two OAuth flows (login vs connectors) — don't conflate them
+
+The app runs **two independent OAuth flows**; keep them separate:
+
+| | **Login** (#9, this doc) | **Connectors** (#8 — Gmail/Calendar ingest) |
+| --- | --- | --- |
+| Provider | Logto (broker; can federate Google) | Google directly |
+| Purpose | who you are (id_token → claims) | data access (access token → Gmail/Cal APIs) |
+| Redirect transport | `neeme://callback` custom scheme | **loopback** `http://127.0.0.1:<port>/callback` |
+| Callback handler | `main/index.ts` `open-url`/`second-instance` → `auth.handleCallback` | a transient local HTTP listener (connectors own it) |
+| Client | public, PKCE, no secret | own Google client (PKCE + secret) |
+| Env | `MAIN_VITE_LOGTO_*` | Google creds (need a `MAIN_VITE_`/`NEEME_` prefix to reach main/worker) |
+
+**Shared, by design:** the pure PKCE primitives in `auth/oidc.ts` (`base64url`, `randomVerifier`,
+`randomState`, `pkceChallenge`) are provider-agnostic — the connector flow should import them rather
+than re-roll crypto. `verifyIdToken`/`claimsFromPayload` are login-only (connectors want access
+tokens, not identity). The custom-scheme handler is login-only — connectors must not register a
+scheme or they'll capture each other's callbacks.
+
 ## Caveats
 
 - **Custom-scheme deep link (`neeme://`)** registers reliably in a **packaged** build. In `pnpm dev`

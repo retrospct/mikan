@@ -42,17 +42,20 @@ async function capture(bytes: Uint8Array, name: string, mime?: string): Promise<
     .values({ id, sourceName: name, contentType, sizeBytes, storedPath, text, status })
     .returning()
 
-  if (text) {
-    const chunks = chunkText(text)
-    const vectors = await embedder.embed(chunks)
-    for (let i = 0; i < chunks.length; i++) {
-      await client.execute({
-        sql: 'INSERT OR REPLACE INTO chunks (item_id, chunk_idx, text, embedding) VALUES (?, ?, ?, vector32(?))',
-        args: [id, i, chunks[i]!, JSON.stringify(vectors[i] ?? [])]
-      })
-    }
-  }
+  if (text) await indexItem(id, text)
   return { memory: toMemory(toItem(created!)), created: true }
+}
+
+/** Chunk + embed an item's text into the vector index (capture + reindex share this). */
+async function indexItem(id: string, text: string): Promise<void> {
+  const chunks = chunkText(text)
+  const vectors = await embedder.embed(chunks)
+  for (let i = 0; i < chunks.length; i++) {
+    await client.execute({
+      sql: 'INSERT OR REPLACE INTO chunks (item_id, chunk_idx, text, embedding) VALUES (?, ?, ?, vector32(?))',
+      args: [id, i, chunks[i]!, JSON.stringify(vectors[i] ?? [])]
+    })
+  }
 }
 
 export const pipelineService = {
@@ -103,5 +106,36 @@ export const pipelineService = {
   /** Rank archive memories for a typed task/query (the UI's `matchTask`). */
   async match(query: string, topK = 8): Promise<MatchHit[]> {
     return toMatchHits(await this.search(query, topK))
+  },
+
+  /** Re-embed every item's text into the vector index (drops + rebuilds chunks).
+   *  The index is a rebuildable artifact derived from items.text. */
+  async reindexAll(): Promise<number> {
+    const rows = await db.select().from(items)
+    await client.execute('DELETE FROM chunks')
+    let n = 0
+    for (const row of rows) {
+      if (!row.text) continue
+      await indexItem(row.id, row.text)
+      n++
+    }
+    return n
+  },
+
+  /** Keep the vector index consistent with the active embedder. If the embedder
+   *  changed since last boot, existing vectors live in a different space → reindex.
+   *  No-op when nothing changed (and near-instant when there are no items yet). */
+  async syncEmbedder(): Promise<void> {
+    const res = await client.execute({
+      sql: 'SELECT value FROM meta WHERE key = ?',
+      args: ['embedder']
+    })
+    const prev = res.rows[0]?.value as string | undefined
+    if (prev === embedder.name) return
+    await pipelineService.reindexAll()
+    await client.execute({
+      sql: 'INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)',
+      args: ['embedder', embedder.name]
+    })
   }
 }

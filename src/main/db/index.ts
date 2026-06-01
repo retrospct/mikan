@@ -34,6 +34,10 @@ export const EMBED_DIM = 384
  */
 export async function initDb(): Promise<void> {
   await client.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS meta (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
     CREATE TABLE IF NOT EXISTS memories (
       id TEXT PRIMARY KEY,
       content TEXT NOT NULL,

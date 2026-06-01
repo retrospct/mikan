@@ -180,6 +180,13 @@ export default function NeemeApp(): JSX.Element {
   const waiting =
     tasks.filter((x) => !x.done && x.status === 'drafted').length +
     backlog.filter((b) => b.fresh).length
+
+  // Mirror the waiting count onto the tray/Dock badge. window.api only exists inside
+  // Electron, so this no-ops in the browser preview (undefined → optional chain).
+  useEffect(() => {
+    const api: typeof window.api | undefined = window.api
+    void api?.ui.setBadge(waiting)
+  }, [waiting])
   const openGlobalSearch = (): void => {
     setOverlay(null)
     setSearchMode('global')

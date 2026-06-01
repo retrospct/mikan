@@ -182,7 +182,9 @@ input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 18px 12px;
+  /* extra top inset: in the frameless tray window there's no title bar, so the
+     header would otherwise sit right against the window's rounded top edge. */
+  padding: 16px 18px 12px;
 }
 .hdr-l {
   display: flex;
@@ -2169,7 +2171,7 @@ html[data-ambient='off'] .vrec-wave span {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px 12px;
+  padding: 16px 14px 12px;
   border-bottom: 1px solid var(--hairline);
 }
 .push-back {
@@ -4223,6 +4225,22 @@ html[data-theme='light'] .desk {
     border-right: 0;
     box-shadow: none;
   }
+}
+
+/* frameless tray window: drag the app by its top bars; keep controls clickable.
+   `-webkit-app-region` is a no-op in a normal (framed) or browser window. */
+.hdr,
+.push-hd {
+  -webkit-app-region: drag;
+}
+button,
+input,
+textarea,
+a,
+.task,
+.slot,
+[role='button'] {
+  -webkit-app-region: no-drag;
 }
 
 /* density */

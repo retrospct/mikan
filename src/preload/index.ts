@@ -38,6 +38,9 @@ const api: NeemeApi = {
       ipcRenderer.on(IPC.authChanged, handler)
       return () => ipcRenderer.removeListener(IPC.authChanged, handler)
     }
+  },
+  ui: {
+    setBadge: (count: number) => ipcRenderer.invoke(IPC.traySetBadge, count)
   }
 }
 

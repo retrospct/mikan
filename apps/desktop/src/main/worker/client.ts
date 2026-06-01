@@ -1,4 +1,5 @@
 import { join } from 'path'
+import { existsSync } from 'fs'
 import { app, utilityProcess, type UtilityProcess } from 'electron'
 
 /**
@@ -18,11 +19,29 @@ let ready: Promise<void> | null = null
 let seq = 0
 const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>()
 
+/** Resolve the nimi-extract Swift helper binary, or undefined if absent. */
+function macHelperPath(): string | undefined {
+  if (process.platform !== 'darwin') return undefined
+  // In a packaged app, resources are unpacked alongside the asar.
+  // In dev, the binary lives next to the source resources directory.
+  const candidates = [
+    join(process.resourcesPath ?? '', 'mac', 'nimi-extract'),
+    join(__dirname, '../../resources/mac/nimi-extract')
+  ]
+  return candidates.find((p) => existsSync(p))
+}
+
 export function startWorker(): Promise<void> {
   if (ready) return ready
+  const helperPath = macHelperPath()
+  const env: Record<string, string> = {
+    ...process.env,
+    NEEME_USER_DATA: app.getPath('userData')
+  }
+  if (helperPath) env.NEEME_MAC_HELPER = helperPath
   const worker = utilityProcess.fork(join(__dirname, 'worker.js'), [], {
     serviceName: 'neeme-data',
-    env: { ...process.env, NEEME_USER_DATA: app.getPath('userData') }
+    env
   })
   child = worker
 

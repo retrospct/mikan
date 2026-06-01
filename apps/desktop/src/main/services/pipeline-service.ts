@@ -1,9 +1,9 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, inArray } from 'drizzle-orm'
 import { client, db } from '../db'
 import { items, type Item as ItemRow } from '../db/schema'
 import { chunkText } from '../pipeline/chunk'
 import { embedder } from '../pipeline/embed'
-import { detectContentType, extract, suffixOf } from '../pipeline/extract'
+import { detectContentType, extract, extractMedia, suffixOf } from '../pipeline/extract'
 import { putRaw } from '../pipeline/raw-store'
 import type { CaptureResult, ContentType, Item, ItemStatus, SearchHit } from '@nimi/contract/ipc'
 import type { FedItem, MatchHit, Memory } from '@nimi/contract/views'
@@ -36,6 +36,7 @@ async function capture(bytes: Uint8Array, name: string, mime?: string): Promise<
   if (existing[0]) return { memory: toMemory(toItem(existing[0])), created: false }
 
   const contentType = detectContentType(name, mime)
+  // text/pdf extract synchronously; image/audio park as pending and extract in the background.
   const { text, status } = await extract(contentType, bytes)
   const [created] = await db
     .insert(items)
@@ -43,8 +44,53 @@ async function capture(bytes: Uint8Array, name: string, mime?: string): Promise<
     .returning()
 
   if (text) await indexItem(id, text)
+
+  // Kick off background OCR/ASR — returns immediately, extraction runs in the queue.
+  if (
+    (contentType === 'image' || contentType === 'audio') &&
+    storedPath &&
+    process.env.NEEME_EXTRACTOR !== 'off'
+  ) {
+    scheduleExtraction(id, storedPath, contentType, mime)
+  }
+
   return { memory: toMemory(toItem(created!)), created: true }
 }
+
+// ── Background extraction queue ────────────────────────────────────────────
+//
+// A serial promise chain so heavy OCR/ASR models never load concurrently.
+// Jobs are enqueued by capture() and by resumeMediaExtraction() on boot.
+
+let extractionQueue: Promise<void> = Promise.resolve()
+
+function scheduleExtraction(
+  id: string,
+  storedPath: string,
+  contentType: ContentType,
+  mime: string | undefined
+): void {
+  extractionQueue = extractionQueue
+    .then(() => runExtraction(id, storedPath, contentType, mime))
+    .catch((err: unknown) => {
+      console.error('[pipeline] extraction job failed', id, err)
+    })
+}
+
+async function runExtraction(
+  id: string,
+  storedPath: string,
+  contentType: ContentType,
+  mime: string | undefined
+): Promise<void> {
+  if (contentType !== 'image' && contentType !== 'audio') return
+  const result = await extractMedia(contentType, storedPath, mime)
+  await db.update(items).set({ text: result.text, status: result.status }).where(eq(items.id, id))
+  if (result.text) await indexItem(id, result.text)
+  console.log('[pipeline] extracted', contentType, id, `status=${result.status}`)
+}
+
+// ── indexItem ──────────────────────────────────────────────────────────────
 
 /** Chunk + embed an item's text into the vector index (capture + reindex share this). */
 async function indexItem(id: string, text: string): Promise<void> {
@@ -120,6 +166,26 @@ export const pipelineService = {
       n++
     }
     return n
+  },
+
+  /**
+   * On worker boot: re-enqueue any items that are still `pending` image/audio
+   * (from a previous capture that crashed or ran with NEEME_EXTRACTOR=off).
+   * Best-effort — failure must not block the worker from starting.
+   */
+  async resumeMediaExtraction(): Promise<void> {
+    if (process.env.NEEME_EXTRACTOR === 'off') return
+    const pending = await db
+      .select()
+      .from(items)
+      .where(inArray(items.contentType, ['image', 'audio']))
+      .then((rows) => rows.filter((r) => r.status === 'pending' && !!r.storedPath))
+    for (const row of pending) {
+      scheduleExtraction(row.id, row.storedPath!, row.contentType as ContentType, undefined)
+    }
+    if (pending.length > 0) {
+      console.log('[pipeline] queued', pending.length, 'pending media item(s) for extraction')
+    }
   },
 
   /** Keep the vector index consistent with the active embedder. If the embedder

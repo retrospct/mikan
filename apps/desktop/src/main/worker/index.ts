@@ -61,6 +61,14 @@ async function start(): Promise<void> {
     console.error('[worker] embedder sync/reindex failed; search may be degraded', err)
   }
 
+  // Re-enqueue any image/audio items still pending from a prior session (crash
+  // recovery or NEEME_EXTRACTOR=off → on transition). Best-effort.
+  try {
+    await pipelineService.resumeMediaExtraction()
+  } catch (err) {
+    console.error('[worker] media resume pass failed; pending items will stay pending', err)
+  }
+
   port.on('message', (event) => {
     const msg = event.data as CallMessage
     const handler = handlers[msg.channel]

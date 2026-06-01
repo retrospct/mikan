@@ -2,21 +2,20 @@
  * Shared IPC contract — imported by main (handlers), preload (bridge), and
  * renderer (typed `window.api`). Keep this free of Node/Electron/Drizzle
  * imports so the renderer can use it without pulling in backend-only modules.
+ *
+ * The renderer-facing return types are the **view model** (`src/shared/views.ts`,
+ * the shapes the UI renders). The data-model types here (`Item`, `Todo`,
+ * `SearchHit`, `ContextEntry`) are the worker's internal vocabulary; the worker
+ * projects them to the view model (see `src/main/services/project.ts`).
  */
-
-export interface Memory {
-  id: string
-  content: string
-  createdAt: Date
-}
+import type { BacklogItem, FedItem, MatchHit, Memory, Task } from './views'
 
 export const IPC = {
-  memoryList: 'memory:list',
-  memoryAdd: 'memory:add',
-  // Pipeline (on-device capture → extract → index → search; main process)
+  // Pipeline (on-device capture → extract → index → surface; runs in the worker)
   pipelineCaptureText: 'pipeline:capture-text',
+  pipelineArchive: 'pipeline:archive',
+  pipelineFeed: 'pipeline:feed',
   pipelineSearch: 'pipeline:search',
-  pipelineList: 'pipeline:list',
   // Todos (daily focus list: cap/plan + the per-todo context pool)
   todoAdd: 'todo:add',
   todoToday: 'todo:today',
@@ -40,7 +39,7 @@ export const IPC = {
   traySetBadge: 'tray:set-badge'
 } as const
 
-// --- Pipeline (capture / surface) -----------------------------------------
+// --- Pipeline data model (worker-internal vocabulary) ---------------------
 
 export type ContentType = 'text' | 'pdf' | 'image' | 'audio' | 'other'
 export type ItemStatus = 'captured' | 'extracted' | 'pending' | 'failed'
@@ -57,7 +56,8 @@ export interface Item {
 }
 
 export interface CaptureResult {
-  item: Item
+  /** The captured item, projected to a view `Memory`. */
+  memory: Memory
   /** false if this exact content was already captured (idempotent). */
   created: boolean
 }
@@ -87,12 +87,6 @@ export interface AuthState {
   claims: AuthClaims | null
 }
 
-/** The API surface exposed on `window.api`. */
-export interface MemoryApi {
-  list: () => Promise<Memory[]>
-  add: (content: string) => Promise<Memory>
-}
-
 export interface AuthApi {
   /** Open the system browser to sign in (OIDC + PKCE). */
   login: () => Promise<void>
@@ -106,7 +100,7 @@ export interface AuthApi {
   onChanged: (cb: (state: AuthState, accessToken?: string) => void) => () => void
 }
 
-// --- Todos (daily focus list + context pool) ------------------------------
+// --- Todos data model (worker-internal vocabulary) ------------------------
 
 export type TodoStatus = 'open' | 'done'
 
@@ -124,7 +118,7 @@ export interface Todo {
 
 export type ContextState = 'surfaced' | 'pinned' | 'dismissed'
 
-/** One surfaced memory in a todo's context pool. */
+/** One surfaced memory in a todo's context pool (worker-internal). */
 export interface ContextEntry {
   itemId: string
   score: number | null
@@ -134,42 +128,42 @@ export interface ContextEntry {
   state: ContextState
 }
 
-export interface TodoWithContext extends Todo {
-  context: ContextEntry[]
-}
-
 /** Raised when adding would exceed the day's focus cap. */
 export const CAP_REACHED = 'CAP_REACHED'
 
+// --- Renderer-facing API (returns the view model) -------------------------
+
 export interface TodoApi {
   /** Add to today (cap-enforced; rejects with CAP_REACHED when full). Surfaces context. */
-  add: (title: string, notes?: string) => Promise<TodoWithContext>
-  /** Today's focus list, each item with its stored context pool. */
-  today: (day?: string) => Promise<TodoWithContext[]>
+  add: (title: string, notes?: string) => Promise<Task>
+  /** Today's focus list, each task with its context pool projected in. */
+  today: (day?: string) => Promise<Task[]>
   /** Open, unscheduled items (the backlog). */
-  backlog: () => Promise<Todo[]>
-  /** The done log (newest first). */
+  backlog: () => Promise<BacklogItem[]>
+  /** The done log (newest first) — worker-internal `Todo` shape. */
   done: (limit?: number) => Promise<Todo[]>
-  complete: (id: string) => Promise<Todo | null>
-  reopen: (id: string) => Promise<Todo | null>
+  complete: (id: string) => Promise<Task | null>
+  reopen: (id: string) => Promise<Task | null>
   /** Plan a day: carry `keep` open items onto it, sweep the rest to the backlog. */
-  plan: (keep: string[], day?: string) => Promise<TodoWithContext[]>
+  plan: (keep: string[], day?: string) => Promise<Task[]>
   /** Pull a backlog item onto a day (cap-enforced). */
-  schedule: (id: string, day?: string) => Promise<Todo | null>
-  /** "Search more" — re-run search and merge new hits into the pool. */
-  searchMoreContext: (id: string) => Promise<ContextEntry[]>
-  pinContext: (id: string, itemId: string) => Promise<ContextEntry[]>
-  dismissContext: (id: string, itemId: string) => Promise<ContextEntry[]>
+  schedule: (id: string, day?: string) => Promise<Task | null>
+  /** "Search more" — re-run search, merge new hits, return the updated task. */
+  searchMoreContext: (id: string) => Promise<Task | null>
+  pinContext: (id: string, itemId: string) => Promise<Task | null>
+  dismissContext: (id: string, itemId: string) => Promise<Task | null>
 }
 
-/** Capture + surface, backed by the on-device pipeline in the main process. */
+/** Capture + surface, backed by the on-device pipeline in the worker. */
 export interface PipelineApi {
-  /** Quick text capture → returns the item (+ whether it was newly created). */
+  /** Quick text capture → the captured item as a `Memory` (+ whether newly created). */
   captureText: (text: string, name?: string) => Promise<CaptureResult>
-  /** Semantic search over captured content. */
-  search: (query: string, topK?: number) => Promise<SearchHit[]>
-  /** Recently captured items (newest first). */
-  listItems: () => Promise<Item[]>
+  /** The archive: every captured item, newest first (the UI's `MEMORIES`). */
+  archive: () => Promise<Memory[]>
+  /** The recent-capture feed (newest first). */
+  feed: () => Promise<FedItem[]>
+  /** Rank archive memories for a typed task/query (the UI's `matchTask`). */
+  search: (query: string, topK?: number) => Promise<MatchHit[]>
 }
 
 /** UI-shell channels (no data) — drive the tray/menu-bar window from the renderer. */
@@ -179,7 +173,6 @@ export interface UiApi {
 }
 
 export interface NeemeApi {
-  memory: MemoryApi
   pipeline: PipelineApi
   todos: TodoApi
   auth: AuthApi

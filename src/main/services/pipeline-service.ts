@@ -6,6 +6,8 @@ import { embedder } from '../pipeline/embed'
 import { detectContentType, extract, suffixOf } from '../pipeline/extract'
 import { putRaw } from '../pipeline/raw-store'
 import type { CaptureResult, ContentType, Item, ItemStatus, SearchHit } from '../../shared/ipc'
+import type { FedItem, MatchHit, Memory } from '../../shared/views'
+import { toFedItem, toMatchHits, toMemory } from './project'
 
 /**
  * The on-device pipeline (ADR 0003): capture → content-hash store → extract →
@@ -31,7 +33,7 @@ async function capture(bytes: Uint8Array, name: string, mime?: string): Promise<
 
   // Idempotent on content: already captured these exact bytes → return it.
   const existing = await db.select().from(items).where(eq(items.id, id)).limit(1)
-  if (existing[0]) return { item: toItem(existing[0]), created: false }
+  if (existing[0]) return { memory: toMemory(toItem(existing[0])), created: false }
 
   const contentType = detectContentType(name, mime)
   const { text, status } = await extract(contentType, bytes)
@@ -50,7 +52,7 @@ async function capture(bytes: Uint8Array, name: string, mime?: string): Promise<
       })
     }
   }
-  return { item: toItem(created!), created: true }
+  return { memory: toMemory(toItem(created!)), created: true }
 }
 
 export const pipelineService = {
@@ -86,5 +88,20 @@ export const pipelineService = {
   async listItems(): Promise<Item[]> {
     const rows = await db.select().from(items).orderBy(desc(items.createdAt))
     return rows.map(toItem)
+  },
+
+  /** The archive (UI `MEMORIES`): every captured item projected to a `Memory`. */
+  async archive(): Promise<Memory[]> {
+    return (await this.listItems()).map(toMemory)
+  },
+
+  /** The recent-capture feed, newest first. */
+  async feed(): Promise<FedItem[]> {
+    return (await this.listItems()).map(toFedItem)
+  },
+
+  /** Rank archive memories for a typed task/query (the UI's `matchTask`). */
+  async match(query: string, topK = 8): Promise<MatchHit[]> {
+    return toMatchHits(await this.search(query, topK))
   }
 }

@@ -4,15 +4,12 @@ import { IPC, type AuthState, type NeemeApi } from '../shared/ipc'
 
 // Custom APIs for renderer — the only data surface the renderer can reach.
 const api: NeemeApi = {
-  memory: {
-    list: () => ipcRenderer.invoke(IPC.memoryList),
-    add: (content: string) => ipcRenderer.invoke(IPC.memoryAdd, content)
-  },
   pipeline: {
     captureText: (text: string, name?: string) =>
       ipcRenderer.invoke(IPC.pipelineCaptureText, text, name),
-    search: (query: string, topK?: number) => ipcRenderer.invoke(IPC.pipelineSearch, query, topK),
-    listItems: () => ipcRenderer.invoke(IPC.pipelineList)
+    archive: () => ipcRenderer.invoke(IPC.pipelineArchive),
+    feed: () => ipcRenderer.invoke(IPC.pipelineFeed),
+    search: (query: string, topK?: number) => ipcRenderer.invoke(IPC.pipelineSearch, query, topK)
   },
   todos: {
     add: (title: string, notes?: string) => ipcRenderer.invoke(IPC.todoAdd, title, notes),

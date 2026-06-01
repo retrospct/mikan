@@ -29,6 +29,55 @@ export type HttpValidationError = {
 }
 
 /**
+ * IngestResponse
+ */
+export type IngestResponse = {
+  /**
+   * Created
+   */
+  created: boolean
+  item: ItemSummary
+}
+
+/**
+ * ItemSummary
+ */
+export type ItemSummary = {
+  /**
+   * Content Type
+   */
+  content_type: string
+  /**
+   * Created At
+   */
+  created_at: string
+  /**
+   * Excerpt
+   */
+  excerpt?: string | null
+  /**
+   * Extraction Status
+   */
+  extraction_status: string
+  /**
+   * Id
+   */
+  id: string
+  /**
+   * S3 Uri
+   */
+  s3_uri?: string | null
+  /**
+   * Source Filename
+   */
+  source_filename?: string | null
+  /**
+   * Tags
+   */
+  tags?: Array<string>
+}
+
+/**
  * NoteIn
  */
 export type NoteIn = {
@@ -44,6 +93,60 @@ export type NoteIn = {
    * Text
    */
   text: string
+}
+
+/**
+ * RecentResponse
+ */
+export type RecentResponse = {
+  /**
+   * Items
+   */
+  items: Array<ItemSummary>
+}
+
+/**
+ * SearchHitView
+ */
+export type SearchHitView = {
+  /**
+   * Content Type
+   */
+  content_type?: string | null
+  /**
+   * Excerpt
+   */
+  excerpt?: string | null
+  /**
+   * Id
+   */
+  id: string
+  /**
+   * S3 Uri
+   */
+  s3_uri?: string | null
+  /**
+   * Score
+   */
+  score: number
+  /**
+   * Source Filename
+   */
+  source_filename?: string | null
+}
+
+/**
+ * SearchResponse
+ */
+export type SearchResponse = {
+  /**
+   * Hits
+   */
+  hits: Array<SearchHitView>
+  /**
+   * Query
+   */
+  query: string
 }
 
 /**
@@ -262,8 +365,10 @@ export type AddNoteNotesPostResponses = {
   /**
    * Successful Response
    */
-  200: unknown
+  200: IngestResponse
 }
+
+export type AddNoteNotesPostResponse = AddNoteNotesPostResponses[keyof AddNoteNotesPostResponses]
 
 export type RecentRecentGetData = {
   body?: never
@@ -290,8 +395,10 @@ export type RecentRecentGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown
+  200: RecentResponse
 }
+
+export type RecentRecentGetResponse = RecentRecentGetResponses[keyof RecentRecentGetResponses]
 
 export type SearchSearchGetData = {
   body?: never
@@ -326,8 +433,10 @@ export type SearchSearchGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown
+  200: SearchResponse
 }
+
+export type SearchSearchGetResponse = SearchSearchGetResponses[keyof SearchSearchGetResponses]
 
 export type TodayTodayGetData = {
   body?: never

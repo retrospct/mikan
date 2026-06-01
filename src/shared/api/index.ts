@@ -30,6 +30,22 @@ import {
   todoContextTodosTodoIdContextGet
 } from './generated'
 
+/**
+ * Unwrap a hey-api result (`{ data, error, response }`) into `data`, throwing a
+ * readable Error on failure. Lets components `await unwrap(getRecent(...))` and
+ * work with the typed payload directly. Network failures (server down) surface
+ * as the rejected promise from the underlying fetch.
+ */
+export async function unwrap<T>(
+  call: Promise<{ data?: T; error?: unknown; response?: Response }>
+): Promise<T> {
+  const { data, error, response } = await call
+  if (error !== undefined || data === undefined) {
+    throw new Error(`Request failed (HTTP ${response?.status ?? '?'})`)
+  }
+  return data
+}
+
 // ---- Memory / item capture + retrieval ----
 /** GET /health — backend configuration status. No params, no auth. */
 export const getHealth = healthHealthGet
@@ -58,6 +74,15 @@ export const deleteTodo = deleteTodoTodosTodoIdDelete
 /** GET /todos/{id}/context — memories relevant to a to-do. */
 export const getTodoContext = todoContextTodosTodoIdContextGet
 
-// ---- Request input types (these ARE typed from the backend) ----
+// ---- Request input types ----
 export type { NoteIn, TodoIn, TodoPatch, BodyIngestIngestPost } from './generated'
-export type { HealthHealthGetResponses } from './generated'
+
+// ---- Response types (now typed from the backend's Pydantic response_models) ----
+export type {
+  ItemSummary,
+  IngestResponse,
+  RecentResponse,
+  SearchHitView,
+  SearchResponse,
+  HealthHealthGetResponses
+} from './generated'

@@ -20,8 +20,15 @@ Lanes (see `CLAUDE.md`): **back** = `src/main` + `src/shared`; **front** = `src/
 
 ## Punch list
 
+> **DO FIRST (#0): monorepo migration** — `git mv src → apps/desktop/src` + lift `src/shared` →
+> `packages/contract` + pnpm workspaces. It rewrites nearly every path, so it must land in the
+> **quiet window (0 open PRs, pre-ramp)** before any parallel workstream branches — else it's a
+> merge nightmare. See [ADR 0006](adr/0006-repo-structure.md) for the checklist. Everything below
+> branches off the already-monorepo'd `main`.
+
 | #   | Item                                                                                                     | Lane         | Unblocks                                         | Size | When       |
 | --- | -------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------ | ---- | ---------- |
+| 0   | **Monorepo migration** (flat → `apps/desktop` + `packages/contract`, pnpm workspaces)                    | back/struct  | a clean root everyone branches off; unblocks #14 | M    | **FIRST**  |
 | 1   | Smoke-test integrated main (embedder + tray actually run)                                                | human        | confidence in the baseline                       | S    | now        |
 | 2   | **Wire UI → `window.api`** (retire mock `data.ts`; see `INTEGRATION.md`)                                 | front        | the app runs on real data — the headline         | L    | **P0**     |
 | 3   | AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings) | back         | every AI-gap field                               | L    | P1 ⚠️      |
@@ -64,8 +71,9 @@ Each is written up as an ADR — settle (ratify) each before starting the items 
    optional parked spike, not a committed path)_.
 2. **OCR / ASR (gates #5):** on-device vs cloud → [ADR 0005](adr/0005-image-audio-extraction.md)
    _(proposed: on-device default, macOS-native fast path, cloud as later offload)_.
-3. **Repo structure (gates #14):** flat vs monorepo → [ADR 0006](adr/0006-repo-structure.md)
-   _(accepted: stay flat now, migrate to a workspace monorepo when the Expo app starts)_.
+3. **Repo structure (gates #14):** → [ADR 0006](adr/0006-repo-structure.md)
+   _(accepted: **migrate to a monorepo NOW** (item #0), before parallel workstreams — the
+   quiet-window beats the premature-tooling cost; supersedes the defer-until-Expo timing)_.
 
 **Native-packaging note (#13):** `onnxruntime-node` ships per-platform prebuilt binaries. macOS
 is the happy path; the Windows build is a deliberate canary to see _how_ it breaks. Fallback if

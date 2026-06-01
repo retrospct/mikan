@@ -1,6 +1,6 @@
 # ADR 0005 — Image + audio extraction (OCR / ASR)
 
-**Status:** Proposed (recommends on-device default — tesseract.js / whisper — with a macOS-native fast path and cloud as later offload)
+**Status:** Accepted — implemented (roadmap #5)
 **Date:** 2026-06-01
 **Context owners:** jlee (+ Claude)
 **Related:** extends [[0003-all-typescript-on-device-pipeline]] (capability→TS mapping); unblocks roadmap #5; feeds the same capture→chunk→embed→index path
@@ -79,7 +79,23 @@ unlike drafting, this is the case least likely to ever need the cloud fallback.
 
 ## Action items
 
-1. [ ] Extend `extract.ts` with image + audio branches behind a per-type seam.
-2. [ ] Portable path first: `tesseract.js` + a Whisper build, lazy-download + cache.
-3. [ ] macOS Vision/Speech native module as the Darwin fast path (fallback to portable).
-4. [ ] Verify HEIC decode in the Electron build (the 0003 image-prep risk).
+1. [x] Extend `extract.ts` with image + audio branches behind a per-type seam (`extractMedia`, routes to `ocr`/`asr` singletons).
+2. [x] Portable path: `tesseract.js` (OCR) + `WhisperAsr` (transformers.js Whisper tiny + ffmpeg decode), lazy-load + cache under `userData/models/`.
+3. [x] macOS Vision/Speech fast path via `nimi-extract.swift` CLI helper (`resources/mac/`); `NEEME_MAC_HELPER` injected by `worker/client.ts`; falls back to portable when helper absent or `NEEME_EXTRACTOR=portable`.
+4. [x] HEIC decode handled: `TesseractOcr` converts HEIC → JPEG via `heic-convert` before Tesseract; `MacVisionOcr` reads HEIC natively via `CGImageSource`. **Note on native Speech ASR:** TCC authorization flows through the parent Electron app; on macOS, `SFSpeechRecognizer` with `requiresOnDeviceRecognition = true` runs entirely on-device. Falls back to portable Whisper if helper is absent.
+
+### Env knobs
+
+| Env var | Values | Default |
+|---------|--------|---------|
+| `NEEME_EXTRACTOR` | `off` / `portable` / unset | unset (native on darwin if helper exists) |
+| `NEEME_OCR_LANG` | any tesseract lang code | `eng` |
+| `NEEME_WHISPER_MODEL` | any Xenova/whisper-* model | `Xenova/whisper-tiny` |
+
+### Build helper (macOS)
+
+```bash
+pnpm --filter @nimi/desktop build:mac-helper
+# or directly:
+swiftc resources/mac/nimi-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/nimi-extract
+```

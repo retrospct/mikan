@@ -52,6 +52,22 @@ The mutators return the **updated `Task`**, so drop the result straight back int
 
 Every id in `Task.ctx` / `Task.pinned` **also appears in `pipeline.archive()`**. So `MEMORIES[ctxId]` always resolves — the "task holds ids, look the display up in the archive" model holds.
 
+## Async media extraction
+
+`captureFile` with an image or audio file returns immediately with `status: 'pending'`. OCR/ASR
+runs in the background (a serial queue in the worker). On the next `feed()` or `archive()` call,
+`status` will be `'extracted'` and the memory will be searchable. The feed maps both `'captured'`
+and `'extracted'` to `done`; `'pending'` stays as pending until extraction completes.
+
+**Env knobs:**
+
+| Var | Effect |
+|-----|--------|
+| `NEEME_EXTRACTOR=off` | Skip OCR/ASR entirely — image/audio stay `pending` forever |
+| `NEEME_EXTRACTOR=portable` | Force tesseract.js/Whisper even on macOS |
+| `NEEME_OCR_LANG` | Tesseract language code (default `eng`) |
+| `NEEME_WHISPER_MODEL` | Whisper model (default `Xenova/whisper-tiny`) |
+
 ## Process model
 
 `renderer (sandboxed, no node)` → `preload (contextBridge)` → `main (router)` → `utilityProcess (DB + pipeline/todos)`. See `docs/SECURITY.md`.

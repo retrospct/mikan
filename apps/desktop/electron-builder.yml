@@ -11,6 +11,7 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+  - node_modules/ffmpeg-static/**
 win:
   executableName: nimi
 nsis:
@@ -25,6 +26,7 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+    - NSSpeechRecognitionUsageDescription: Nimi uses on-device speech recognition to transcribe voice memos into searchable memories.
   notarize: false
 dmg:
   artifactName: ${name}-${version}.${ext}

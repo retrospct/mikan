@@ -58,12 +58,29 @@ function anchorPosition(): { x: number; y: number } {
   return { x, y }
 }
 
+// Programmatic setPosition can echo a 'moved' event; suppress the snap logic for a
+// tick around our own moves so it doesn't fight itself (a cause of open choppiness).
+let suppressMoved = false
+function place(x: number, y: number): void {
+  suppressMoved = true
+  win?.setPosition(x, y, false)
+  setTimeout(() => {
+    suppressMoved = false
+  }, 60)
+}
+
 function showAnchored(): void {
   if (!win) return
   const { x, y } = anchorPosition()
-  win.setPosition(x, y, false)
+  place(x, y)
   win.show()
   win.focus()
+}
+
+function setPinned(value: boolean): void {
+  pinned = value
+  // Pinned = float above other windows (and skip hide-on-blur).
+  win?.setAlwaysOnTop(value, 'floating')
 }
 
 function toggle(): void {
@@ -95,6 +112,7 @@ export function initTrayWindow(): void {
     skipTaskbar: true,
     show: false,
     roundedCorners: true,
+    backgroundColor: '#0a0a0b', // app dark bg — avoids a white flash on first paint
     ...(process.platform === 'linux' ? { icon: appIcon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -125,11 +143,12 @@ export function initTrayWindow(): void {
     }
   })
   // Magnetic snap: on drag-release near the anchor, lock into the anchored spot.
+  // (Live "pull while dragging" easing is punch-listed.)
   win.on('moved', () => {
-    if (!win) return
+    if (!win || suppressMoved) return
     const b = win.getBounds()
     const a = anchorPosition()
-    if (Math.hypot(b.x - a.x, b.y - a.y) <= SNAP_PX) win.setPosition(a.x, a.y, false)
+    if (Math.hypot(b.x - a.x, b.y - a.y) <= SNAP_PX) place(a.x, a.y)
   })
 
   // Tray icon (monochrome template on macOS so it themes with the menu bar).
@@ -141,12 +160,10 @@ export function initTrayWindow(): void {
   const menu = Menu.buildFromTemplate([
     { label: 'Show Neeme', click: () => showAnchored() },
     {
-      label: 'Pin (stay open)',
+      label: 'Pin on top',
       type: 'checkbox',
       checked: pinned,
-      click: (mi: MenuItem) => {
-        pinned = mi.checked
-      }
+      click: (mi: MenuItem) => setPinned(mi.checked)
     },
     { type: 'separator' },
     {

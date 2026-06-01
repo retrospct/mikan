@@ -9,6 +9,6 @@ import { client } from '../src/main/db/index'
 export async function clearTables(): Promise<void> {
   // Delete in dependency order (FKs may or may not be enforced, but order is safe)
   await client.executeMultiple(
-    'DELETE FROM todo_ai; DELETE FROM todo_context; DELETE FROM todos; DELETE FROM chunks; DELETE FROM items; DELETE FROM meta;'
+    'DELETE FROM todo_ai; DELETE FROM todo_context; DELETE FROM todos; DELETE FROM chunks; DELETE FROM items; DELETE FROM meta; DELETE FROM connector_state;'
   )
 }

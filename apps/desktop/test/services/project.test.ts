@@ -103,6 +103,35 @@ describe('toMemory', () => {
     expect(m.kind).toBe('voice')
   })
 
+  it('maps connector=gmail to kind "email" regardless of contentType', () => {
+    const m = toMemory(makeItem({ connector: 'gmail', contentType: 'text', sourceName: 'msg.txt' }))
+    expect(m.kind).toBe('email')
+  })
+
+  it('maps connector=gcal to kind "calendar" regardless of contentType', () => {
+    const m = toMemory(makeItem({ connector: 'gcal', contentType: 'text', sourceName: 'evt.txt' }))
+    expect(m.kind).toBe('calendar')
+  })
+
+  it('connector kind takes precedence over extension-based inference', () => {
+    // A .md file ingested via gmail should still be "email"
+    const m = toMemory(makeItem({ connector: 'gmail', contentType: 'text', sourceName: 'note.md' }))
+    expect(m.kind).toBe('email')
+  })
+
+  it('uses item.uri as src when present', () => {
+    const m = toMemory(makeItem({
+      connector: 'gmail',
+      uri: 'https://mail.google.com/mail/u/0/#inbox/abc123'
+    }))
+    expect(m.src).toBe('https://mail.google.com/mail/u/0/#inbox/abc123')
+  })
+
+  it('falls back to sourceName as src when uri is absent', () => {
+    const m = toMemory(makeItem({ connector: 'gmail', uri: undefined }))
+    expect(m.src).toBe('note.md')
+  })
+
   it('derives title from the first non-empty line of text', () => {
     const m = toMemory(makeItem({ text: '\nFirst line\nSecond line' }))
     expect(m.title).toBe('First line')

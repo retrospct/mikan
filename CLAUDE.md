@@ -6,16 +6,12 @@ things done. This repo is the product. (The Python `neeme` repo is legacy.)
 
 ## Before you start (coordination)
 
-Two agents work this repo in parallel. **Lanes:** backend/pipeline = `src/main/**` +
-`src/shared/**`; frontend/UI = `src/renderer/**`. Before starting a task or rebasing:
+2–3 agents may work this repo in parallel. **Lanes:** back = `src/main/**` + `src/shared/**`;
+front = `src/renderer/**`. Two rules keep us from colliding:
 
-1. Read **`docs/agent-sync/INBOX.md`** (directives for you — a `@all hold` overrides
-   everything), **`docs/agent-sync/SYNC-BRIEF.md`** (branches, merge order, live conflicts),
-   and **`docs/INTEGRATION.md`** (the backend⇄UI contract + swap map).
-2. **Contract changes land in `src/shared` first** — types are the boundary; the compiler
-   enforces agreement there. Update `docs/INTEGRATION.md` in the same change.
-3. Stay in your lane unless the contract says otherwise. Don't edit the other lane's files
-   beyond what a shared-type change forces.
+1. Check **`docs/agent-sync/INBOX.md`** for a `@all hold` before branching.
+2. **Contract changes land in `src/shared` first** (the compiler enforces the boundary) —
+   update `docs/INTEGRATION.md` in the same change. Otherwise stay in your lane.
 
 ## Architecture (process model)
 
@@ -36,13 +32,11 @@ Never set `sandbox:false`, `nodeIntegration:true`, `contextIsolation:false`, or
 
 ## The contract
 
-- `src/shared/views.ts` — the **view model** the UI renders (`Memory`/`Task`/`BacklogItem`/
-  `FedItem`/`MatchHit`). `src/shared/ipc.ts` — the `window.api.*` surface + channels.
-- The worker projects its data model (`Item`/`Todo`/…) → the view model in
-  `src/main/services/project.ts`. That's the one place the **AI-gap** lives.
-- **"Wire real, plain":** structural data is served for real; AI-generated fields
-  (`brief`/`draft`/`note`, `gathering`→`drafted`) come back `null`/empty until the LLM layer
-  lands, and the UI degrades gracefully.
+- `src/shared/views.ts` — the view model the UI renders. `src/shared/ipc.ts` — the
+  `window.api.*` surface + channels. The worker projects its data model → the view model in
+  `src/main/services/project.ts` (where the **AI-gap** lives). Details: `docs/INTEGRATION.md`.
+- **"Wire real, plain":** structural data is served for real; AI-generated fields come back
+  `null`/empty until the LLM layer lands, and the UI degrades gracefully.
 
 ## Verify before you PR
 

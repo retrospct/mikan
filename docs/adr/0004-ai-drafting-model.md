@@ -65,8 +65,9 @@ cloud path and cut over **where the numbers say local isn't good enough** — an
 is **per-capability, not wholesale**.
 
 **The "good enough" bar (define before building):** acceptable draft quality on real tasks
-(reply-to-email, one-pager brief) + a latency target on a **low-end device**, not just Apple
-Silicon. Measure each capability against it.
+(reply-to-email, one-pager brief) + a latency target on the **v1 target device** (Apple
+Silicon — get it working _there_ first). Low-end/weak-hardware viability is the capability
+probe's job _later_, not a launch gate. Measure each capability against it.
 
 Likely outcome by capability (to be confirmed by benchmark, not assumed):
 
@@ -77,6 +78,26 @@ Likely outcome by capability (to be confirmed by benchmark, not assumed):
 
 So: ship local, benchmark, and let the bar — per capability — decide what (if anything)
 graduates to cloud. Worst case is "long drafts go cloud"; best case is "all local."
+
+### Device capability gate + v1 scope
+
+Local inference is hardware-bound and not every device clears the bar. Two rules:
+
+- **v1: get it working _somewhere_, not everywhere.** Target capable hardware first (the
+  Apple-Silicon dev machine) and ship the local path there. Broadening device reach
+  (quantized/smaller models, tiers, weak-Intel/Windows) is a later concern, **not a launch
+  blocker** — don't let universal coverage gate getting the loop working at all.
+- **Runtime capability probe.** On first use, check the device against a **minimum spec**
+  (arch / RAM / accelerator, or a quick timed warm-up inference). Clears it → local Drafter
+  on. Below it → fall back to cloud (opt-in) or simply the **graceful-null state the UI
+  already handles** ("wire real, plain": no draft, neutral status). The "device too weak"
+  path is _free_ — it's the degrade path we already built, not new work.
+
+**No chatty hybrid.** Keep each capability end-to-end on **one** side. A split that ferries
+embeddings / intermediate state back and forth over the network reintroduces exactly the
+round-trip latency on-device is meant to kill — so a capability is _fully_ local or _fully_
+cloud, never half-and-half mid-pipeline. (This is the latency win you're really after: skip
+the record→upload→process→respond loop, not just the upload.)
 
 ## Consequences
 
@@ -100,8 +121,11 @@ graduates to cloud. Worst case is "long drafts go cloud"; best case is "all loca
 ## Action items
 
 1. [ ] Define the `Drafter` interface + a `NIMI_DRAFTER` env seam (mirror `embed.ts`).
-2. [ ] Set the "good enough" bar: real-task quality + a latency target on a low-end device.
+2. [ ] Set the "good enough" bar on the **v1 target** (Apple Silicon): real-task quality + latency.
 3. [ ] Build the **on-device** Drafter first (`node-llama-cpp`, lazy model) → benchmark
-       `brief` + `draft` against the bar, per capability.
-4. [ ] Only for capabilities that miss the bar: add the cloud offload (opt-in, BYO-key) +
+       `brief` + `draft` against the bar, per capability. Get it working _there_ before
+       worrying about device breadth.
+4. [ ] Add a runtime **capability probe** (min-spec / timed warm-up) → enable local only when
+       cleared; below it, fall back to cloud (opt-in) or the existing graceful-null state.
+5. [ ] Only for capabilities that miss the bar: add the cloud offload (opt-in, BYO-key) +
        the consent/settings surface, and cut those over.

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { IPC, type AuthState, type NimiApi } from '@nimi/contract/ipc'
+import { IPC, type AuthState, type ConnectorsState, type ConnectorId, type NimiApi } from '@nimi/contract/ipc'
 
 // Custom APIs for renderer — the only data surface the renderer can reach.
 const api: NimiApi = {
@@ -40,6 +40,17 @@ const api: NimiApi = {
       ): void => cb(payload.state, payload.accessToken)
       ipcRenderer.on(IPC.authChanged, handler)
       return () => ipcRenderer.removeListener(IPC.authChanged, handler)
+    }
+  },
+  connectors: {
+    connect: (provider: ConnectorId) => ipcRenderer.invoke(IPC.connectorsConnect, provider),
+    disconnect: (provider: ConnectorId) => ipcRenderer.invoke(IPC.connectorsDisconnect, provider),
+    getState: () => ipcRenderer.invoke(IPC.connectorsGetState),
+    syncNow: (provider: ConnectorId) => ipcRenderer.invoke(IPC.connectorsSyncNow, provider),
+    onChanged: (cb: (state: ConnectorsState) => void) => {
+      const handler = (_e: IpcRendererEvent, state: ConnectorsState): void => cb(state)
+      ipcRenderer.on(IPC.connectorsChanged, handler)
+      return (): void => { ipcRenderer.removeListener(IPC.connectorsChanged, handler) }
     }
   },
   ui: {

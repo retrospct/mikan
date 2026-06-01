@@ -12,4 +12,10 @@ interface ImportMetaEnv {
   readonly MAIN_VITE_LOGTO_APP_ID?: string
   /** Optional API resource indicator the access token should be scoped to. */
   readonly MAIN_VITE_LOGTO_RESOURCE?: string
+  /** Google Desktop-app OAuth client ID (for Gmail + Calendar connectors). */
+  readonly MAIN_VITE_GOOGLE_CLIENT_ID?: string
+  /** Google Desktop-app OAuth client secret (non-confidential in a native app). */
+  readonly MAIN_VITE_GOOGLE_CLIENT_SECRET?: string
+  /** Optional space-separated scope override for Google OAuth. */
+  readonly MAIN_VITE_GOOGLE_SCOPES?: string
 }

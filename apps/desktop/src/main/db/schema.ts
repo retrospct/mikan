@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 /**
  * `memories` — the atomic unit of neeme's local store.
@@ -28,22 +28,49 @@ export type NewMemory = typeof memories.$inferInsert
  * normalized `text`, and an extraction `status`. The vector index lives in a
  * separate `chunks` table (created in db/index.ts — it uses libSQL's native
  * F32_BLOB type, so it's managed via raw SQL rather than the Drizzle schema).
+ *
+ * Connector provenance: `connector` identifies the source (gmail, gcal, or null for
+ * manual captures); `externalId` is the provider's stable id for dedup across re-syncs;
+ * `uri` is an optional deep-link back to the original item.
  */
-export const items = sqliteTable('items', {
-  id: text('id').primaryKey(), // sha256 of the raw bytes
-  sourceName: text('source_name').notNull(),
-  contentType: text('content_type').notNull(), // text | pdf | image | audio | other
-  sizeBytes: integer('size_bytes').notNull(),
-  storedPath: text('stored_path'),
-  text: text('text').notNull().default(''),
-  status: text('status').notNull(), // captured | extracted | pending | failed
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch())`)
-})
+export const items = sqliteTable(
+  'items',
+  {
+    id: text('id').primaryKey(), // sha256 of the raw bytes
+    sourceName: text('source_name').notNull(),
+    contentType: text('content_type').notNull(), // text | pdf | image | audio | other
+    sizeBytes: integer('size_bytes').notNull(),
+    storedPath: text('stored_path'),
+    text: text('text').notNull().default(''),
+    status: text('status').notNull(), // captured | extracted | pending | failed
+    // Connector provenance (null for manual captures)
+    connector: text('connector'), // gmail | gcal | null
+    externalId: text('external_id'), // provider's stable id (Gmail message id, Calendar event id)
+    uri: text('uri'), // optional deep-link to the original item
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch())`)
+  },
+  (t) => [uniqueIndex('items_external_id_idx').on(t.externalId)]
+)
 
 export type Item = typeof items.$inferSelect
 export type NewItem = typeof items.$inferInsert
+
+/**
+ * `connector_state` — per-provider sync cursor and metadata. Tracks the
+ * Gmail historyId and Calendar syncToken so incremental syncs only fetch deltas.
+ * One row per provider; upserted on every successful sync.
+ */
+export const connectorState = sqliteTable('connector_state', {
+  provider: text('provider').primaryKey(), // gmail | gcal
+  cursor: text('cursor'), // Gmail historyId | Calendar syncToken (null = full re-sync needed)
+  itemCount: integer('item_count').notNull().default(0),
+  lastSyncAt: integer('last_sync_at', { mode: 'timestamp' })
+})
+
+export type ConnectorStateRow = typeof connectorState.$inferSelect
+export type NewConnectorStateRow = typeof connectorState.$inferInsert
 
 /**
  * `todos` — the daily focus list (cap 5). `day` is the ISO date the item lives

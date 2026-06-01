@@ -4,7 +4,9 @@ import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { startWorker, call } from './worker/client'
 import { initTrayWindow, showWindow, setBadge } from './window/tray-window'
 import * as auth from './auth/logto'
+import * as googleAuth from './connectors/google-auth'
 import { IPC } from '@nimi/contract/ipc'
+import type { ConnectorId, ConnectorsState, IngestResult } from '@nimi/contract/ipc'
 
 // Register `neeme://` as the OAuth callback scheme. In dev (electron launched
 // with a script arg) we must pass execPath + the project dir so the OS routes
@@ -115,6 +117,85 @@ app.whenReady().then(async () => {
   ipcMain.handle(IPC.authLogout, () => auth.logout())
   ipcMain.handle(IPC.authGetToken, () => auth.getAccessToken())
   ipcMain.handle(IPC.authGetState, () => auth.getState())
+
+  // Connectors (Google OAuth + periodic ingest) — main-only, like auth.
+  // Inert until MAIN_VITE_GOOGLE_CLIENT_ID is set.
+  function broadcastConnectorsState(state: ConnectorsState): void {
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send(IPC.connectorsChanged, state)
+    }
+  }
+
+  /**
+   * Build the full ConnectorsState by merging googleAuth's in-memory OAuth
+   * connection status with the DB-persisted item counts + last-sync timestamps
+   * (fetched from the worker via connectorsGetStats).
+   */
+  async function buildConnectorsState(): Promise<ConnectorsState> {
+    const base = googleAuth.getState()
+    try {
+      const stats = await call<{
+        gmail: { itemCount: number; lastSyncAt: string | null }
+        gcal: { itemCount: number; lastSyncAt: string | null }
+      }>(IPC.connectorsGetStats, [])
+      base.gmail.itemCount = stats.gmail.itemCount
+      base.gmail.lastSyncAt = stats.gmail.lastSyncAt
+      base.gcal.itemCount = stats.gcal.itemCount
+      base.gcal.lastSyncAt = stats.gcal.lastSyncAt
+    } catch {
+      // DB stats unavailable — connected/configured status is still correct
+    }
+    return base as ConnectorsState
+  }
+
+  /**
+   * Run a sync for one provider: get a fresh token, call the worker, broadcast
+   * the updated state. Returns the IngestResult for syncNow IPC.
+   */
+  async function runSync(provider: ConnectorId): Promise<IngestResult> {
+    const accessToken = await googleAuth.getAccessToken(provider)
+    if (!accessToken) throw new Error(`${provider} is not connected`)
+    const result = await call<IngestResult>(IPC.connectorsIngest, [provider, accessToken])
+    // Broadcast updated state after sync (best-effort).
+    buildConnectorsState().then(broadcastConnectorsState).catch(() => {})
+    return result
+  }
+
+  // Restore persisted sessions silently on startup.
+  await googleAuth.init()
+
+  // IPC handlers — main-only (not forwarded to worker).
+  ipcMain.handle(IPC.connectorsGetState, () => buildConnectorsState())
+
+  ipcMain.handle(IPC.connectorsConnect, async (_e, provider: ConnectorId) => {
+    await googleAuth.connect(provider)
+    // Kick off an immediate first sync in the background so the feed populates.
+    runSync(provider).catch((err) => console.error(`[connectors] initial sync failed for ${provider}`, err))
+    broadcastConnectorsState(googleAuth.getState())
+  })
+
+  ipcMain.handle(IPC.connectorsDisconnect, async (_e, provider: ConnectorId) => {
+    await googleAuth.disconnect(provider)
+    broadcastConnectorsState(googleAuth.getState())
+  })
+
+  ipcMain.handle(IPC.connectorsSyncNow, async (_e, provider: ConnectorId) => {
+    return runSync(provider)
+  })
+
+  // Periodic background sync — every NEEME_CONNECTOR_SYNC_MINUTES (default 15).
+  const syncMinutes = Math.max(1, parseInt(process.env.NEEME_CONNECTOR_SYNC_MINUTES ?? '15', 10))
+  const syncInterval = setInterval(() => {
+    const providers: ConnectorId[] = ['gmail', 'gcal']
+    for (const provider of providers) {
+      if (!googleAuth.getState()[provider].connected) continue
+      runSync(provider).catch((err) =>
+        console.error(`[connectors] background sync failed for ${provider}`, err)
+      )
+    }
+  }, syncMinutes * 60 * 1000)
+  // Ensure the interval doesn't keep the process alive after quit.
+  syncInterval.unref()
 
   // UI-only: renderer pushes the "waiting" count → tray + Dock badge.
   ipcMain.handle(IPC.traySetBadge, (_e, count: number) => setBadge(count))

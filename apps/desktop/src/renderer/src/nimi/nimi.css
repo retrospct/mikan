@@ -4279,3 +4279,80 @@ html[data-density='compact'] .mem {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ── Connectors panel ──────────────────────────────────────────────────────── */
+
+.connectors-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: 4px;
+}
+
+.connector-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 7px;
+  transition: background 0.12s;
+}
+
+.connector-row[data-connected='true'] {
+  background: color-mix(in srgb, var(--accent, #7c6aff) 10%, transparent);
+}
+
+.connector-icon {
+  flex-shrink: 0;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+}
+
+.connector-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.connector-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-1, #e8e8ed);
+  white-space: nowrap;
+}
+
+.connector-meta {
+  font-size: 10px;
+  color: var(--text-3, #888);
+  white-space: nowrap;
+}
+
+.connector-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.connector-connect {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--accent, #7c6aff) 20%, transparent);
+  color: var(--text-1, #e8e8ed);
+  height: auto;
+  width: auto;
+}
+
+.connector-connect:hover {
+  background: color-mix(in srgb, var(--accent, #7c6aff) 35%, transparent);
+}
+
+.connector-disconnect {
+  opacity: 0.5;
+}
+
+.connector-disconnect:hover {
+  opacity: 1;
+}

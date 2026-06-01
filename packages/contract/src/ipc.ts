@@ -38,6 +38,17 @@ export const IPC = {
   authGetState: 'auth:get-state',
   /** main → renderer event: auth state / token changed (login, refresh, logout). */
   authChanged: 'auth:changed',
+  // Connectors (Google OAuth + ingest; lives in main; see src/main/connectors/google-auth.ts)
+  connectorsConnect: 'connectors:connect',
+  connectorsDisconnect: 'connectors:disconnect',
+  connectorsGetState: 'connectors:get-state',
+  connectorsSyncNow: 'connectors:sync-now',
+  /** main → renderer event: connector state changed (connected, synced, disconnected). */
+  connectorsChanged: 'connectors:changed',
+  /** Internal channel forwarded to the worker for actual API sync. */
+  connectorsIngest: 'connectors:ingest',
+  /** Internal channel to read per-provider DB stats (item count + last sync). */
+  connectorsGetStats: 'connectors:get-stats',
   // UI shell (tray/menu-bar window — see src/main/window/tray-window.ts)
   traySetBadge: 'tray:set-badge'
 } as const
@@ -55,6 +66,10 @@ export interface Item {
   sizeBytes: number
   status: ItemStatus
   text: string
+  /** Connector provenance — set for connector-ingested items, absent for manual captures. */
+  connector?: string
+  externalId?: string
+  uri?: string
   createdAt: Date
 }
 
@@ -182,9 +197,48 @@ export interface UiApi {
   setBadge: (count: number) => Promise<void>
 }
 
+// --- Connectors (Google OAuth + ingest — main-process concern) -----------
+
+/** The connector providers currently supported. */
+export type ConnectorId = 'gmail' | 'gcal'
+
+/** State of a single provider. */
+export interface ProviderState {
+  connected: boolean
+  lastSyncAt: string | null
+  itemCount: number
+}
+
+/** State surfaced to the renderer. `configured` is false until NEEME_GOOGLE_CLIENT_ID is set. */
+export interface ConnectorsState {
+  configured: boolean
+  gmail: ProviderState
+  gcal: ProviderState
+}
+
+/** Result returned by a sync run (worker-internal, surfaced via connectorsChanged). */
+export interface IngestResult {
+  ingested: number
+  lastSyncAt: string
+}
+
+export interface ConnectorsApi {
+  /** Open the system browser to authorize a provider (PKCE + loopback). */
+  connect: (provider: ConnectorId) => Promise<void>
+  /** Revoke stored tokens and clear all sync state for a provider. */
+  disconnect: (provider: ConnectorId) => Promise<void>
+  /** Snapshot of connector state for all providers. */
+  getState: () => Promise<ConnectorsState>
+  /** Trigger an immediate incremental sync (returns after the sync completes). */
+  syncNow: (provider: ConnectorId) => Promise<IngestResult>
+  /** Subscribe to state changes; returns an unsubscribe fn. */
+  onChanged: (cb: (state: ConnectorsState) => void) => () => void
+}
+
 export interface NimiApi {
   pipeline: PipelineApi
   todos: TodoApi
   auth: AuthApi
+  connectors: ConnectorsApi
   ui: UiApi
 }

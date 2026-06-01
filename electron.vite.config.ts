@@ -5,7 +5,17 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        // Two entries: the main process + the data utilityProcess (forked at
+        // runtime from out/main/worker.js). index.js stays the app entry.
+        input: {
+          index: resolve('src/main/index.ts'),
+          worker: resolve('src/main/worker/index.ts')
+        }
+      }
+    }
   },
   preload: {
     plugins: [externalizeDepsPlugin()]

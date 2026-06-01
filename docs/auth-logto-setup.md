@@ -91,6 +91,21 @@ than re-roll crypto. `verifyIdToken`/`claimsFromPayload` are login-only (connect
 tokens, not identity). The custom-scheme handler is login-only — connectors must not register a
 scheme or they'll capture each other's callbacks.
 
+## Gotchas we actually hit (verified 2026-06)
+
+- **Use a Native app, not the Management API app.** Every Logto tenant auto-creates an M2M
+  "Management API" app — grabbing *its* App ID gives `invalid_redirect_uri` ("redirect_uris must
+  contain members"), because M2M apps have no redirect URIs. The login client must be type **Native**.
+- **Save the redirect URI.** Adding `neeme://callback` but not clicking **Save changes** leaves the
+  array empty → same error. After saving it shows as a chip in the list.
+- **Don't request the Management API resource for login.** `MAIN_VITE_LOGTO_RESOURCE=<tenant>/api`
+  is the Management API indicator; a user-login client requesting it gets `invalid_target`. Leave it
+  unset unless you've registered a real API resource and want a scoped access token.
+- **One app instance at a time across worktrees.** All worktrees share appId `cool.jlee.nimi` +
+  `userData`, so they share a single-instance lock. A stale `pnpm dev` in another worktree keeps its
+  (wrong) window up and blocks yours — `window.api` reads `undefined` and the UI silently falls back
+  to the browser mock (no lock). Kill the other dev first.
+
 ## Caveats
 
 - **Custom-scheme deep link (`neeme://`)** registers reliably in a **packaged** build. In `pnpm dev`

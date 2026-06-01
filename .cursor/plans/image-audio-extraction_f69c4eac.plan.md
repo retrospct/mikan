@@ -28,7 +28,7 @@ todos:
     status: completed
   - id: verify
     content: "typecheck/build + worker smoke: captureFile a PNG and m4a, confirm status→extracted and search returns extracted text; verify Mac native path + portable fallback"
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

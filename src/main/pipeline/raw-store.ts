@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { app } from 'electron'
+import { userDataDir } from '../runtime/paths'
 
 /**
  * Content-addressed raw store: the original bytes land first, sha256-named and
@@ -18,7 +18,7 @@ export interface RawItem {
 
 export function putRaw(bytes: Uint8Array, suffix = ''): RawItem {
   const id = createHash('sha256').update(bytes).digest('hex')
-  const dir = join(app.getPath('userData'), 'raw', id.slice(0, 2))
+  const dir = join(userDataDir(), 'raw', id.slice(0, 2))
   const storedPath = join(dir, `${id}${suffix}`)
   const isNew = !existsSync(storedPath)
   if (isNew) {

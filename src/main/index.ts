@@ -2,10 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { initDb } from './db'
-import { memoryService } from './services/memory-service'
-import { pipelineService } from './services/pipeline-service'
-import { todoService } from './services/todo-service'
+import { startWorker, call } from './worker/client'
 import * as auth from './auth/logto'
 import { IPC } from '../shared/ipc'
 
@@ -37,6 +34,31 @@ app.on('open-url', (event, url) => {
   auth.handleCallback(url).catch((e) => console.error('auth callback failed', e))
 })
 
+// --- Security: lock down navigation + window creation (Electron checklist) ---
+// Only https/mailto links escape to the system browser; the renderer may never
+// open its own windows or navigate away from the app's own content.
+function isSafeExternal(url: string): boolean {
+  try {
+    const { protocol } = new URL(url)
+    return protocol === 'https:' || protocol === 'mailto:'
+  } catch {
+    return false
+  }
+}
+function isAppUrl(url: string): boolean {
+  const devUrl = process.env['ELECTRON_RENDERER_URL']
+  return (!!devUrl && url.startsWith(devUrl)) || url.startsWith('file://')
+}
+app.on('web-contents-created', (_event, contents) => {
+  contents.setWindowOpenHandler(({ url }) => {
+    if (isSafeExternal(url)) void shell.openExternal(url)
+    return { action: 'deny' }
+  })
+  contents.on('will-navigate', (event, url) => {
+    if (!isAppUrl(url)) event.preventDefault()
+  })
+})
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -52,7 +74,12 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      // Hardened renderer: sandboxed, context-isolated, no Node. All privileged
+      // work is behind the preload contextBridge → main → utilityProcess, so the
+      // renderer never needs Node and we keep Electron's default sandbox on.
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false
     }
   })
 
@@ -60,10 +87,7 @@ function createWindow(): void {
     mainWindow.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+  // Navigation + window-open are locked down globally (see web-contents-created).
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -91,36 +115,31 @@ app.whenReady().then(async () => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  // Local-first data layer — ensure the schema exists before handlers can query.
-  await initDb()
-  ipcMain.handle(IPC.memoryList, () => memoryService.list())
-  ipcMain.handle(IPC.memoryAdd, (_event, content: string) => memoryService.add(content))
-
-  // Pipeline — on-device capture / semantic search (see services/pipeline-service).
-  ipcMain.handle(IPC.pipelineCaptureText, (_e, text: string, name?: string) =>
-    pipelineService.captureText(text, name)
-  )
-  ipcMain.handle(IPC.pipelineSearch, (_e, query: string, topK?: number) =>
-    pipelineService.search(query, topK)
-  )
-  ipcMain.handle(IPC.pipelineList, () => pipelineService.listItems())
-
-  // Todos — daily focus list + per-todo context pool (see services/todo-service).
-  ipcMain.handle(IPC.todoAdd, (_e, title: string, notes?: string) => todoService.add(title, notes))
-  ipcMain.handle(IPC.todoToday, (_e, day?: string) => todoService.today(day))
-  ipcMain.handle(IPC.todoBacklog, () => todoService.backlog())
-  ipcMain.handle(IPC.todoDone, (_e, limit?: number) => todoService.done(limit))
-  ipcMain.handle(IPC.todoComplete, (_e, id: string) => todoService.complete(id))
-  ipcMain.handle(IPC.todoReopen, (_e, id: string) => todoService.reopen(id))
-  ipcMain.handle(IPC.todoPlan, (_e, keep: string[], day?: string) => todoService.plan(keep, day))
-  ipcMain.handle(IPC.todoSchedule, (_e, id: string, day?: string) => todoService.schedule(id, day))
-  ipcMain.handle(IPC.todoContextSearch, (_e, id: string) => todoService.searchMoreContext(id))
-  ipcMain.handle(IPC.todoContextPin, (_e, id: string, itemId: string) =>
-    todoService.pinContext(id, itemId)
-  )
-  ipcMain.handle(IPC.todoContextDismiss, (_e, id: string, itemId: string) =>
-    todoService.dismissContext(id, itemId)
-  )
+  // Data layer runs in a utilityProcess (off the main loop). Main is a thin
+  // router: every data channel is forwarded to the worker, which owns the DB +
+  // services. Start it (it inits the schema) before handlers can be called.
+  await startWorker()
+  const DATA_CHANNELS: string[] = [
+    IPC.memoryList,
+    IPC.memoryAdd,
+    IPC.pipelineCaptureText,
+    IPC.pipelineSearch,
+    IPC.pipelineList,
+    IPC.todoAdd,
+    IPC.todoToday,
+    IPC.todoBacklog,
+    IPC.todoDone,
+    IPC.todoComplete,
+    IPC.todoReopen,
+    IPC.todoPlan,
+    IPC.todoSchedule,
+    IPC.todoContextSearch,
+    IPC.todoContextPin,
+    IPC.todoContextDismiss
+  ]
+  for (const channel of DATA_CHANNELS) {
+    ipcMain.handle(channel, (_e, ...args: unknown[]) => call(channel, args))
+  }
 
   // Auth (Logto) — broadcast changes to renderers, restore any saved session,
   // then expose login/logout/token over IPC. Inert until Logto env is configured.

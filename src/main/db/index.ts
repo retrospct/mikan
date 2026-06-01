@@ -1,19 +1,22 @@
-import { app } from 'electron'
 import { join } from 'path'
 import { createClient } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
 import * as schema from './schema'
+import { userDataDir } from '../runtime/paths'
 
 /**
  * Local-first data layer on libSQL (a SQLite fork). For now this is a plain
- * on-device `file:` database in Electron's per-user `userData` dir — protected
- * by the OS account (Tier 1: no app-level lock yet).
+ * on-device `file:` database in the per-user `userData` dir — protected by the
+ * OS account (Tier 1: no app-level lock yet).
+ *
+ * This module runs in the utilityProcess (a plain Node child, no `electron.app`),
+ * so the data dir comes from the env the parent sets — see runtime/paths.
  *
  * libSQL is deliberate: the same driver later turns this local file into a
  * Turso *embedded replica* that syncs to the cloud, without rewriting the data
  * layer. Sync stays opt-in (and will only ever push encrypted data).
  */
-const dbPath = join(app.getPath('userData'), 'neeme.db')
+const dbPath = join(userDataDir(), 'neeme.db')
 
 // Exported so the pipeline can use libSQL's native vector functions
 // (vector32 / vector_distance_cos / libsql_vector_idx) via raw SQL — Drizzle's

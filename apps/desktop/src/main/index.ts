@@ -85,6 +85,7 @@ app.whenReady().then(async () => {
     IPC.pipelineCaptureFile,
     IPC.pipelineArchive,
     IPC.pipelineFeed,
+    IPC.pipelineUncoverTodos,
     IPC.pipelineSearch,
     IPC.todoAdd,
     IPC.todoToday,

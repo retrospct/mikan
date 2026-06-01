@@ -105,9 +105,9 @@ export interface BacklogItem {
 }
 
 /**
- * AI-gap: a todo Nimi *infers* from the feed (not user-entered). The backend
- * does not emit these yet — `window.api` returns `[]` until the inference layer
- * lands. Kept here so the UI type matches.
+ * AI-gap: a todo Nimi *infers* from the feed (not user-entered). Emitted by
+ * `pipeline.uncoverTodos()` when the drafter is configured (`NEEME_ANTHROPIC_KEY`);
+ * `window.api` returns `[]` otherwise so the UI degrades to no suggestions.
  */
 export interface UncoveredTodo {
   id?: string

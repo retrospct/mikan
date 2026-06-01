@@ -8,6 +8,7 @@
  * layer lands (or is absent), only these functions change.
  * Runs in the worker (off the main loop).
  */
+import { createHash } from 'node:crypto'
 import type { ContextEntry, Item, ItemStatus, Todo } from '@nimi/contract/ipc'
 import type {
   BacklogItem,
@@ -17,14 +18,15 @@ import type {
   MemoryKind,
   NoteKind,
   Task,
-  TaskStatus
+  TaskStatus,
+  UncoveredTodo
 } from '@nimi/contract/views'
-import type { TaskDraft } from '../pipeline/draft'
+import type { TaskDraft, UncoveredDraft } from '../pipeline/draft'
 
 const DAY_MS = 86_400_000
 
 /** A coarse human "when" for the feed/archive (the AI can refine phrasing later). */
-function relativeWhen(date: Date): string {
+export function relativeWhen(date: Date): string {
   const diff = Date.now() - date.getTime()
   if (diff < 60_000) return 'just now'
   const mins = Math.floor(diff / 60_000)
@@ -163,6 +165,28 @@ export function toTask(todo: Todo, context: ContextEntry[], ai?: TaskDraft): Tas
     useLabel: ai?.useLabel,
     useNote: ai?.useNote,
     useDone: ai?.useDone
+  }
+}
+
+/**
+ * Project an inferred to-do into the view model. `id` is a stable content hash of
+ * the title + source ids, so it survives cache round-trips (the UI keys its
+ * "added" state on `td.id`).
+ */
+export function toUncoveredTodo(d: UncoveredDraft): UncoveredTodo {
+  const id =
+    'unc_' +
+    createHash('sha1')
+      .update(d.title + '|' + d.ctx.join(','))
+      .digest('hex')
+      .slice(0, 12)
+  return {
+    id,
+    title: d.title,
+    why: d.why,
+    conf: d.conf,
+    ctxN: d.ctx.length,
+    ctx: d.ctx
   }
 }
 

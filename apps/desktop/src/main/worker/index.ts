@@ -13,6 +13,7 @@ import { IPC } from '@nimi/contract/ipc'
 import { initDb } from '../db'
 import { pipelineService } from '../services/pipeline-service'
 import { todoService } from '../services/todo-service'
+import { uncoverService } from '../services/uncover-service'
 
 type Handler = (args: unknown[]) => unknown | Promise<unknown>
 
@@ -23,6 +24,7 @@ const handlers: Record<string, Handler> = {
     pipelineService.captureFile(bytes as Uint8Array, name as string, mime as string | undefined),
   [IPC.pipelineArchive]: () => pipelineService.archive(),
   [IPC.pipelineFeed]: () => pipelineService.feed(),
+  [IPC.pipelineUncoverTodos]: () => uncoverService.uncoverTodos(),
   [IPC.pipelineSearch]: ([query, topK]) =>
     pipelineService.match(query as string, topK as number | undefined),
 

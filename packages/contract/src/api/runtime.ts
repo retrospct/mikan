@@ -31,6 +31,8 @@ export function configureClient(opts: {
   })
 }
 
+// Defaults for the generated singleton's initial construction; configureClient()
+// applies app-specific values to that singleton before requests are made.
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
   baseUrl: _baseUrl,

@@ -36,7 +36,7 @@ export default function LoginScreen(): ReactElement {
         clientId: LOGTO_APP_ID,
         redirectUri,
         responseType: ResponseType.Code,
-        scopes: ['openid', 'offline_access', 'profile', 'email'],
+        scopes: ['openid', 'profile', 'email'],
         usePKCE: true
       })
       const authUrl = await request.makeAuthUrlAsync({

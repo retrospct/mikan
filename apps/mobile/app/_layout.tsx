@@ -12,6 +12,7 @@ export default function RootLayout(): ReactElement | null {
   const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
+    // TODO: Validate expiry/refresh tokens here when mobile refresh auth lands.
     restoreToken()
       .then(setToken)
       .finally(() => setReady(true))

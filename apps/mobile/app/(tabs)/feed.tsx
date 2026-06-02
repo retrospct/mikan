@@ -32,9 +32,8 @@ export default function FeedScreen(): ReactElement {
   }
 
   useEffect(() => {
-    queueMicrotask(() => {
-      void load()
-    })
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial remote load after mount.
+    void load()
   }, [])
 
   if (loading) {

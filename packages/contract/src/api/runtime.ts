@@ -1,21 +1,46 @@
 import type { CreateClientConfig } from './generated/client.gen'
+import { client } from './generated/client.gen'
 import { getToken } from './token-store'
 
 /**
  * Runtime configuration for the generated Nimi API client.
  *
- * hey-api calls this before constructing the client, so it's the right place
- * for values the generated code can't hardcode. It survives `pnpm gen:api`
- * (the generated files do not). Plain `fetch` only — no Electron/Node imports —
- * so this same client is reusable as-is in React Native / Expo later.
+ * t3-turbo pattern: the shared package holds zero URL/auth config.
+ * Each app calls `configureClient()` at startup with its own env var:
+ *   - Desktop (electron-vite): import.meta.env.VITE_NEEME_API_URL
+ *   - Mobile (Expo): process.env.EXPO_PUBLIC_NEEME_API_URL (+ LAN fallback)
+ *
+ * Plain `fetch` only — no Electron/Node/Vite imports — so this stays
+ * reusable across desktop renderer, React Native, and any future surface.
  */
-export const createClientConfig: CreateClientConfig = (config) => ({
-  ...config,
-  // Base URL from env; defaults to the local `neeme serve` address.
-  baseUrl: import.meta.env.VITE_NEEME_API_URL ?? 'http://localhost:8000',
-  // Auth seam: hey-api calls `auth` per request, so the token can be hydrated
-  // lazily. `token-store` holds the bearer in memory, populated over IPC from the
-  // main-process Logto flow (`src/main/auth/logto.ts`). `undefined` today (no
-  // login) means no Authorization header — the local-first app stays unauthenticated.
-  auth: () => getToken()
-})
+
+let _baseUrl: string = 'http://localhost:8000'
+let _getToken: () => string | undefined = () => getToken()
+
+function buildClientConfig(
+  config: Parameters<CreateClientConfig>[0] = {}
+): ReturnType<CreateClientConfig> {
+  return {
+    ...config,
+    baseUrl: _baseUrl,
+    auth: () => _getToken()
+  }
+}
+
+/** Call once at app startup, before any API calls are made. */
+export function configureClient(opts: {
+  baseUrl?: string
+  getToken?: () => string | undefined
+}): void {
+  if (opts.baseUrl !== undefined) {
+    const baseUrl = opts.baseUrl.trim()
+    if (baseUrl) _baseUrl = baseUrl
+  }
+  if (opts.getToken !== undefined) _getToken = opts.getToken
+
+  client.setConfig(buildClientConfig())
+}
+
+// Defaults for the generated singleton's initial construction; configureClient()
+// applies app-specific values to that singleton before requests are made.
+export const createClientConfig: CreateClientConfig = (config) => buildClientConfig(config)

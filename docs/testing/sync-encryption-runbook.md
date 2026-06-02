@@ -106,6 +106,7 @@ appears in the other's archive (see `docs/setup/turso-credentials.md` §"Smoke t
 | `Replication(PrimaryHandshakeTimeout)` / `replicator sync error` | bad/expired token, wrong URL, or no network | rotate the token (`turso db tokens create`), recheck `NEEME_SYNC_URL` |
 | `[crypto] decrypt failed (wrong key or corrupt data)` warnings | rows on the primary were encrypted with a **different** key | use the same key across devices; warnings are non-fatal (raw value returned) |
 | `[primary] ciphertext: false` | sync ran without a key (older build) or key was unset on Device A | ensure the key is set before capturing; wipe + retry |
+| `invalid local state: db file exists but metadata file does not` | enabling sync on a DB first created sync-off | auto-recovered: the plain DB is backed up, a fresh replica bootstraps, and its rows migrate in after first sync (`db/migrate.ts`) — no manual step needed |
 
 > The "wrong key" warning is by design: `decrypt()` never throws on bad data — it returns
 > the raw value and logs, so a key mismatch degrades gracefully instead of crashing.

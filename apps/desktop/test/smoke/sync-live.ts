@@ -60,8 +60,12 @@ async function deviceA(): Promise<void> {
   await initDb()
   await syncNow()
   const cap = await pipelineService.captureText(NOTE, SOURCE)
-  await todoService.add(TODO_TITLE)
+  const todo = await todoService.add(TODO_TITLE)
   await syncNow()
+  // Emit machine-parseable ids so the orchestrator can clean up afterward.
+  // (todos.title is encrypted at rest, so cleanup must target the id, not the title.)
+  console.log(`[A] itemId=${cap.memory.id}`)
+  console.log(`[A] todoId=${todo.id}`)
   console.log(`[A] captured + pushed item ${cap.memory.id}`)
 }
 
@@ -118,16 +122,22 @@ async function gateCheck(): Promise<void> {
   if (!ok) process.exit(1)
 }
 
-/** Spawn this script in a child process for one "device" with an isolated data dir. */
-function runChild(childMode: string, userDataDir: string): void {
+/**
+ * Spawn this script in a child process for one "device" with an isolated data dir.
+ * Captures stdout (and echoes it) so the orchestrator can parse ids for cleanup.
+ */
+function runChild(childMode: string, userDataDir: string): string {
   const res = spawnSync('pnpm', ['exec', 'tsx', __filename, childMode], {
-    stdio: 'inherit',
+    stdio: ['inherit', 'pipe', 'inherit'],
+    encoding: 'utf8',
     env: { ...process.env, NEEME_USER_DATA: userDataDir, NEEME_EMBEDDER: 'hash', SYNC_NONCE: NONCE }
   })
+  if (res.stdout) process.stdout.write(res.stdout)
   if (res.status !== 0) {
     console.error(`[orchestrate] child "${childMode}" failed (exit ${res.status})`)
     process.exit(1)
   }
+  return res.stdout ?? ''
 }
 
 async function orchestrate(): Promise<void> {
@@ -145,22 +155,26 @@ async function orchestrate(): Promise<void> {
 
   const dirA = mkdtempSync(join(tmpdir(), 'nimi-sync-a-'))
   const dirB = mkdtempSync(join(tmpdir(), 'nimi-sync-b-'))
+  let todoId: string | undefined
   try {
     console.log('\n-- Device A: capture + push --')
-    runChild('a', dirA)
+    const outA = runChild('a', dirA)
+    todoId = /\[A\] todoId=([\w-]+)/.exec(outA)?.[1]
     console.log('\n-- Remote primary: at-rest check --')
     runChild('primary', mkdtempSync(join(tmpdir(), 'nimi-sync-p-')))
     console.log('\n-- Device B: pull + decrypt + search --')
     runChild('b', dirB)
     console.log('\n✓ PASS — encrypted note + todo synced A → primary (ciphertext) → B (decrypted).')
   } finally {
+    // Clean up this run's rows. items match on source_name (plaintext metadata);
+    // todos must match on id, since todos.title is encrypted at rest.
     const c = remoteClient()
     await c
       .execute({ sql: 'DELETE FROM items WHERE source_name = ?', args: [SOURCE] })
       .catch(() => {})
-    await c
-      .execute({ sql: 'DELETE FROM todos WHERE title LIKE ?', args: [`%${NONCE}%`] })
-      .catch(() => {})
+    if (todoId) {
+      await c.execute({ sql: 'DELETE FROM todos WHERE id = ?', args: [todoId] }).catch(() => {})
+    }
     console.log('[orchestrate] cleaned up this run’s rows from the primary.')
   }
 }

@@ -11,7 +11,7 @@
  */
 import { IPC } from '@nimi/contract/ipc'
 import type { ConnectorId, SyncStatus } from '@nimi/contract/ipc'
-import { initDb, syncNow } from '../db'
+import { initDb, syncNow, reimportPreSyncBackup } from '../db'
 import { getSyncConfig } from '../db/sync-config'
 import { pipelineService } from '../services/pipeline-service'
 import { todoService } from '../services/todo-service'
@@ -25,19 +25,29 @@ type Handler = (args: unknown[]) => unknown | Promise<unknown>
 // Tracks sync lifecycle so sync:get-status can report it. Never throws —
 // sync failures are soft errors that must not affect the local-first path.
 
+const initialSyncConfig = getSyncConfig()
 let syncState: SyncStatus = {
-  enabled: getSyncConfig().enabled,
+  enabled: initialSyncConfig.enabled,
   lastSyncAt: null,
+  lastSyncDurationMs: null,
   syncing: false,
-  error: null
+  error:
+    initialSyncConfig.disabledReason === 'missing-or-invalid-key'
+      ? 'sync disabled: a valid NEEME_SYNC_ENCRYPTION_KEY is required for encryption at rest'
+      : initialSyncConfig.disabledReason === 'missing-url'
+        ? 'sync disabled: NEEME_SYNC_URL is not set'
+        : null
 }
 
 async function runSyncNow(): Promise<void> {
   if (!syncState.enabled) return
   syncState = { ...syncState, syncing: true, error: null }
+  const t0 = Date.now()
   try {
     await syncNow()
-    syncState = { ...syncState, syncing: false, lastSyncAt: Date.now(), error: null }
+    const durationMs = Date.now() - t0
+    syncState = { ...syncState, syncing: false, lastSyncAt: t0 + durationMs, lastSyncDurationMs: durationMs, error: null }
+    console.log(`[sync] synced in ${durationMs}ms`)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     syncState = { ...syncState, syncing: false, error: msg }
@@ -105,15 +115,30 @@ async function start(): Promise<void> {
   await initDb()
 
   // ── Boot-time sync (before reindex so the first index sees pulled items) ──
-  const syncConfig = getSyncConfig()
-  if (syncConfig.enabled) {
+  if (initialSyncConfig.enabled) {
     await runSyncNow()
+
+    // If this device had a pre-sync (sync-off) DB, its rows were backed up while
+    // bootstrapping the replica (db/index.ts buildClient). Migrate them in now —
+    // after the first successful sync so we don't fight the initial pull. Best-effort:
+    // the backup is kept on failure, and reindex below rebuilds the vector index.
+    if (syncState.error === null) {
+      try {
+        const migrated = await reimportPreSyncBackup()
+        if (migrated > 0) {
+          console.log(`[worker] migrated ${migrated} pre-sync row(s) into the replica`)
+          await runSyncNow() // push the migrated rows up to the primary
+        }
+      } catch (err) {
+        console.error('[worker] pre-sync data migration failed (backup kept for retry):', err)
+      }
+    }
 
     // Periodic sync — in addition to the libSQL syncInterval background pull,
     // an explicit loop lets us update syncState and log status.
     const interval = setInterval(() => {
       runSyncNow().catch(() => {}) // errors are handled inside runSyncNow
-    }, syncConfig.syncIntervalMs)
+    }, initialSyncConfig.syncIntervalMs)
     interval.unref()
   }
 

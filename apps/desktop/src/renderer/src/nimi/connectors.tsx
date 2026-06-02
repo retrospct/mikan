@@ -6,6 +6,7 @@
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { useConnectors } from '../hooks/useConnectors'
+import { relativeTime } from './time'
 import type { ConnectorId } from '@nimi/contract/ipc'
 
 interface ProviderRowProps {
@@ -23,13 +24,7 @@ interface ProviderRowProps {
 
 function formatSync(lastSyncAt: string | null): string {
   if (!lastSyncAt) return 'never synced'
-  const diff = Date.now() - new Date(lastSyncAt).getTime()
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
+  return relativeTime(new Date(lastSyncAt).getTime())
 }
 
 function ProviderRow({

@@ -33,11 +33,11 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 | 7   | ~~**Worker-service tests (vitest)**~~ ✅ **done**                                                        | back         | guards pipeline/todo logic                       | M    | ✅ shipped  |
 | 8   | ~~**Connectors / ingest (email, calendar, …)**~~ ✅ **done**                                             | back         | automatic capture vs manual                      | L    | ✅ shipped  |
 | 9   | ~~Auth end-to-end (Logto **Native** app + PKCE, id_token JWKS-verified)~~ ✅ **done** (PR #35)            | back + front | real accounts                                    | M    | ✅ shipped  |
-| 10  | Sync / cloud offload (Turso), multi-user                                                                 | back         | multi-device                                     | L    | P3         |
-| 11  | Vuln cleanup + CSP tighten                                                                               | back         | the dependabot alerts + hardening                | S    | P1 (quick) |
-| 12  | Auto-updater (electron-updater)                                                                          | back/dist    | testers auto-get each pushed build               | M    | P1         |
-| 13  | Package macOS (build + notarize) + Windows canary                                                        | back/dist    | shipping signed builds to testers                | M    | P1         |
-| 14  | Start an RN + Expo app in-repo (`apps/mobile`, mobile companion)                                         | mobile       | the mobile surface                               | L    | P2         |
+| 10  | ~~Sync / cloud offload (Turso), multi-user~~ 🟡 base seam + encryption on main; PRs #46/#48/#49 open    | back         | multi-device                                     | L    | 🟡 in progress |
+| 11  | ~~Vuln cleanup + CSP tighten~~ ✅                                                                        | back         | the dependabot alerts + hardening                | S    | ✅ shipped  |
+| 12  | ~~Auto-updater (electron-updater)~~ ✅                                                                   | back/dist    | testers auto-get each pushed build               | M    | ✅ shipped  |
+| 13  | ~~Package macOS (build + notarize) + Windows canary~~ ✅                                                 | back/dist    | shipping signed builds to testers                | M    | ✅ shipped  |
+| 14  | ~~Start an RN + Expo app in-repo (`apps/mobile`, mobile companion)~~ 🟡 PR #45 open                     | mobile       | the mobile surface                               | L    | 🟡 in progress |
 
 ## Decisions gating work
 

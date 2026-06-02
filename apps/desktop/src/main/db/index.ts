@@ -1,9 +1,11 @@
+import { existsSync, readdirSync, renameSync, rmSync } from 'node:fs'
 import { join } from 'path'
-import { createClient } from '@libsql/client'
+import { createClient, type Client } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
 import * as schema from './schema'
 import { userDataDir } from '../runtime/paths'
 import { getSyncConfig } from './sync-config'
+import { buildReplicaWithRecovery, migrateUserData } from './migrate'
 
 /**
  * Local-first data layer on libSQL (a SQLite fork). For now this is a plain
@@ -25,18 +27,86 @@ const dbPath = join(userDataDir(), 'neeme.db')
 
 const syncConfig = getSyncConfig()
 
+/** libSQL writes these sidecars next to the db file; move/remove them together. */
+const DB_SIDECARS = ['', '-wal', '-shm', '-journal', '-info', '-client_wal_index'] as const
+
+/** Path of a pre-sync (plain) DB moved aside so the replica could bootstrap; its
+ *  rows are migrated in after the first successful sync. null when no migration. */
+let preSyncBackupPath: string | null = null
+
+function buildReplicaClient(): Client {
+  return createClient({
+    url: `file:${dbPath}`,
+    syncUrl: syncConfig.syncUrl,
+    authToken: syncConfig.authToken,
+    // Periodic background pull in addition to the worker's explicit syncNow() calls.
+    syncInterval: syncConfig.syncIntervalMs / 1000
+  })
+}
+
+function moveDbAside(from: string, to: string): void {
+  for (const ext of DB_SIDECARS) {
+    if (existsSync(`${from}${ext}`)) renameSync(`${from}${ext}`, `${to}${ext}`)
+  }
+}
+
+/**
+ * Find a pre-sync backup left by a prior boot whose migration didn't finish
+ * (e.g. the network dropped mid-migration). Lets a later boot retry instead of
+ * orphaning the offline data. The Date.now() suffix sorts chronologically.
+ */
+function findOrphanedPreSyncBackup(): string | null {
+  let names: string[]
+  try {
+    names = readdirSync(userDataDir())
+  } catch {
+    return null
+  }
+  const backups = names.filter((n) => /^neeme\.db\.pre-sync-\d+$/.test(n)).sort()
+  const latest = backups[backups.length - 1]
+  return latest ? join(userDataDir(), latest) : null
+}
+
+/**
+ * Build the libSQL client. Sync off → a bare file: client (unchanged — used by
+ * every test). Sync on → an embedded replica. If a plain (sync-off) DB already
+ * exists at the path, libSQL refuses to open it as a replica ("invalid local
+ * state: db file exists but metadata file does not"); we back it up, bootstrap a
+ * fresh replica from the primary, and remember the backup so the worker can
+ * migrate its rows in after the first sync (reimportPreSyncBackup).
+ */
+function buildClient(): Client {
+  if (!syncConfig.enabled) return createClient({ url: `file:${dbPath}` })
+  const { client: replica, backupPath } = buildReplicaWithRecovery({
+    makeReplica: buildReplicaClient,
+    dbExists: () => existsSync(dbPath),
+    backupAside: (backup) => moveDbAside(dbPath, backup),
+    restoreBackup: (backup) => moveDbAside(backup, dbPath),
+    dbPath
+  })
+  if (backupPath) {
+    preSyncBackupPath = backupPath
+    console.warn(
+      `[sync] existing local DB is not an embedded replica — backed it up to ${backupPath} and ` +
+        'bootstrapped a fresh replica from the primary; its data migrates in after first sync'
+    )
+  } else {
+    // No fresh backup this boot, but a prior boot may have backed one up and
+    // failed to migrate it — adopt it so the worker retries after first sync.
+    preSyncBackupPath = findOrphanedPreSyncBackup()
+    if (preSyncBackupPath) {
+      console.warn(
+        `[sync] found pending pre-sync backup ${preSyncBackupPath} — will retry migration`
+      )
+    }
+  }
+  return replica
+}
+
 // Exported so the pipeline can use libSQL's native vector functions
 // (vector32 / vector_distance_cos / libsql_vector_idx) via raw SQL — Drizzle's
 // query builder doesn't model the F32_BLOB type.
-export const client = syncConfig.enabled
-  ? createClient({
-      url: `file:${dbPath}`,
-      syncUrl: syncConfig.syncUrl,
-      authToken: syncConfig.authToken,
-      // Periodic background pull in addition to the worker's explicit syncNow() calls.
-      syncInterval: syncConfig.syncIntervalMs / 1000
-    })
-  : createClient({ url: `file:${dbPath}` })
+export const client = buildClient()
 
 export const db = drizzle(client, { schema })
 
@@ -53,6 +123,30 @@ export const EMBED_DIM = 384
 export async function syncNow(): Promise<void> {
   if (!syncConfig.enabled) return
   await client.sync()
+}
+
+/**
+ * Migrate rows from a pre-sync backup DB (see buildClient) into the live replica,
+ * re-encrypting content under the active key so the cloud primary holds ciphertext.
+ * Call AFTER the first successful sync. No-op when there is no backup. The backup
+ * is deleted only on success and kept on failure, so offline data is never lost.
+ */
+export async function reimportPreSyncBackup(): Promise<number> {
+  if (!preSyncBackupPath) return 0
+  const backup = preSyncBackupPath
+  const src = createClient({ url: `file:${backup}` })
+  try {
+    const n = await migrateUserData(src, client)
+    src.close()
+    for (const ext of DB_SIDECARS) {
+      if (existsSync(`${backup}${ext}`)) rmSync(`${backup}${ext}`)
+    }
+    preSyncBackupPath = null
+    return n
+  } catch (err) {
+    src.close()
+    throw err // keep preSyncBackupPath + backup files so a later boot can retry
+  }
 }
 
 /**

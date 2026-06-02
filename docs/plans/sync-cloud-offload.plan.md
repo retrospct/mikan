@@ -465,3 +465,66 @@ The two "official" zero-knowledge options each have a fatal flaw at **this** sca
 - If the team is **uncomfortable owning field-crypto + key recovery** (lose-key-lose-data), prefer **BYOK when funded** over rolling it yourself.
 - If **metadata leakage** (row counts, timestamps, sha256 ids, sizes to the cloud) is itself unacceptable, only a **CRDT blob mesh (Jazz/Automerge+relay)** hides it — accept the alpha/rewrite cost.
 - If **privacy becomes the explicit product driver** (not just elevated), reopen ADR 0001's E2E track toward **Jazz/Automerge** as originally lent — the premise-flip the ADR already documents.
+
+## Scaling thresholds & monitoring KPIs (2026-06)
+
+The DB-per-user model and embedded-replica sync have specific pressure points.
+These are the metrics to watch, the thresholds to act on, and the next move at each.
+
+### 1. Turso database count (the #1 scaling gate)
+
+| Stage | DB count | Action |
+|---|---|---|
+| **Free** | 0–80 | No action |
+| **⚠️ Warning** | 80–95 | Upgrade to Developer ($4.99/mo — unlimited DBs) |
+| **🔴 Hard cap** | 100 | Free tier silently rejects new DB provisioning → users can't sign in |
+
+**Monitor:** Turso Platform API `GET /v1/organizations/{org}/databases` → count. Alert at 80.
+
+### 2. Sync latency (embedded replica round-trip)
+
+| Metric | Target | Warning | Action |
+|---|---|---|---|
+| `client.sync()` wall time (p50) | < 500 ms | > 2 s | Check DB size, network, Turso region match |
+| `client.sync()` wall time (p99) | < 3 s | > 10 s | Consider per-table sync scoping or pruning old items |
+| Time-to-first-sync on new device | < 10 s | > 30 s | DB too large → introduce item archival / prune policy |
+
+**Instrument:** log `[sync] synced in Xms` in `worker/index.ts` sync loop (already has try/catch). Expose `lastSyncDurationMs` in `SyncStatus`.
+
+### 3. DB size per user (affects sync time + Turso storage cost)
+
+| DB size | Notes |
+|---|---|
+| < 10 MB | Healthy — text + todos only, no large blobs |
+| 10–50 MB | Monitor — likely has many captures; check if `items.text` is storing extracted PDF/audio text verbatim |
+| > 50 MB | Investigate — consider pruning extracted text > N chars, or moving large text to a separate non-synced store |
+
+> Vectors (`chunks` table) stay in the **local-only `neeme-vec.db`** and never sync — this is the key reason DB size stays manageable.
+
+**Monitor:** `SELECT page_count * page_size FROM pragma_page_count(), pragma_page_size()` on the synced DB.
+
+### 4. Token broker (when wired)
+
+| Metric | Target | Action |
+|---|---|---|
+| Token mint latency | < 200 ms (cached hit), < 1 s (Turso Platform API) | Cache tokens in `safeStorage`; set `expiresAt - 5min` refresh |
+| Token mint error rate | < 0.1% | Alert + fallback to offline mode |
+| Broker cold start (Vercel) | < 500 ms | Acceptable; token is cached so this is rare |
+
+### 5. Encryption correctness (field-level AES-256-GCM)
+
+| Signal | What it means |
+|---|---|
+| `decrypt()` returns raw `enc:…` string | Wrong or missing `NEEME_SYNC_ENCRYPTION_KEY` on this device |
+| Items visible on device B but showing raw ciphertext in UI | Key not propagated — check `NEEME_SYNC_ENCRYPTION_KEY` is set identically on both devices |
+| `[sync] error` with libSQL auth error | `NEEME_SYNC_AUTH_TOKEN` expired — re-run `turso db tokens create` |
+
+### 6. When to re-evaluate the stack
+
+| Signal | Consider |
+|---|---|
+| > 1,000 users | Evaluate Turso Pro for BYOK (zero-knowledge without DIY crypto) |
+| Sync conflicts appearing in todos | Implement last-write-wins merge log or move todos to a CRDT structure |
+| DB size > 50 MB / user | Item archival policy + separate large-text store |
+| Privacy must be provable (product decision) | Spike Jazz or Evolu; reopen ADR 0001 E2E track |
+| Turso cost > $50/mo | Self-host `sqld` on Fly.io — identical `@libsql/client` code path |

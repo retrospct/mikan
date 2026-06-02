@@ -1,20 +1,28 @@
 /**
- * Token broker — Vercel Serverless Function (self-contained).
+ * Token broker — Vercel Serverless Function (self-contained, no framework).
  *
- * All logic is inlined here so Vercel has a single entry point with no local
- * file imports to resolve at runtime.
+ * Deliberately a SINGLE file with zero relative imports: Vercel's @vercel/node
+ * builder compiles each api/* entry point but does not reliably bundle local
+ * `./src/*` imports under `"type": "module"` (it leaves extensionless ESM
+ * imports that Node can't resolve at runtime). Keeping everything inline — and
+ * using the native (req, res) Node handler instead of a web framework — sidesteps
+ * the whole bundling/resolution problem.
  *
  * POST /token  — Authorization: Bearer <logto_access_token>
- *                → { syncUrl, authToken, expiresAt }
- * GET  /health — readiness probe
+ *                → 200 { syncUrl, authToken, expiresAt }
+ * GET  /health — readiness probe → 200 { ok: true } | 503 { ok: false, missing }
+ *
+ * The HTTP plumbing is split from the logic via `handleRequest()`, a pure
+ * function over (method, pathname, authHeader) that returns { status, body }.
+ * That keeps the broker fully unit-testable without spinning up a server.
  */
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { createHash } from 'node:crypto'
-import { Hono } from 'hono'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-interface BrokerTokenResponse {
+export interface BrokerTokenResponse {
   syncUrl: string
   authToken: string
   expiresAt: number
@@ -22,7 +30,7 @@ interface BrokerTokenResponse {
 
 // ── Logto verification ────────────────────────────────────────────────────────
 
-class LogtoVerifyError extends Error {
+export class LogtoVerifyError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'LogtoVerifyError'
@@ -60,7 +68,7 @@ async function verifyLogtoToken(token: string): Promise<string> {
 const TURSO_API = 'https://api.turso.tech/v1'
 const DEFAULT_TTL_SECONDS = 3600
 
-class TursoApiError extends Error {
+export class TursoApiError extends Error {
   constructor(
     message: string,
     public readonly statusCode: number
@@ -143,7 +151,7 @@ function dbNameForSub(sub: string): string {
   return `neeme-${hash}`
 }
 
-async function exchangeToken(logtoAccessToken: string): Promise<BrokerTokenResponse> {
+export async function exchangeToken(logtoAccessToken: string): Promise<BrokerTokenResponse> {
   const sub = await verifyLogtoToken(logtoAccessToken)
   const dbName = dbNameForSub(sub)
   await provisionOrLookupDb(dbName)
@@ -154,9 +162,9 @@ async function exchangeToken(logtoAccessToken: string): Promise<BrokerTokenRespo
   return { syncUrl, authToken, expiresAt }
 }
 
-// ── Hono app ──────────────────────────────────────────────────────────────────
+// ── Pure HTTP router (framework-agnostic, fully testable) ──────────────────────
 
-const REQUIRED_ENV = [
+export const REQUIRED_ENV = [
   'LOGTO_JWKS_URL',
   'LOGTO_ISSUER',
   'LOGTO_AUDIENCE',
@@ -165,39 +173,70 @@ const REQUIRED_ENV = [
   'TURSO_GROUP'
 ] as const
 
-const app = new Hono()
+export interface HandlerResult {
+  status: number
+  body: Record<string, unknown>
+}
 
-app.get('/health', (c) => {
-  const missing = REQUIRED_ENV.filter((k) => !process.env[k])
-  if (missing.length > 0) return c.json({ ok: false, missing }, 503)
-  return c.json({ ok: true })
-})
+/**
+ * Core request handler. Routes on pathname (falling back to method so it works
+ * whether Vercel preserves the original /token|/health path or rewrites to
+ * /api/token). No I/O beyond the broker exchange — trivial to unit test.
+ */
+export async function handleRequest(
+  method: string,
+  pathname: string,
+  authHeader: string | null
+): Promise<HandlerResult> {
+  const isHealth = pathname.endsWith('/health') || (method === 'GET' && !pathname.endsWith('/token'))
 
-app.post('/token', async (c) => {
-  const auth = c.req.header('Authorization') ?? ''
-  if (!auth.startsWith('Bearer ')) {
-    return c.json({ error: 'Missing or malformed Authorization header' }, 401)
+  if (isHealth) {
+    const missing = REQUIRED_ENV.filter((k) => !process.env[k])
+    return missing.length > 0
+      ? { status: 503, body: { ok: false, missing } }
+      : { status: 200, body: { ok: true } }
   }
+
+  if (method !== 'POST') {
+    return { status: 405, body: { error: 'Method not allowed' } }
+  }
+
+  const auth = authHeader ?? ''
+  if (!auth.startsWith('Bearer ')) {
+    return { status: 401, body: { error: 'Missing or malformed Authorization header' } }
+  }
+
   try {
     const result = await exchangeToken(auth.slice(7))
-    return c.json(result)
+    return { status: 200, body: { ...result } }
   } catch (err) {
     if (err instanceof LogtoVerifyError) {
-      return c.json({ error: `Token verification failed: ${err.message}` }, 401)
+      return { status: 401, body: { error: `Token verification failed: ${err.message}` } }
     }
     if (err instanceof TursoApiError) {
       console.error('[broker] Turso API error:', err.message)
-      return c.json({ error: 'Upstream provisioning error' }, err.statusCode as 502)
+      return { status: err.statusCode, body: { error: 'Upstream provisioning error' } }
     }
     console.error('[broker] Unexpected error:', err)
-    return c.json({ error: 'Internal server error' }, 500)
+    return { status: 500, body: { error: 'Internal server error' } }
   }
-})
+}
 
-// ── Vercel handler ────────────────────────────────────────────────────────────
+// ── Vercel Node handler ────────────────────────────────────────────────────────
 
-export default async function handler(req: Request): Promise<Response> {
-  return app.fetch(req)
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse
+): Promise<void> {
+  const method = req.method ?? 'GET'
+  const pathname = (req.url ?? '/').split('?')[0]
+  const authHeader = (req.headers['authorization'] as string | undefined) ?? null
+
+  const { status, body } = await handleRequest(method, pathname, authHeader)
+
+  res.statusCode = status
+  res.setHeader('Content-Type', 'application/json')
+  res.end(JSON.stringify(body))
 }
 
 export const config = { runtime: 'nodejs' }

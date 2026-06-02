@@ -83,6 +83,10 @@ Each user's Turso DB is named `neeme-<16 hex chars of SHA-256(sub)>`. The name i
 - Concurrent first-login requests for the same user are safe (Turso returns 409 on duplicate create, which the broker treats as success).
 - DB names stay within Turso's 63-character limit.
 
+## Implementation note
+
+All logic lives in a **single self-contained `api/token.ts`** with no relative imports and no web framework — just the native Vercel `(req, res)` Node handler. This is deliberate: Vercel's `@vercel/node` builder compiles each `api/*` entry point but does not reliably bundle local `./src/*` imports under `"type": "module"`, leaving extensionless ESM imports that crash at runtime (`ERR_MODULE_NOT_FOUND`). Keep new logic inline here rather than splitting it back into `src/` modules. `src/index.ts` is a local-dev-only HTTP server that reuses the same `handleRequest()` core and is never deployed.
+
 ## Architecture reference
 
 See [docs/adr/0008-sync-auth-token-broker.md](../../docs/adr/0008-sync-auth-token-broker.md) for the full decision record (threat model, option table, token lifecycle, open questions).

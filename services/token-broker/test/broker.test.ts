@@ -5,12 +5,13 @@
  *   - A locally generated RSA-2048 keypair (jose generateKeyPair) to sign JWTs.
  *   - A stubbed JWKS endpoint via fetch mock.
  *   - A mocked fetch for all Turso Platform API calls.
+ *
+ * All logic lives in a single self-contained api/token.ts (no framework), so
+ * the HTTP layer is tested via the pure handleRequest() core rather than a
+ * server.
  */
 import { describe, it, expect, beforeAll, vi, beforeEach } from 'vitest'
-import { generateKeyPair, exportJWK, SignJWT, importJWK } from 'jose'
-import { exchangeToken } from '../src/broker.ts'
-import { LogtoVerifyError } from '../src/logto.ts'
-import { TursoApiError } from '../src/turso.ts'
+import { generateKeyPair, exportJWK, SignJWT } from 'jose'
 
 // ── Key generation (once per suite) ──────────────────────────────────────────
 
@@ -36,8 +37,6 @@ async function makeKeySet(): Promise<KeySet> {
       .sign(privateKey)
   }
 
-  // Returns a local RSA private key that can be used to verify via the JWK —
-  // we export the private key as JWK with just the public components for JWKS.
   const jwks = () => ({ keys: [pub] })
 
   return { sign, jwks }
@@ -104,21 +103,20 @@ beforeAll(async () => {
 
 beforeEach(() => {
   setEnv()
-  // jose's JWKS resolver caches the key set — reset the module to clear the
-  // cached resolver between tests (logto.ts uses a module-level singleton).
+  // api/token.ts caches the JWKS resolver in a module-level singleton — reset
+  // the module registry so each test gets a fresh resolver.
   vi.resetModules()
 })
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// ── exchangeToken — happy path ──────────────────────────────────────────────────
 
 describe('exchangeToken — happy path', () => {
   it('returns syncUrl + authToken + expiresAt for a valid token', async () => {
     const jwt = await keySet.sign({ sub: 'user-123' })
-    const fetchMock = vi.fn(makeTursoFetch())
-    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('fetch', vi.fn(makeTursoFetch()))
 
-    const { exchangeToken: exchange } = await import('../src/broker.ts')
-    const result = await exchange(jwt)
+    const { exchangeToken } = await import('../api/token')
+    const result = await exchangeToken(jwt)
 
     expect(result.syncUrl).toBe('libsql://neeme-test-test-org.turso.io')
     expect(result.authToken).toBe('minted-turso-jwt')
@@ -127,11 +125,10 @@ describe('exchangeToken — happy path', () => {
 
   it('idempotent on 409 (DB already exists)', async () => {
     const jwt = await keySet.sign({ sub: 'existing-user' })
-    const fetchMock = vi.fn(makeTursoFetch({ createStatus: 409 }))
-    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('fetch', vi.fn(makeTursoFetch({ createStatus: 409 })))
 
-    const { exchangeToken: exchange } = await import('../src/broker.ts')
-    const result = await exchange(jwt)
+    const { exchangeToken } = await import('../api/token')
+    const result = await exchangeToken(jwt)
 
     expect(result.syncUrl).toContain('libsql://')
     expect(result.authToken).toBe('minted-turso-jwt')
@@ -147,35 +144,35 @@ describe('exchangeToken — happy path', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const { exchangeToken: exchange } = await import('../src/broker.ts')
-    await exchange(jwt1)
+    const { exchangeToken } = await import('../api/token')
+    await exchangeToken(jwt1)
     const dbCallsForFirst = calls.filter(c => c.includes('/databases/')).map(c => c.replace(/.*\/databases\//, '').split('/')[0])
 
     calls.length = 0
-    await exchange(jwt2)
+    await exchangeToken(jwt2)
     const dbCallsForSecond = calls.filter(c => c.includes('/databases/')).map(c => c.replace(/.*\/databases\//, '').split('/')[0])
 
     expect(dbCallsForFirst[0]).toBe(dbCallsForSecond[0])
   })
 })
 
+// ── exchangeToken — invalid Logto token ──────────────────────────────────────────
+
 describe('exchangeToken — invalid Logto token', () => {
   it('throws LogtoVerifyError for a garbage token', async () => {
-    const fetchMock = vi.fn(makeTursoFetch())
-    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('fetch', vi.fn(makeTursoFetch()))
 
-    const { exchangeToken: exchange, LogtoVerifyError: LVE } = await import('../src/broker.ts')
-    await expect(exchange('not.a.jwt')).rejects.toThrow(LVE)
+    const { exchangeToken, LogtoVerifyError } = await import('../api/token')
+    await expect(exchangeToken('not.a.jwt')).rejects.toThrow(LogtoVerifyError)
   })
 
   it('throws LogtoVerifyError for an expired token', async () => {
     const past = Math.floor(Date.now() / 1000) - 3600
     const jwt = await keySet.sign({ sub: 'expired-user', exp: past })
-    const fetchMock = vi.fn(makeTursoFetch())
-    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('fetch', vi.fn(makeTursoFetch()))
 
-    const { exchangeToken: exchange, LogtoVerifyError: LVE } = await import('../src/broker.ts')
-    await expect(exchange(jwt)).rejects.toThrow(LVE)
+    const { exchangeToken, LogtoVerifyError } = await import('../api/token')
+    await expect(exchangeToken(jwt)).rejects.toThrow(LogtoVerifyError)
   })
 
   it('throws LogtoVerifyError when JWKS fetch fails', async () => {
@@ -185,56 +182,55 @@ describe('exchangeToken — invalid Logto token', () => {
       return makeTursoFetch()(url)
     }))
 
-    const { exchangeToken: exchange, LogtoVerifyError: LVE } = await import('../src/broker.ts')
-    await expect(exchange(jwt)).rejects.toThrow(LVE)
+    const { exchangeToken, LogtoVerifyError } = await import('../api/token')
+    await expect(exchangeToken(jwt)).rejects.toThrow(LogtoVerifyError)
   })
 })
+
+// ── exchangeToken — Turso API failures ────────────────────────────────────────────
 
 describe('exchangeToken — Turso API failures', () => {
   it('throws TursoApiError when DB creation fails (non-409 error)', async () => {
     const jwt = await keySet.sign({ sub: 'user-fail' })
     vi.stubGlobal('fetch', vi.fn(makeTursoFetch({ createStatus: 500 })))
 
-    const { exchangeToken: exchange, TursoApiError: TAE } = await import('../src/broker.ts')
-    await expect(exchange(jwt)).rejects.toThrow(TAE)
+    const { exchangeToken, TursoApiError } = await import('../api/token')
+    await expect(exchangeToken(jwt)).rejects.toThrow(TursoApiError)
   })
 
   it('throws TursoApiError when token mint fails', async () => {
     const jwt = await keySet.sign({ sub: 'user-mintfail' })
     vi.stubGlobal('fetch', vi.fn(makeTursoFetch({ mintStatus: 500 })))
 
-    const { exchangeToken: exchange, TursoApiError: TAE } = await import('../src/broker.ts')
-    await expect(exchange(jwt)).rejects.toThrow(TAE)
+    const { exchangeToken, TursoApiError } = await import('../api/token')
+    await expect(exchangeToken(jwt)).rejects.toThrow(TursoApiError)
   })
 })
 
-describe('Hono app — HTTP layer', () => {
+// ── handleRequest — HTTP layer (no framework) ─────────────────────────────────────
+
+describe('handleRequest — HTTP layer', () => {
   it('GET /health returns 503 when env vars are missing', async () => {
     delete process.env.TURSO_PLATFORM_TOKEN
-    const { createApp } = await import('../src/app.ts')
-    const app = createApp()
-    const res = await app.fetch(new Request('http://localhost/health'))
+    const { handleRequest } = await import('../api/token')
+    const res = await handleRequest('GET', '/health', null)
     expect(res.status).toBe(503)
-    const body = (await res.json()) as { ok: boolean; missing: string[] }
-    expect(body.ok).toBe(false)
-    expect(body.missing).toContain('TURSO_PLATFORM_TOKEN')
+    expect(res.body.ok).toBe(false)
+    expect(res.body.missing).toContain('TURSO_PLATFORM_TOKEN')
   })
 
   it('GET /health returns 200 when all env vars are set', async () => {
     setEnv()
-    const { createApp } = await import('../src/app.ts')
-    const app = createApp()
-    const res = await app.fetch(new Request('http://localhost/health'))
+    const { handleRequest } = await import('../api/token')
+    const res = await handleRequest('GET', '/health', null)
     expect(res.status).toBe(200)
-    const body = (await res.json()) as { ok: boolean }
-    expect(body.ok).toBe(true)
+    expect(res.body.ok).toBe(true)
   })
 
   it('POST /token without Authorization returns 401', async () => {
     setEnv()
-    const { createApp } = await import('../src/app.ts')
-    const app = createApp()
-    const res = await app.fetch(new Request('http://localhost/token', { method: 'POST' }))
+    const { handleRequest } = await import('../api/token')
+    const res = await handleRequest('POST', '/token', null)
     expect(res.status).toBe(401)
   })
 
@@ -242,32 +238,29 @@ describe('Hono app — HTTP layer', () => {
     setEnv()
     vi.stubGlobal('fetch', vi.fn(makeTursoFetch()))
     const jwt = await keySet.sign({ sub: 'http-user' })
-    const { createApp } = await import('../src/app.ts')
-    const app = createApp()
-    const res = await app.fetch(
-      new Request('http://localhost/token', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${jwt}` }
-      })
-    )
+    const { handleRequest } = await import('../api/token')
+    const res = await handleRequest('POST', '/token', `Bearer ${jwt}`)
     expect(res.status).toBe(200)
-    const body = (await res.json()) as { syncUrl: string; authToken: string; expiresAt: number }
-    expect(body.syncUrl).toContain('libsql://')
-    expect(body.authToken).toBe('minted-turso-jwt')
-    expect(body.expiresAt).toBeGreaterThan(Date.now())
+    expect(res.body.syncUrl).toContain('libsql://')
+    expect(res.body.authToken).toBe('minted-turso-jwt')
+    expect(res.body.expiresAt as number).toBeGreaterThan(Date.now())
   })
 
   it('POST /token with an invalid JWT returns 401', async () => {
     setEnv()
     vi.stubGlobal('fetch', vi.fn(makeTursoFetch()))
-    const { createApp } = await import('../src/app.ts')
-    const app = createApp()
-    const res = await app.fetch(
-      new Request('http://localhost/token', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer bad.token.here' }
-      })
-    )
+    const { handleRequest } = await import('../api/token')
+    const res = await handleRequest('POST', '/token', 'Bearer bad.token.here')
     expect(res.status).toBe(401)
+  })
+
+  it('routes to /token when path is the Vercel rewrite target /api/token', async () => {
+    setEnv()
+    vi.stubGlobal('fetch', vi.fn(makeTursoFetch()))
+    const jwt = await keySet.sign({ sub: 'rewrite-user' })
+    const { handleRequest } = await import('../api/token')
+    const res = await handleRequest('POST', '/api/token', `Bearer ${jwt}`)
+    expect(res.status).toBe(200)
+    expect(res.body.authToken).toBe('minted-turso-jwt')
   })
 })

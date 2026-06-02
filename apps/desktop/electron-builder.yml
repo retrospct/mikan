@@ -21,12 +21,16 @@ nsis:
   createDesktopShortcut: always
 mac:
   entitlementsInherit: build/entitlements.mac.plist
+  hardenedRuntime: true
+  gatekeeperAssess: false
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
     - NSSpeechRecognitionUsageDescription: Nimi uses on-device speech recognition to transcribe voice memos into searchable memories.
+  # notarize: true requires CSC_LINK + APPLE_TEAM_ID + APPLE_API_KEY* secrets.
+  # Set to true in CI once those secrets are configured (see docs/plans/distribution-hardening.plan.md).
   notarize: false
 dmg:
   artifactName: nimi-${version}.${ext}
@@ -41,5 +45,8 @@ appImage:
   artifactName: nimi-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: retrospct
+  repo: nimi
+  # releaseType: draft — set to 'release' once signing is configured and tested.
+  releaseType: draft

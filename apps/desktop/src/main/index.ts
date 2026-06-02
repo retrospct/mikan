@@ -6,7 +6,7 @@ import { initTrayWindow, showWindow, setBadge } from './window/tray-window'
 import * as auth from './auth/logto'
 import * as googleAuth from './connectors/google-auth'
 import { IPC } from '@nimi/contract/ipc'
-import type { ConnectorId, ConnectorsState, IngestResult } from '@nimi/contract/ipc'
+import type { ConnectorId, ConnectorsState, IngestResult, UpdateStatus } from '@nimi/contract/ipc'
 
 // Register `neeme://` as the OAuth callback scheme. In dev (electron launched
 // with a script arg) we must pass execPath + the project dir so the OS routes
@@ -225,6 +225,13 @@ app.whenReady().then(async () => {
   // UI-only: renderer pushes the "waiting" count → tray + Dock badge.
   ipcMain.handle(IPC.traySetBadge, (_e, count: number) => setBadge(count))
 
+  // Auto-updater (ROADMAP #12) — only active in packaged builds; silently no-ops
+  // in dev (app.isPackaged = false). Main owns the lifecycle (quit-and-install);
+  // the renderer receives status pushes and can show a "restart to update" affordance.
+  if (app.isPackaged) {
+    setupAutoUpdater()
+  }
+
   initTrayWindow()
 
   app.on('activate', function () {
@@ -241,6 +248,66 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+// --- Auto-updater (ROADMAP #12) ------------------------------------------
+// Wires electron-updater (GitHub Releases feed) into the thin-main-router
+// pattern. All update state is tracked locally and pushed to the renderer;
+// the renderer only ever calls `update:get-status` or `update:quit-and-install`.
+// Errors are logged but never crash the app.
+function setupAutoUpdater(): void {
+  // Dynamic import keeps electron-updater out of the critical startup path and
+  // avoids loading it at all in dev (this fn is only called when app.isPackaged).
+  import('electron-updater')
+    .then(({ autoUpdater }) => {
+      let status: UpdateStatus = {
+        stage: 'idle',
+        version: null,
+        progress: null,
+        error: null
+      }
+
+      function push(next: Partial<UpdateStatus>): void {
+        status = { ...status, ...next }
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send(IPC.updateChanged, status)
+        }
+      }
+
+      autoUpdater.autoDownload = true
+      autoUpdater.autoInstallOnAppQuit = true
+
+      autoUpdater.on('checking-for-update', () => push({ stage: 'checking', error: null }))
+      autoUpdater.on('update-available', (info) =>
+        push({ stage: 'available', version: info.version, error: null })
+      )
+      autoUpdater.on('update-not-available', () => push({ stage: 'idle', error: null }))
+      autoUpdater.on('download-progress', (p) =>
+        push({ stage: 'downloading', progress: Math.round(p.percent) })
+      )
+      autoUpdater.on('update-downloaded', (info) =>
+        push({ stage: 'ready', version: info.version, progress: null, error: null })
+      )
+      autoUpdater.on('error', (err) => {
+        console.error('[updater]', err)
+        push({ stage: 'error', error: err.message, progress: null })
+      })
+
+      ipcMain.handle(IPC.updateGetStatus, () => status)
+      ipcMain.handle(IPC.updateQuitAndInstall, () => autoUpdater.quitAndInstall())
+
+      // Check on startup; daily re-check keeps long-running instances up-to-date.
+      autoUpdater.checkForUpdatesAndNotify().catch((err) =>
+        console.error('[updater] initial check failed', err)
+      )
+      const dailyMs = 24 * 60 * 60 * 1000
+      const timer = setInterval(
+        () => autoUpdater.checkForUpdatesAndNotify().catch(() => {}),
+        dailyMs
+      )
+      timer.unref()
+    })
+    .catch((err) => console.error('[updater] failed to load electron-updater', err))
+}
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

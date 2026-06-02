@@ -72,6 +72,7 @@ describe('buildReplicaWithRecovery', () => {
       backupAside: () => {
         backedUp = true
       },
+      restoreBackup: () => {},
       dbPath: '/data/neeme.db'
     })
     expect(res.backupPath).toBeNull()
@@ -237,5 +238,15 @@ describe('migrateUserData', () => {
       .rows[0]!
     expect(String(row.text)).toBe(ct)
     expect(decrypt(String(row.text))).toBe('already secret')
+  })
+
+  it('re-throws copy failures so the pre-sync backup is kept for retry', async () => {
+    await src.execute({
+      sql: 'INSERT INTO items (id, source_name, text, status) VALUES (?, ?, ?, ?)',
+      args: ['i3', 'n', 'kept on failure', 'captured']
+    })
+    await dest.execute('DROP TABLE items')
+
+    await expect(migrateUserData(src, dest)).rejects.toThrow(/no such table/i)
   })
 })

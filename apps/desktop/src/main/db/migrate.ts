@@ -95,6 +95,11 @@ function toStoredContent(value: InValue, encryptCol: boolean): InValue {
   return value.startsWith('enc:') ? value : encrypt(value)
 }
 
+function isMissingTableError(err: unknown, table: string): boolean {
+  const msg = err instanceof Error ? err.message : String(err)
+  return new RegExp(`no such table:\\s*(?:main\\.)?${table}\\b`, 'i').test(msg)
+}
+
 /**
  * Copy all rows from `table` in `src` into `dest` within a single transaction
  * (atomic per-table, idempotent via INSERT OR IGNORE). Column names are
@@ -102,7 +107,13 @@ function toStoredContent(value: InValue, encryptCol: boolean): InValue {
  * rows actually inserted (rowsAffected, not the total selected).
  */
 async function copyTable(src: Client, dest: Client, table: string): Promise<number> {
-  const res = await src.execute(`SELECT * FROM "${table}"`)
+  let res: Awaited<ReturnType<Client['execute']>>
+  try {
+    res = await src.execute(`SELECT * FROM "${table}"`)
+  } catch (err) {
+    if (isMissingTableError(err, table)) return 0
+    throw err
+  }
   if (res.rows.length === 0) return 0
   const encCols = ENCRYPTED_COLUMNS[table] ?? []
   let inserted = 0
@@ -134,7 +145,7 @@ async function copyTable(src: Client, dest: Client, table: string): Promise<numb
 export async function migrateUserData(src: Client, dest: Client): Promise<number> {
   let total = 0
   for (const table of MIGRATABLE_TABLES) {
-    total += await copyTable(src, dest, table).catch(() => 0)
+    total += await copyTable(src, dest, table)
   }
   return total
 }

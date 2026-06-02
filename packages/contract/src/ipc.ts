@@ -55,7 +55,14 @@ export const IPC = {
   /** Query current sync status from the worker (request-response). */
   syncGetStatus: 'sync:get-status',
   /** Trigger an immediate sync; resolves when complete (request-response). */
-  syncNow: 'sync:now'
+  syncNow: 'sync:now',
+  // Auto-updater (ROADMAP #12 — electron-updater via GitHub Releases)
+  /** Query current updater state (request-response). */
+  updateGetStatus: 'update:get-status',
+  /** Apply the downloaded update: quit and install. */
+  updateQuitAndInstall: 'update:quit-and-install',
+  /** main → renderer push: update state changed (checking, available, downloading, ready). */
+  updateChanged: 'update:changed'
 } as const
 
 // --- Pipeline data model (worker-internal vocabulary) ---------------------
@@ -246,6 +253,35 @@ export interface NimiApi {
   auth: AuthApi
   connectors: ConnectorsApi
   ui: UiApi
+  update: UpdateApi
+}
+
+// --- Auto-updater (ROADMAP #12 — electron-updater via GitHub Releases) ----
+
+export type UpdateStage = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
+
+/**
+ * Snapshot of the auto-updater state pushed to the renderer via `update:changed`
+ * and returned by `update:get-status`. The renderer surfaces a subtle "restart
+ * to update" affordance only when `stage === 'ready'`.
+ */
+export interface UpdateStatus {
+  stage: UpdateStage
+  /** Version string of the available/downloaded update, or null if none found yet. */
+  version: string | null
+  /** Download progress 0–100, or null when not downloading. */
+  progress: number | null
+  /** Human-readable error message, or null when healthy. */
+  error: string | null
+}
+
+export interface UpdateApi {
+  /** Current updater snapshot. */
+  getStatus: () => Promise<UpdateStatus>
+  /** Quit the app and apply the downloaded update. Only meaningful when stage === 'ready'. */
+  quitAndInstall: () => Promise<void>
+  /** Subscribe to state changes; returns an unsubscribe fn. */
+  onChanged: (cb: (status: UpdateStatus) => void) => () => void
 }
 
 // --- Sync (ROADMAP #10 — cloud offload via Turso embedded replicas) -------

@@ -1,12 +1,13 @@
 /**
- * Local dev server entry point.
- * Run with: pnpm dev (which calls: tsx watch src/index.ts)
+ * Local dev server — wraps the same handler Vercel runs in production.
+ * Run with: pnpm dev (tsx watch src/index.ts)
  *
- * For Vercel deployment, use api/token.ts instead — it imports createApp()
- * directly without starting a Node HTTP server.
+ * Production uses api/token.ts directly as a Vercel Serverless Function; this
+ * file only exists so you can curl the broker locally. It deliberately reuses
+ * the pure handleRequest() core so dev and prod behave identically.
  */
-import { serve } from '@hono/node-server'
-import { createApp, REQUIRED_ENV } from './app'
+import { createServer } from 'node:http'
+import { handleRequest, REQUIRED_ENV } from '../api/token'
 
 const missing = REQUIRED_ENV.filter((k) => !process.env[k])
 if (missing.length > 0) {
@@ -14,7 +15,19 @@ if (missing.length > 0) {
   console.warn('[broker] /token will error; /health will report 503')
 }
 
-const app = createApp()
 const port = parseInt(process.env.PORT ?? '3100', 10)
-serve({ fetch: app.fetch, port })
-console.log(`[broker] Listening on http://localhost:${port}`)
+
+const server = createServer(async (req, res) => {
+  const method = req.method ?? 'GET'
+  const pathname = (req.url ?? '/').split('?')[0]
+  const authHeader = (req.headers['authorization'] as string | undefined) ?? null
+
+  const { status, body } = await handleRequest(method, pathname, authHeader)
+  res.statusCode = status
+  res.setHeader('Content-Type', 'application/json')
+  res.end(JSON.stringify(body))
+})
+
+server.listen(port, () => {
+  console.log(`[broker] Listening on http://localhost:${port}`)
+})

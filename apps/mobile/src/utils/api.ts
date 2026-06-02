@@ -13,6 +13,9 @@ function getBaseUrl(): string {
   if (process.env.EXPO_PUBLIC_NEEME_API_URL) {
     return process.env.EXPO_PUBLIC_NEEME_API_URL
   }
+  if (!__DEV__) {
+    throw new Error('EXPO_PUBLIC_NEEME_API_URL must be set for production mobile builds')
+  }
   // In Expo Go on a physical device, localhost won't reach the dev machine.
   // Use the LAN IP from expo-constants when available (mirrors t3-turbo's getBaseUrl()).
   const debuggerHost = Constants.expoConfig?.hostUri

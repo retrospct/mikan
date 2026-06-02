@@ -8,7 +8,7 @@ import { persistToken } from '../../src/utils/auth'
 
 WebBrowser.maybeCompleteAuthSession()
 
-const LOGTO_ENDPOINT = process.env.EXPO_PUBLIC_LOGTO_ENDPOINT ?? ''
+const LOGTO_ENDPOINT = (process.env.EXPO_PUBLIC_LOGTO_ENDPOINT ?? '').replace(/\/+$/, '')
 const LOGTO_APP_ID = process.env.EXPO_PUBLIC_LOGTO_APP_ID ?? ''
 
 /**

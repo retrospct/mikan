@@ -17,24 +17,30 @@ import { getToken } from './token-store'
 let _baseUrl: string = 'http://localhost:8000'
 let _getToken: () => string | undefined = () => getToken()
 
+function buildClientConfig(
+  config: Parameters<CreateClientConfig>[0] = {}
+): ReturnType<CreateClientConfig> {
+  return {
+    ...config,
+    baseUrl: _baseUrl,
+    auth: () => _getToken()
+  }
+}
+
 /** Call once at app startup, before any API calls are made. */
 export function configureClient(opts: {
   baseUrl?: string
   getToken?: () => string | undefined
 }): void {
-  if (opts.baseUrl !== undefined) _baseUrl = opts.baseUrl
+  if (opts.baseUrl !== undefined) {
+    const baseUrl = opts.baseUrl.trim()
+    if (baseUrl) _baseUrl = baseUrl
+  }
   if (opts.getToken !== undefined) _getToken = opts.getToken
 
-  client.setConfig({
-    baseUrl: _baseUrl,
-    auth: () => _getToken()
-  })
+  client.setConfig(buildClientConfig())
 }
 
 // Defaults for the generated singleton's initial construction; configureClient()
 // applies app-specific values to that singleton before requests are made.
-export const createClientConfig: CreateClientConfig = (config) => ({
-  ...config,
-  baseUrl: _baseUrl,
-  auth: () => _getToken()
-})
+export const createClientConfig: CreateClientConfig = (config) => buildClientConfig(config)

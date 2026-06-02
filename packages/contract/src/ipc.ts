@@ -285,6 +285,22 @@ export interface UpdateApi {
   onChanged: (cb: (status: UpdateStatus) => void) => () => void
 }
 
+// --- Token broker (ADR 0008 — Logto → per-user Turso DB provisioning) -----
+
+/**
+ * Response from the token broker service (services/token-broker).
+ * Main fetches this at boot (when NEEME_SYNC_BROKER_URL is set), caches it in
+ * safeStorage, and injects syncUrl + authToken into the worker env.
+ */
+export interface BrokerTokenResponse {
+  /** libSQL sync URL for this user's Turso DB, e.g. libsql://<name>-<org>.turso.io */
+  syncUrl: string
+  /** Short-lived, DB-scoped Turso token. Expires at `expiresAt`. */
+  authToken: string
+  /** Unix timestamp (ms) when the token expires. Refresh ~60 s before this. */
+  expiresAt: number
+}
+
 // --- Sync (ROADMAP #10 — cloud offload via Turso embedded replicas) -------
 
 /**

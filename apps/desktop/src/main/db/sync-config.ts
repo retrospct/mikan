@@ -7,7 +7,11 @@
  * Environment variables:
  *   NEEME_SYNC              "on" to enable (anything else = off)
  *   NEEME_SYNC_URL          libSQL sync URL (e.g. libsql://<db>.turso.io)
- *   NEEME_SYNC_AUTH_TOKEN   DB-scoped auth token (short-lived; main fetches from broker)
+ *   NEEME_SYNC_AUTH_TOKEN   DB-scoped auth token — set by main from the broker response
+ *                           (or provided directly as the spike fallback)
+ *   NEEME_SYNC_BROKER_URL   Broker service URL — when set, main fetches and injects
+ *                           NEEME_SYNC_URL + NEEME_SYNC_AUTH_TOKEN before forking the
+ *                           worker (see src/main/sync/broker.ts and ADR 0008)
  *   NEEME_SYNC_INTERVAL_S   Periodic sync interval in seconds (default 300 = 5 min)
  *   NEEME_SYNC_ENCRYPTION_KEY  64-hex AES-256-GCM key — REQUIRED to enable sync
  *

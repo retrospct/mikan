@@ -11,6 +11,8 @@ jobs:
   build-mac:
     name: Build & publish macOS
     runs-on: macos-latest
+    permissions:
+      contents: write
     env:
       NEEME_EMBEDDER: hash
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

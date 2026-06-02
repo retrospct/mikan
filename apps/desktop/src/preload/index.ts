@@ -60,6 +60,10 @@ const api: NimiApi = {
       return (): void => { ipcRenderer.removeListener(IPC.connectorsChanged, handler) }
     }
   },
+  sync: {
+    getStatus: () => ipcRenderer.invoke(IPC.syncGetStatus),
+    now: () => ipcRenderer.invoke(IPC.syncNow)
+  },
   ui: {
     setBadge: (count: number) => ipcRenderer.invoke(IPC.traySetBadge, count)
   },

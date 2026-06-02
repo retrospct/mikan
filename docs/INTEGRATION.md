@@ -69,6 +69,23 @@ and `'extracted'` to `done`; `'pending'` stays as pending until extraction compl
 | `NEEME_OCR_LANG` | Tesseract language code (default `eng`) |
 | `NEEME_WHISPER_MODEL` | Whisper model (default `Xenova/whisper-tiny`) |
 
+## Cloud sync status (`window.api.sync`)
+
+Opt-in Turso sync (ROADMAP #10) exposes a small status surface on `window.api`:
+
+| Call | Returns | Notes |
+|------|---------|-------|
+| `await window.api.sync.getStatus()` | `SyncStatus` | `{ enabled, lastSyncAt, syncing, error }` |
+| `await window.api.sync.now()` | `void` | trigger an immediate sync; no-op when disabled |
+
+`SyncStatus.error` is set when sync is refused or fails — notably when `NEEME_SYNC=on`
+but no valid `NEEME_SYNC_ENCRYPTION_KEY` is present (`enabled:false` + an error message).
+The renderer surfaces this via `SyncControl` (`nimi/sync.tsx`, driven by the `useSync`
+hook) as a header pill: a red "Sync off"/"Sync error" pill with the message in its
+tooltip, "Syncing…" while a sync runs, or "Synced" (click to sync now) when healthy. The
+pill renders nothing when sync is simply off with no error. There's no push event yet, so
+`useSync` polls `getStatus()` on an interval.
+
 ## Process model
 
 `renderer (sandboxed, no node)` → `preload (contextBridge)` → `main (router)` → `utilityProcess (DB + pipeline/todos)`. See `docs/SECURITY.md`.

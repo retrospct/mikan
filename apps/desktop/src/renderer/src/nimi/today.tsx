@@ -6,6 +6,7 @@ import { kindIcon } from './iconKind'
 import { NimiMark, NimiNote } from './mark'
 import { AuthControl } from './auth'
 import { ConnectorsControl } from './connectors'
+import { SyncControl } from './sync'
 import { MemoryContext } from './api'
 import type { Task } from '@nimi/contract/views'
 import type { NimiMarkState } from './types'
@@ -50,6 +51,7 @@ function AppHeader({
         </div>
       </div>
       <div className="hdr-r">
+        <SyncControl />
         <ConnectorsControl />
         <AuthControl />
         <button className="hdr-btn" aria-label="Plan tomorrow" onClick={onTomorrow}>

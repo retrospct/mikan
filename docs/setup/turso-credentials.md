@@ -51,7 +51,12 @@ turso db tokens create nimi-test --expiration 7d
 
 Tokens expire. For longer spikes use `--expiration 30d` or `never` (rotate manually).
 
-### 5. (Optional) Encryption key
+### 5. Encryption key (REQUIRED)
+
+Sync now **refuses to enable** without a valid `NEEME_SYNC_ENCRYPTION_KEY` (64 hex
+chars). This guarantees encryption at rest — plaintext content is never written to the
+cloud primary. If the key is missing or malformed, the app stays fully local-first and
+reports the reason in sync status.
 
 Generate a fresh 32-byte key for at-rest field encryption:
 
@@ -72,13 +77,11 @@ means the encrypted rows on the cloud primary cannot be decrypted.
 Add these to your shell (or `.env.local`, or an Electron launch config):
 
 ```sh
-# Required to enable sync
+# Required to enable sync (all four — sync fails closed if the key is missing/invalid)
 NEEME_SYNC=on
 NEEME_SYNC_URL=libsql://nimi-test-<org>.turso.io    # from step 3
 NEEME_SYNC_AUTH_TOKEN=eyJ...                         # from step 4
-
-# Optional: at-rest field encryption (strongly recommended before any real data)
-NEEME_SYNC_ENCRYPTION_KEY=<64-hex-chars>             # from step 5
+NEEME_SYNC_ENCRYPTION_KEY=<64-hex-chars>             # from step 5 (mandatory)
 
 # Optional: sync interval (default 300 s = 5 min)
 NEEME_SYNC_INTERVAL_S=60
@@ -90,6 +93,7 @@ Then launch the app:
 NEEME_SYNC=on \
 NEEME_SYNC_URL=libsql://nimi-test-<org>.turso.io \
 NEEME_SYNC_AUTH_TOKEN=eyJ... \
+NEEME_SYNC_ENCRYPTION_KEY=<64-hex-chars> \
 NEEME_EMBEDDER=hash \
 pnpm dev
 ```
@@ -104,7 +108,8 @@ pnpm dev
    turso db shell nimi-test "SELECT id, source_name FROM items LIMIT 5;"
    ```
 3. **Device B** — launch with the **same** `NEEME_SYNC_URL` + `NEEME_SYNC_AUTH_TOKEN`
-   (+ same `NEEME_SYNC_ENCRYPTION_KEY` if using encryption). On boot the worker calls
+   + the **same** `NEEME_SYNC_ENCRYPTION_KEY` (required, and it must match Device A or the
+   pulled rows cannot be decrypted). On boot the worker calls
    `syncNow()` which pulls from the primary. The note from Device A should appear in
    the archive feed.
 4. Confirm Device B can search semantically — `reindexAll()` runs via `syncEmbedder()`

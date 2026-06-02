@@ -19,6 +19,7 @@ const FIXTURES = join(__dirname, '..', 'fixtures')
 
 let app: ElectronApplication
 let page: Page
+let cleanupUserDataDir = (): void => {}
 
 /** Source names currently in the archive (the persisted `items` table). */
 async function archiveSrcs(): Promise<string[]> {
@@ -59,10 +60,15 @@ test.beforeAll(async () => {
   const launched = await launchBuiltApp('nimi-e2e-')
   app = launched.app
   page = launched.page
+  cleanupUserDataDir = launched.cleanupUserDataDir
 })
 
 test.afterAll(async () => {
-  await app?.close()
+  try {
+    await app?.close()
+  } finally {
+    cleanupUserDataDir()
+  }
 })
 
 test('picker: choosing a PDF captures + extracts it (renderer → IPC → worker → DB)', async () => {

@@ -51,6 +51,7 @@ function readBuiltMetaCsp(): string {
 
 let app: ElectronApplication
 let page: Page
+let cleanupUserDataDir = (): void => {}
 
 /** Console errors + page errors that look like CSP violations, collected from
  *  the moment listeners attach through the reload below. */
@@ -60,6 +61,7 @@ test.beforeAll(async () => {
   const launched = await launchBuiltApp('nimi-csp-e2e-')
   app = launched.app
   page = launched.page
+  cleanupUserDataDir = launched.cleanupUserDataDir
 
   // Attach listeners, THEN reload so any load-time CSP violation is captured
   // under the listener (the first load already happened before firstWindow()).
@@ -73,12 +75,15 @@ test.beforeAll(async () => {
   await page.reload()
   await page.waitForLoadState('domcontentloaded')
   await page.waitForLoadState('networkidle')
-  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.show())
   await page.locator('.nav').waitFor({ state: 'visible' })
 })
 
 test.afterAll(async () => {
-  await app?.close()
+  try {
+    await app?.close()
+  } finally {
+    cleanupUserDataDir()
+  }
 })
 
 test('renderer boots with ZERO CSP violations', async () => {
@@ -98,6 +103,8 @@ test('bundled fonts load locally (offline-first)', async () => {
 })
 
 test('no Google Fonts network requests', async () => {
+  // Resource Timing proves no remote font request reached the network; the CSP
+  // violation test above catches blocked Google Fonts links before they load.
   const googleFontReqs = await page.evaluate(() =>
     performance
       .getEntriesByType('resource')

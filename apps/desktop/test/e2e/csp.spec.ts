@@ -121,5 +121,8 @@ test('shipped <meta> CSP is the strict production policy', async () => {
   })
   expect(metaCsp).toBe(readBuiltMetaCsp())
   expect(metaCsp).not.toContain("'unsafe-inline'")
+  expect(metaCsp).not.toContain("'unsafe-eval'")
   expect(metaCsp).not.toContain('https://')
+  expect(metaCsp).not.toContain('http://')
+  expect(metaCsp).not.toMatch(/script-src[^;]*\bblob:/)
 })

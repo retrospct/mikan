@@ -31,8 +31,8 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 | 5   | ~~Image + audio extraction (OCR / transcription)~~ ✅                                                    | back         | screenshots & voice memos as memories            | M–L  | ✅ shipped  |
 | 6   | ~~Feed view + uncovered-todos (Nimi proposes todos from the feed)~~ ✅ **done**                            | back + front | the `FedItem` / `UncoveredTodo` surfaces         | M    | ✅ shipped  |
 | 7   | ~~**Worker-service tests (vitest)**~~ ✅ **done**                                                        | back         | guards pipeline/todo logic                       | M    | ✅ shipped  |
-| 8   | **Connectors / ingest (email, calendar, …)** 🚧 in progress                                              | back         | automatic capture vs manual                      | L    | P2         |
-| 9   | Auth end-to-end (Logto **Native** app + PKCE, id_token JWKS-verified) — **login verified** ✅; PR #35 open  | back + front | real accounts                                    | M    | P2         |
+| 8   | ~~**Connectors / ingest (email, calendar, …)**~~ ✅ **done**                                             | back         | automatic capture vs manual                      | L    | ✅ shipped  |
+| 9   | ~~Auth end-to-end (Logto **Native** app + PKCE, id_token JWKS-verified)~~ ✅ **done** (PR #35)            | back + front | real accounts                                    | M    | ✅ shipped  |
 | 10  | Sync / cloud offload (Turso), multi-user                                                                 | back         | multi-device                                     | L    | P3         |
 | 11  | Vuln cleanup + CSP tighten                                                                               | back         | the dependabot alerts + hardening                | S    | P1 (quick) |
 | 12  | Auto-updater (electron-updater)                                                                          | back/dist    | testers auto-get each pushed build               | M    | P1         |

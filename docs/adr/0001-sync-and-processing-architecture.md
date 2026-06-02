@@ -1,8 +1,34 @@
 # ADR 0001 — Sync & processing architecture for neeme
 
-**Status:** Exploring (no decision yet — this records research to inform prototypes)
-**Date:** 2026-06-01
+**Status:** Proposed — sync *mechanism* decided (**Turso / libSQL embedded replicas**, aligning with [[0003-all-typescript-on-device-pipeline]] + the sync plan); supersedes this ADR's original "Exploring" Jazz/E2E lean for the *mechanism* question. **Privacy posture is NOT yet decided** — see the sign-off callout in the Update below.
+**Decision status:** **proposed, awaiting sign-off.** The mechanism (Turso) is settled; the **privacy-posture trade-off (trusted-cloud at-rest vs zero-knowledge/E2E) is a human decision and is still open.** Do not treat this ADR as Accepted until that is signed off.
+**Date:** 2026-06-01 (rev. 2 — 2026-06: reconciled with ADR 0003; recorded the driver shift privacy → speed/offline; chose Turso embedded replicas as the sync mechanism; flagged the privacy posture for human sign-off)
 **Context owners:** jlee (+ Claude)
+**Related:** reframed by [[0003-all-typescript-on-device-pipeline]]; implementation plan in [docs/plans/sync-cloud-offload.plan.md](../plans/sync-cloud-offload.plan.md); see also [[0002-authentication]]
+
+## Update (2026-06) — Decision: Turso embedded replicas for sync (driver: speed/offline)
+
+> This section is the current decision. Everything from [## Problem](#problem) downward is the **original research** (June 1) that this Update resolves — it is preserved as the record, not overwritten. The Update *selects among* the options that research laid out, under a driver (speed/offline) that the original draft had not yet fixed.
+
+**What changed.** This ADR opened in "Exploring," and its original *recommendation* (below) leaned **Jazz / E2E-encrypted CRDT** for a private peer-sync axis, filing **Turso/libSQL embedded replicas** only as a conditional *trusted-cloud system-of-record* "if we accept the cloud holding a readable primary." Two things have since settled the **mechanism** question:
+
+1. **[[0003-all-typescript-on-device-pipeline]]** reframed the local-first driver from **privacy → speed / latency / offline** (privacy is a welcome side effect, not the driver), and explicitly endorsed **Turso embedded replicas** as the sync story — the *same* `@libsql/client` driver nimi already uses, so it needs **no data-layer rewrite**.
+2. The **[sync / cloud-offload plan](../plans/sync-cloud-offload.plan.md)** scored five realistic sync approaches (Turso embedded replicas · self-hosted libSQL · Postgres + local cache · CRDT/sync-engine · roll-your-own oplog) against nimi's *actual* constraints — libSQL is already the local store, native vector search lives in the DB, TS-everywhere, offline-first — and landed on **Turso embedded replicas** as the default, with a **self-hosted libSQL server** as the no-lock-in fallback on the *identical* code path.
+
+**Resolution (mechanism).** For single-user multi-device sync, nimi adopts **Turso / libSQL embedded replicas** (Option 4 in the table below), **not** Jazz/E2E (Option 2). One-line rationale: the local store *is* libSQL and the vector index *is* a libSQL-native feature chosen on purpose ([[0003-all-typescript-on-device-pipeline]]), so Turso is the **only path with zero engine/data-model change** — and because the self-hosted `sqld` fallback shares the exact code path, "managed Turso now → self-host later" is a config change, not a re-platform. Concrete shape (from the plan): opt-in `NEEME_SYNC` flag, **database-per-user** isolation (replicas mirror the whole DB, so row-scoping can't isolate across devices), the **vector index kept local-only and recomputed per device** (re-derivable, never synced), and a small TS token-broker bridging Logto identity → a DB-scoped Turso token.
+
+### The premise that, if it flips, flips the decision
+
+0001's *original* driver was **privacy**. Under a privacy-first premise the decision **inverts**: **Jazz / Automerge + an encrypted relay (E2E / zero-knowledge)** would lead, and Turso would drop back to a trusted-cloud fallback for re-derivable data only. The Turso decision above is correct **only while speed/offline is the driver** (per 0003). **If privacy becomes the product driver, reopen this ADR toward the E2E/CRDT track.**
+
+> ⚠️ **PENDING HUMAN SIGN-OFF — privacy posture: trusted-cloud (at-rest) vs zero-knowledge (E2E)**
+>
+> Turso embedded replicas are **encryption-at-rest under a trusted cloud — NOT zero-knowledge / E2E.** The cloud holds a **readable primary** (readable *with* the at-rest `encryptionKey`); the host (Turso, or whoever runs `sqld`) can in principle read user content. **This reverses this ADR's original privacy lean** and is a genuine product decision that must not be made unilaterally — so it is flagged here rather than declared Accepted.
+>
+> - **Trusted-cloud (what the Turso mechanism gives us — proposed):** simplest, zero data-layer change, ships ROADMAP #10 now on infra nimi already uses. **Cost:** the host *could* read plaintext; privacy rests on operator trust + at-rest encryption, not a cryptographic guarantee.
+> - **Zero-knowledge / E2E (0001's original lean):** the server only ever holds ciphertext; clients hold keys. **Cost:** abandon the libSQL/Turso sync path, adopt **Jazz** (its own cojson data model alongside libSQL for vector search) or **Automerge/Yjs + an encrypted relay** (build the encryption + transport yourself); more build + ops, younger ecosystem, weaker desktop/RN maturity story, and the on-device vector index still has to live in libSQL.
+>
+> **Recommended for #10 / v1 (proposed, awaiting sign-off):** accept **trusted-cloud** — scoped so the synced primary carries **items/todos** while **raw embeddings/vectors stay local-only and re-derivable**, minimizing what leaves the device — and **revisit E2E if/when privacy becomes the product driver.** This status moves to **Accepted** only after jlee signs off on the trusted-cloud posture; otherwise reopen toward the E2E track above.
 
 ## Problem
 
@@ -74,6 +100,8 @@ WDK is the **processing/compute-offload axis** (option 5 reframed as inspiration
 **Synthesis:** **WDK = processing axis · Jazz = sync/private-data axis · "Worlds" = the conceptual bridge** that lets the same code target local-vs-cloud per environment. A strong template for neeme's "we'll need both" architecture — don't necessarily adopt WDK itself, but copy the World-seam + event-log-replay shape.
 
 ## Recommendation (for prototyping, not a final decision)
+
+> **Superseded for the mechanism choice by the [Update (2026-06)](#update-2026-06--decision-turso-embedded-replicas-for-sync-driver-speedoffline) above.** This was the original *privacy-driver* recommendation (lean Jazz for the peer/E2E axis). Once ADR 0003 fixed the driver as **speed/offline**, the mechanism flipped to **Turso embedded replicas**; this text is kept as the record of what the privacy-first path would have been (and is the path to revive if privacy later becomes the driver).
 
 Mapping to the user's lean — *peer first, trusted-cloud fallback, probably both*:
 

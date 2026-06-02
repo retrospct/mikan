@@ -91,6 +91,14 @@ Features that require `NEEME_ANTHROPIC_KEY` + a display are covered by runbooks 
 | Runbook | Feature | Needs |
 |---|---|---|
 | `docs/testing/uncovered-todos-gui-runbook.md` | Feed → "I spotted these to-dos" | `NEEME_ANTHROPIC_KEY`, `DISPLAY` |
+| `docs/testing/csp-smoke-runbook.md` | CSP hardening + local fonts (#11) | `DISPLAY` (deterministic tier needs neither) |
+
+Runbooks follow `docs/testing/RUNBOOK-TEMPLATE.md`; the `gui-smoke` skill
+(`.cursor/skills/gui-smoke/SKILL.md`) is the SOP for running them + capturing
+artifacts. The deterministic tier (`pnpm --filter @nimi/desktop test:e2e` under
+Xvfb) runs automatically on PRs via `.github/workflows/e2e-smoke.yml`; see
+`docs/testing/automation-setup.md` for wiring an auto-launched cloud agent for the
+visual tier.
 
 ### Scoped commands
 

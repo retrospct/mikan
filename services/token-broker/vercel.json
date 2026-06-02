@@ -3,13 +3,5 @@
   "rewrites": [
     { "source": "/token", "destination": "/api/token" },
     { "source": "/health", "destination": "/api/token" }
-  ],
-  "env": {
-    "LOGTO_JWKS_URL": "@logto-jwks-url",
-    "LOGTO_ISSUER": "@logto-issuer",
-    "LOGTO_AUDIENCE": "@logto-audience",
-    "TURSO_PLATFORM_TOKEN": "@turso-platform-token",
-    "TURSO_ORG": "@turso-org",
-    "TURSO_GROUP": "@turso-group"
-  }
+  ]
 }

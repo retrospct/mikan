@@ -12,12 +12,16 @@
  * Hono handler maps to the appropriate HTTP status code.
  */
 import { createHash } from 'node:crypto'
-import type { BrokerTokenResponse } from '@nimi/contract/ipc'
 import { verifyLogtoToken, LogtoVerifyError } from './logto.ts'
 import { provisionOrLookupDb, getDbUrl, mintDbToken, TursoApiError } from './turso.ts'
 
 export { LogtoVerifyError, TursoApiError }
-export type { BrokerTokenResponse }
+
+export interface BrokerTokenResponse {
+  syncUrl: string
+  authToken: string
+  expiresAt: number
+}
 
 /**
  * Derive a stable, url-safe database name from a Logto sub claim.

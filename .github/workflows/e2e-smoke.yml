@@ -1,0 +1,77 @@
+name: Desktop E2E smoke
+
+# Deterministic, no-human tier of our GUI runbooks: builds the Electron app and
+# runs the Playwright `_electron` smoke suite (CSP + local fonts + capture-file)
+# headlessly under Xvfb. This is the half of "follow the runbook" that needs no
+# agent and no judgement — it just passes or fails on every PR.
+#
+# The visual/judgement half (screenshots + demo video) is handled separately by
+# a Cursor Automation that launches a cloud agent on PR events; see
+# docs/testing/automation-setup.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/contract/**'
+      - '.github/workflows/e2e-smoke.yml'
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/contract/**'
+      - '.github/workflows/e2e-smoke.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Skip the ONNX/MiniLM model download — the smoke suite never needs the
+      # real embedder, and the network fetch is slow + flaky in CI.
+      NEEME_EMBEDDER: hash
+      NEEME_EXTRACTOR: off
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Electron/Chromium system libraries + Xvfb
+        # Electron shares Chromium's shared-library set; `playwright install-deps
+        # chromium` resolves the right apt packages across Ubuntu versions so we
+        # don't hand-maintain a brittle libnss3/libgbm1/... list.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          pnpm --filter @nimi/desktop exec playwright install-deps chromium
+
+      - name: Build desktop app
+        run: pnpm --filter @nimi/desktop build
+
+      - name: Run Electron E2E smoke (Xvfb)
+        run: xvfb-run -a -s "-screen 0 1280x1024x24" pnpm --filter @nimi/desktop test:e2e
+
+      - name: Upload Playwright artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: apps/desktop/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

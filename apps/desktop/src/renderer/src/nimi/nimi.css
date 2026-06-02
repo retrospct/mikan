@@ -252,7 +252,6 @@ button.sync-pill:disabled {
   border-color: color-mix(in srgb, #e5484d 45%, var(--hairline));
   color: #e5484d;
   background: color-mix(in srgb, #e5484d 12%, var(--surface));
-  cursor: default;
 }
 .sync-pill-err svg {
   color: #e5484d;

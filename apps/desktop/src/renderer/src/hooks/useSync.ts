@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SyncStatus } from '@nimi/contract/ipc'
 import { isElectron } from '../nimi/api'
 
-const DEFAULT: SyncStatus = { enabled: false, lastSyncAt: null, syncing: false, error: null }
+const DEFAULT: SyncStatus = {
+  enabled: false,
+  lastSyncAt: null,
+  lastSyncDurationMs: null,
+  syncing: false,
+  error: null
+}
 
 /** How often to re-poll worker sync status. There's no push event yet, so we poll. */
 const POLL_MS = 5000
@@ -17,6 +23,7 @@ const NOOP = (): void => {}
  */
 export function useSync(): { status: SyncStatus; syncNow: () => void } {
   const [status, setStatus] = useState<SyncStatus>(DEFAULT)
+  const syncNowInFlight = useRef(false)
 
   useEffect(() => {
     if (!isElectron) return
@@ -47,12 +54,18 @@ export function useSync(): { status: SyncStatus; syncNow: () => void } {
   }, [])
 
   const syncNow = useCallback(() => {
-    if (!isElectron) return
+    if (!isElectron || syncNowInFlight.current) return
+    syncNowInFlight.current = true
+    setStatus((current) => ({ ...current, syncing: true }))
     window.api.sync
       .now()
       .then(() => window.api.sync.getStatus())
       .then(setStatus)
       .catch((e) => console.error('sync now failed', e))
+      .finally(() => {
+        syncNowInFlight.current = false
+        setStatus((current) => ({ ...current, syncing: false }))
+      })
   }, [])
 
   if (!isElectron) return { status: DEFAULT, syncNow: NOOP }

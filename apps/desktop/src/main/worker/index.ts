@@ -28,6 +28,7 @@ type Handler = (args: unknown[]) => unknown | Promise<unknown>
 let syncState: SyncStatus = {
   enabled: getSyncConfig().enabled,
   lastSyncAt: null,
+  lastSyncDurationMs: null,
   syncing: false,
   error: null
 }
@@ -35,9 +36,12 @@ let syncState: SyncStatus = {
 async function runSyncNow(): Promise<void> {
   if (!syncState.enabled) return
   syncState = { ...syncState, syncing: true, error: null }
+  const t0 = Date.now()
   try {
     await syncNow()
-    syncState = { ...syncState, syncing: false, lastSyncAt: Date.now(), error: null }
+    const durationMs = Date.now() - t0
+    syncState = { ...syncState, syncing: false, lastSyncAt: t0 + durationMs, lastSyncDurationMs: durationMs, error: null }
+    console.log(`[sync] synced in ${durationMs}ms`)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     syncState = { ...syncState, syncing: false, error: msg }

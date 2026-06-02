@@ -260,6 +260,8 @@ export interface NimiApi {
 export interface SyncStatus {
   enabled: boolean
   lastSyncAt: number | null
+  /** Wall-clock duration of the most recent completed sync in milliseconds. */
+  lastSyncDurationMs: number | null
   syncing: boolean
   error: string | null
 }

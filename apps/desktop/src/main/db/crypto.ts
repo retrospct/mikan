@@ -35,9 +35,9 @@ const KEY_HEX = /^[0-9a-f]{64}$/i
 function resolveKey(): Buffer | null {
   const hex = process.env.NEEME_SYNC_ENCRYPTION_KEY
   if (!hex) return null
-  if (hex.length !== 64) {
+  if (!KEY_HEX.test(hex)) {
     throw new Error(
-      `NEEME_SYNC_ENCRYPTION_KEY must be 64 hex characters (32 bytes). Got ${hex.length}.`
+      `NEEME_SYNC_ENCRYPTION_KEY must be 64 hex characters (32 bytes). Got ${hex.length} chars${hex.length === 64 ? ' (non-hex)' : ''}.`
     )
   }
   return Buffer.from(hex, 'hex')

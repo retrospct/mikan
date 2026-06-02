@@ -33,7 +33,9 @@ let syncState: SyncStatus = {
   error:
     initialSyncConfig.disabledReason === 'missing-or-invalid-key'
       ? 'sync disabled: a valid NEEME_SYNC_ENCRYPTION_KEY is required for encryption at rest'
-      : null
+      : initialSyncConfig.disabledReason === 'missing-url'
+        ? 'sync disabled: NEEME_SYNC_URL is not set'
+        : null
 }
 
 async function runSyncNow(): Promise<void> {

@@ -49,7 +49,7 @@ describe('getSyncConfig', () => {
     expect(getSyncConfig().enabled).toBe(false)
   })
 
-  it('is disabled when NEEME_SYNC=on but NEEME_SYNC_URL is missing', () => {
+  it('is disabled when NEEME_SYNC=on but NEEME_SYNC_URL is missing, with disabledReason missing-url', () => {
     process.env.NEEME_SYNC = 'on'
     const cfg = getSyncConfig()
     expect(cfg.enabled).toBe(false)
@@ -133,6 +133,11 @@ describe('encrypt / decrypt', () => {
   it('is a no-op pass-through when the key is not set', () => {
     expect(encrypt('hello world')).toBe('hello world')
     expect(decrypt('hello world')).toBe('hello world')
+  })
+
+  it('throws a clear error when the key is 64 chars but non-hex (resolveKey validation parity)', () => {
+    process.env[KEY_ENV] = 'g'.repeat(64) // 64 chars, all non-hex
+    expect(() => encrypt('anything')).toThrow(/non-hex|must be 64 hex/)
   })
 
   it('leaves non-encrypted values alone when decrypting (key present)', () => {

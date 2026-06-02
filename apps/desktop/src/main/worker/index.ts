@@ -11,7 +11,7 @@
  */
 import { IPC } from '@nimi/contract/ipc'
 import type { ConnectorId, SyncStatus } from '@nimi/contract/ipc'
-import { initDb, syncNow } from '../db'
+import { initDb, syncNow, reimportPreSyncBackup } from '../db'
 import { getSyncConfig } from '../db/sync-config'
 import { pipelineService } from '../services/pipeline-service'
 import { todoService } from '../services/todo-service'
@@ -117,6 +117,22 @@ async function start(): Promise<void> {
   // ── Boot-time sync (before reindex so the first index sees pulled items) ──
   if (initialSyncConfig.enabled) {
     await runSyncNow()
+
+    // If this device had a pre-sync (sync-off) DB, its rows were backed up while
+    // bootstrapping the replica (db/index.ts buildClient). Migrate them in now —
+    // after the first successful sync so we don't fight the initial pull. Best-effort:
+    // the backup is kept on failure, and reindex below rebuilds the vector index.
+    if (syncState.error === null) {
+      try {
+        const migrated = await reimportPreSyncBackup()
+        if (migrated > 0) {
+          console.log(`[worker] migrated ${migrated} pre-sync row(s) into the replica`)
+          await runSyncNow() // push the migrated rows up to the primary
+        }
+      } catch (err) {
+        console.error('[worker] pre-sync data migration failed (backup kept for retry):', err)
+      }
+    }
 
     // Periodic sync — in addition to the libSQL syncInterval background pull,
     // an explicit loop lets us update syncState and log status.

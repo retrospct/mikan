@@ -220,7 +220,8 @@ input {
   align-items: center;
   gap: 8px;
 }
-.priv-pill {
+.priv-pill,
+.sync-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -239,19 +240,6 @@ input {
   color: var(--accent-ink);
 }
 .sync-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--mono);
-  white-space: nowrap;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 5px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--hairline);
-  color: var(--ink-2);
-  background: var(--surface);
   cursor: pointer;
 }
 button.sync-pill:disabled {

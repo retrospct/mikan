@@ -1,22 +1,7 @@
-// sync.tsx — a compact header pill for Turso cloud-sync status.
-//
-// Self-contained (drives its own `useSync` hook, straight on window.api.sync).
-// Renders nothing when sync is simply off with no error — it only earns header
-// space when there's something worth showing: an error, an active sync, or a
-// healthy "synced" state. The full error message is exposed via the tooltip.
 import { useState, type JSX } from 'react'
 import { NIcon } from './icons'
 import { useSync } from '../hooks/useSync'
-
-function relTime(ts: number | null): string {
-  if (!ts) return 'never'
-  const mins = Math.floor((Date.now() - ts) / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
-}
+import { relativeTime } from './time'
 
 export function SyncControl(): JSX.Element | null {
   const { status, syncNow } = useSync()
@@ -24,7 +9,7 @@ export function SyncControl(): JSX.Element | null {
 
   // Error takes priority. `enabled:false` + error = a config problem (e.g. a
   // missing encryption key); `enabled:true` + error = a transient sync failure.
-  // Click reveals the full reason inline (not just the native-title tooltip).
+  // Click reveals the full reason inline.
   if (status.error) {
     return (
       <span className="sync-wrap">
@@ -49,14 +34,13 @@ export function SyncControl(): JSX.Element | null {
   // Nothing worth showing when sync isn't configured.
   if (!status.enabled) return null
 
+  const syncedLabel =
+    status.lastSyncAt === null ? 'Synced' : `Synced ${relativeTime(status.lastSyncAt)}`
+
   return (
     <button
       className="sync-pill"
-      title={
-        status.syncing
-          ? 'Syncing with cloud…'
-          : `Synced ${relTime(status.lastSyncAt)} · click to sync now`
-      }
+      title={status.syncing ? 'Syncing with cloud…' : `${syncedLabel} · click to sync now`}
       onClick={syncNow}
       disabled={status.syncing}
       aria-label="Cloud sync status"

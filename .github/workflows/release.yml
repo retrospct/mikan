@@ -38,6 +38,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Decode App Store Connect API key
+        # notarytool expects a file path, not inline content.
+        # Decode the base64 secret to a temp file and point APPLE_API_KEY at it.
+        run: |
+          echo "${{ secrets.APPLE_API_KEY }}" | base64 --decode > /tmp/apple_api_key.p8
+          echo "APPLE_API_KEY=/tmp/apple_api_key.p8" >> $GITHUB_ENV
+
       - name: Typecheck
         run: pnpm typecheck
 

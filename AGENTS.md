@@ -67,6 +67,26 @@ The E2E reads ground truth back through `window.api.pipeline.archive()` (the app
 connection — a separate SQLite reader hits WAL-visibility races). It launches with
 `--user-data-dir=<tmp>` for an isolated throwaway DB.
 
+### Sync + encryption-at-rest tests (#10)
+
+Opt-in Turso sync with mandatory field encryption. Full procedure:
+**`docs/testing/sync-encryption-runbook.md`**.
+
+```bash
+# Tier 1 — gate check (no creds): NEEME_SYNC=on without a valid key must stay local
+pnpm --filter @nimi/desktop test:smoke:sync
+
+# Tier 2 — live two-device replica loop (needs a Turso DB; key is REQUIRED)
+NEEME_SYNC=on NEEME_SYNC_URL=libsql://<db>.turso.io \
+NEEME_SYNC_AUTH_TOKEN=<token> NEEME_SYNC_ENCRYPTION_KEY=<64-hex> \
+pnpm --filter @nimi/desktop test:smoke:sync
+```
+
+Sync **fails closed**: `NEEME_SYNC=on` enables sync only with a valid 64-hex
+`NEEME_SYNC_ENCRYPTION_KEY`, so plaintext is never written to the cloud primary. See
+`docs/setup/turso-credentials.md` for Turso setup (and use Cloud Agents → Secrets for the
+four env vars when running as a cloud agent).
+
 ### Tier 3 — packaged installer on a second computer (Mac/Windows)
 
 ```bash
@@ -91,6 +111,14 @@ Features that require `NEEME_ANTHROPIC_KEY` + a display are covered by runbooks 
 | Runbook | Feature | Needs |
 |---|---|---|
 | `docs/testing/uncovered-todos-gui-runbook.md` | Feed → "I spotted these to-dos" | `NEEME_ANTHROPIC_KEY`, `DISPLAY` |
+| `docs/testing/csp-smoke-runbook.md` | CSP hardening + local fonts (#11) | `DISPLAY` (deterministic tier needs neither) |
+
+Runbooks follow `docs/testing/RUNBOOK-TEMPLATE.md`; the `gui-smoke` skill
+(`.cursor/skills/gui-smoke/SKILL.md`) is the SOP for running them + capturing
+artifacts. The deterministic tier (`pnpm --filter @nimi/desktop test:e2e` under
+Xvfb) runs automatically on PRs via `.github/workflows/e2e-smoke.yml`; see
+`docs/testing/automation-setup.md` for wiring an auto-launched cloud agent for the
+visual tier.
 
 ### Scoped commands
 

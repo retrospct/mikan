@@ -1,14 +1,15 @@
 # ADR 0008 — Sync authentication & per-user database provisioning (token broker)
 
-**Status:** Proposed (deferred — build when sync/accounts ship; assumes the Turso
-embedded-replica sync mechanism, which still needs the [[0001-sync-and-processing-architecture]]
-amendment)
+**Status:** ✅ Accepted — signed off by jlee, 2026-06-02. Implementation begins in
+`services/token-broker` (see Hosting below).
 **Date:** 2026-06-02
 **Context owners:** jlee (+ Cursor agent)
 **Related:** builds on [[0002-authentication]] (Logto OIDC + PKCE, `safeStorage`, JWKS-verify);
 under [[0003-all-typescript-on-device-pipeline]] (TS backend); settles the auth/provisioning
 seam of the Turso sync path planned in `docs/plans/sync-cloud-offload.plan.md`; security posture
-ties to the field-encryption work (ROADMAP #10).
+ties to the field-encryption work (ROADMAP #10). The [[0001-sync-and-processing-architecture]]
+amendment (Turso embedded replicas as the sync mechanism) was **Accepted 2026-06-02** — the
+assumption this ADR depended on is now resolved.
 
 ## Problem
 
@@ -99,11 +100,18 @@ Automerge + relay), parked as a future privacy track in the sync plan and ADR 00
 ## Hosting
 
 The broker is **stateless, called once-per-session, and cached** — cold start is irrelevant.
-Recommended host: a **Vercel** function (Hono or a single route handler) in a new
-`services/token-broker` workspace (all-TS per ADR 0003). Env secrets: `TURSO_PLATFORM_TOKEN`,
-`TURSO_ORG`, `TURSO_GROUP`, `LOGTO_ISSUER`, `LOGTO_AUDIENCE`, `LOGTO_JWKS_URL`. Cloudflare Workers
-is an equally good alternative. **Not** the (Python, currently-undeployed) neeme FastAPI — wrong
-language for the ADR 0003 TS-backend direction.
+Host: a **Vercel** function (Hono) in `services/token-broker` — a new pnpm workspace in this
+repo (all-TS per ADR 0003). Env secrets: `TURSO_PLATFORM_TOKEN`, `TURSO_ORG`, `TURSO_GROUP`,
+`LOGTO_ISSUER`, `LOGTO_AUDIENCE`, `LOGTO_JWKS_URL`, optional `TOKEN_TTL_SECONDS`. Cloudflare
+Workers is an equally good alternative. **Not** the (Python, currently-undeployed) neeme FastAPI —
+wrong language for the ADR 0003 TS-backend direction.
+
+Desktop integration: main fetches the broker token after Logto login, caches the result in
+`safeStorage` (same pattern as the Logto refresh token), injects `NEEME_SYNC_URL` +
+`NEEME_SYNC_AUTH_TOKEN` into the worker env before forking — the existing libSQL embedded-replica
+client in `apps/desktop/src/main/db/index.ts` picks them up with no changes. Configure broker
+mode by setting `NEEME_SYNC_BROKER_URL`; the static `NEEME_SYNC_AUTH_TOKEN` env path remains as
+the documented spike fallback.
 
 ## Consequences
 
@@ -117,17 +125,20 @@ language for the ADR 0003 TS-backend direction.
   `NEEME_SYNC_URL` / `NEEME_SYNC_AUTH_TOKEN` proves the replica loop **before** any broker exists
   (see `docs/setup/turso-credentials.md`). This is what the current #10 slice uses.
 
-## Action items (not now — when sync/accounts are scheduled)
+## Action items
 
-1. [ ] Resolve the [[0001-sync-and-processing-architecture]] amendment (Turso embedded replicas as
-       the sync mechanism) — this ADR assumes it.
-2. [ ] Scaffold `services/token-broker` (Vercel, Hono/route handler): JWKS-verify Logto →
-       Platform-API provision-or-lookup → mint DB-scoped token → `{ syncUrl, authToken, expiresAt }`.
-3. [ ] Add the `@nimi/contract` sync-token channel; main caches in `safeStorage` and pushes to the
-       worker; worker swaps the token into the replica client; refresh on `401`.
-4. [ ] Per-user DB **lifecycle**: provisioning naming (`neeme-<subhash>`), and **teardown on
-       account delete**.
-5. [ ] **CSP:** allow the broker + Logto/JWKS origins in `apps/desktop/src/renderer/index.html`.
+1. [x] ~~Resolve the [[0001-sync-and-processing-architecture]] amendment (Turso embedded replicas as
+       the sync mechanism) — this ADR assumes it.~~ **Done** — ADR 0001 Accepted 2026-06-02.
+2. [x] ~~Scaffold `services/token-broker`~~ **Done** — Hono + Vercel function implemented in
+       `services/token-broker`; JWKS-verify Logto → Platform-API provision-or-lookup → mint
+       DB-scoped token → `{ syncUrl, authToken, expiresAt }`.
+3. [x] ~~Add the `@nimi/contract` sync-token channel; main caches in `safeStorage` and pushes to the
+       worker.~~ **Done** — `BrokerTokenResponse` in `@nimi/contract/ipc`; main caches token in
+       `safeStorage` and injects into worker env at boot; refresh before expiry.
+4. [ ] Per-user DB **lifecycle**: provisioning naming (`neeme-<subhash>`) is implemented in the
+       broker. **Teardown on account delete** is deferred — needs a delete-account flow first.
+5. [ ] **CSP:** allow the broker + Logto/JWKS origins in `apps/desktop/src/renderer/index.html`
+       (add when broker URL is known).
 
 ## Open questions (need a human)
 

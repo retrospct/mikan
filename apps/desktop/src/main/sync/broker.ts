@@ -1,0 +1,129 @@
+/**
+ * Desktop-side token broker client (ADR 0008).
+ *
+ * Main fetches a short-lived, DB-scoped Turso sync token from the broker service
+ * on behalf of the authenticated user. The token is:
+ *   - cached in Electron `safeStorage` (OS keychain on macOS/Windows), same
+ *     approach as the Logto refresh token in auth/logto.ts
+ *   - refreshed proactively ~60 s before it expires
+ *   - never handed to the renderer (only main + worker touch it)
+ *
+ * When NEEME_SYNC_BROKER_URL is not set, all functions are no-ops, preserving
+ * the existing static NEEME_SYNC_AUTH_TOKEN spike path.
+ *
+ * Config:
+ *   NEEME_SYNC_BROKER_URL — Deployed broker URL, e.g. https://token-broker.vercel.app
+ */
+import { app, safeStorage } from 'electron'
+import { readFile, writeFile, rm } from 'node:fs/promises'
+import { join } from 'node:path'
+import type { BrokerTokenResponse } from '@nimi/contract/ipc'
+
+const REFRESH_BUFFER_MS = 60_000 // refresh when < 60 s from expiry
+
+let cached: BrokerTokenResponse | null = null
+
+function cacheFile(): string {
+  return join(app.getPath('userData'), 'neeme-sync-token.bin')
+}
+
+function brokerUrl(): string | undefined {
+  return process.env.NEEME_SYNC_BROKER_URL?.replace(/\/+$/, '')
+}
+
+/** True when broker mode is configured (NEEME_SYNC_BROKER_URL is set). */
+export function isBrokerConfigured(): boolean {
+  return Boolean(brokerUrl())
+}
+
+/** True when the cached token is still valid (has > REFRESH_BUFFER_MS remaining). */
+function isTokenFresh(token: BrokerTokenResponse): boolean {
+  return token.expiresAt - Date.now() > REFRESH_BUFFER_MS
+}
+
+/** Persist the token to the OS keychain via safeStorage. */
+async function persist(token: BrokerTokenResponse): Promise<void> {
+  const plain = JSON.stringify(token)
+  const blob = safeStorage.isEncryptionAvailable()
+    ? safeStorage.encryptString(plain)
+    : Buffer.from(plain, 'utf8')
+  await writeFile(cacheFile(), blob)
+}
+
+/** Remove the cached token from disk. */
+async function clearPersisted(): Promise<void> {
+  await rm(cacheFile(), { force: true }).catch(() => {})
+  cached = null
+}
+
+/** Restore a persisted token from disk (called at startup). */
+export async function restoreCachedToken(): Promise<void> {
+  if (!isBrokerConfigured()) return
+  try {
+    const blob = await readFile(cacheFile())
+    const plain = safeStorage.isEncryptionAvailable()
+      ? safeStorage.decryptString(blob)
+      : blob.toString('utf8')
+    const token = JSON.parse(plain) as BrokerTokenResponse
+    if (isTokenFresh(token)) {
+      cached = token
+    }
+    // Expired tokens are discarded; a fresh fetch will happen at first use.
+  } catch {
+    /* no stored token */
+  }
+}
+
+/**
+ * Fetch a fresh token from the broker using the caller's Logto access token.
+ * Throws on HTTP errors or network failures.
+ */
+async function fetchFromBroker(logtoAccessToken: string): Promise<BrokerTokenResponse> {
+  const url = brokerUrl()
+  if (!url) throw new Error('NEEME_SYNC_BROKER_URL is not set')
+
+  const res = await fetch(`${url}/token`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${logtoAccessToken}` }
+  })
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Broker returned HTTP ${res.status}: ${body.slice(0, 200)}`)
+  }
+  return res.json() as Promise<BrokerTokenResponse>
+}
+
+/**
+ * Get a valid sync token, using the cache when possible.
+ *
+ * @param logtoAccessToken — fresh Logto access token from auth.getAccessToken()
+ * @returns the broker token, or null if the broker is not configured
+ *
+ * Errors from the broker are logged and rethrown; callers should catch and
+ * fall back to the static NEEME_SYNC_AUTH_TOKEN path if present.
+ */
+export async function getSyncToken(
+  logtoAccessToken: string
+): Promise<BrokerTokenResponse | null> {
+  if (!isBrokerConfigured()) return null
+
+  if (cached && isTokenFresh(cached)) {
+    return cached
+  }
+
+  const token = await fetchFromBroker(logtoAccessToken)
+  cached = token
+  await persist(token).catch((err) =>
+    console.warn('[broker-client] failed to persist sync token:', err)
+  )
+  return token
+}
+
+/**
+ * Clear the in-memory and on-disk cached token.
+ * Call on logout so the next login gets a fresh token.
+ */
+export async function clearSyncToken(): Promise<void> {
+  cached = null
+  await clearPersisted()
+}

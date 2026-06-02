@@ -1,0 +1,23 @@
+{
+  "name": "@nimi/token-broker",
+  "version": "0.1.0",
+  "description": "Logto → Turso token broker: JWKS-verify the Logto access token and mint a short-lived, DB-scoped Turso token for the user's personal embedded replica.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "jose": "^6.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.4",
+    "tsx": "^4.19.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}

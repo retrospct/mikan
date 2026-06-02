@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/token", "destination": "/api/token" },
+    { "source": "/health", "destination": "/api/token" }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Nimi",
+    "slug": "nimi",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "nimi",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "cool.jlee.nimi"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "cool.jlee.nimi"
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

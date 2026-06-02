@@ -1,0 +1,13 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "allowImportingTsExtensions": true,
+    "moduleSuffixes": [".native", ""],
+    "types": ["node"],
+    "paths": {
+      "@nimi/contract/*": ["../../packages/contract/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"]
+}

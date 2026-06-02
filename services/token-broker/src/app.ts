@@ -10,7 +10,7 @@
  * (api/token.ts). Stateless — safe to call multiple times.
  */
 import { Hono } from 'hono'
-import { exchangeToken, LogtoVerifyError, TursoApiError } from './broker.ts'
+import { exchangeToken, LogtoVerifyError, TursoApiError } from './broker'
 
 export const REQUIRED_ENV = [
   'LOGTO_JWKS_URL',

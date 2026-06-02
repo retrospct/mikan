@@ -6,7 +6,7 @@
  * directly without starting a Node HTTP server.
  */
 import { serve } from '@hono/node-server'
-import { createApp, REQUIRED_ENV } from './app.ts'
+import { createApp, REQUIRED_ENV } from './app'
 
 const missing = REQUIRED_ENV.filter((k) => !process.env[k])
 if (missing.length > 0) {

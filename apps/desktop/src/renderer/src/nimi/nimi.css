@@ -238,6 +238,37 @@ input {
 .priv-pill svg {
   color: var(--accent-ink);
 }
+.sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  white-space: nowrap;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  color: var(--ink-2);
+  background: var(--surface);
+  cursor: pointer;
+}
+button.sync-pill:disabled {
+  cursor: default;
+}
+.sync-pill svg {
+  color: var(--ink-3);
+}
+.sync-pill-err {
+  border-color: color-mix(in srgb, #e5484d 45%, var(--hairline));
+  color: #e5484d;
+  background: color-mix(in srgb, #e5484d 12%, var(--surface));
+  cursor: default;
+}
+.sync-pill-err svg {
+  color: #e5484d;
+}
 .hdr-btn {
   width: 36px;
   height: 36px;

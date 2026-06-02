@@ -252,6 +252,7 @@ export interface NimiApi {
   todos: TodoApi
   auth: AuthApi
   connectors: ConnectorsApi
+  sync: SyncApi
   ui: UiApi
   update: UpdateApi
 }
@@ -300,4 +301,11 @@ export interface SyncStatus {
   lastSyncDurationMs: number | null
   syncing: boolean
   error: string | null
+}
+
+export interface SyncApi {
+  /** Current Turso embedded-replica sync status (request-response). */
+  getStatus: () => Promise<SyncStatus>
+  /** Trigger an immediate sync; resolves when complete. No-op when sync is disabled. */
+  now: () => Promise<void>
 }

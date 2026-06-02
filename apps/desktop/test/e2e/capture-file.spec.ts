@@ -11,19 +11,11 @@
  * Prereq:  pnpm --filter @nimi/desktop build   (produces out/main/index.js)
  * Run:     pnpm --filter @nimi/desktop test:e2e
  */
-import {
-  test,
-  expect,
-  _electron as electron,
-  type ElectronApplication,
-  type Page
-} from '@playwright/test'
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { test, expect, type ElectronApplication, type Page } from '@playwright/test'
 import { join } from 'node:path'
+import { launchBuiltApp } from './app-fixture'
 
 const FIXTURES = join(__dirname, '..', 'fixtures')
-const MAIN = join(__dirname, '..', '..', 'out', 'main', 'index.js')
 
 let app: ElectronApplication
 let page: Page
@@ -64,16 +56,9 @@ async function gotoFeed(): Promise<void> {
 }
 
 test.beforeAll(async () => {
-  const userDataDir = mkdtempSync(join(tmpdir(), 'nimi-e2e-'))
-  app = await electron.launch({
-    args: [MAIN, `--user-data-dir=${userDataDir}`],
-    env: { ...process.env, NEEME_EMBEDDER: 'hash', NEEME_EXTRACTOR: 'off' }
-  })
-  page = await app.firstWindow()
-  await page.waitForLoadState('domcontentloaded')
-  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.show())
-  // BottomNav appears once the app finishes its initial load (phase: 'ready').
-  await page.locator('.nav').waitFor({ state: 'visible' })
+  const launched = await launchBuiltApp('nimi-e2e-')
+  app = launched.app
+  page = launched.page
 })
 
 test.afterAll(async () => {

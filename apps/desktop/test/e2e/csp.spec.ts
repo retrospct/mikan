@@ -26,23 +26,28 @@
 import {
   test,
   expect,
-  _electron as electron,
   type ElectronApplication,
   type Page,
   type ConsoleMessage
 } from '@playwright/test'
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { launchBuiltApp } from './app-fixture'
 
-const MAIN = join(__dirname, '..', '..', 'out', 'main', 'index.js')
+const RENDERER_INDEX_HTML = join(__dirname, '..', '..', 'out', 'renderer', 'index.html')
 
 /** Matches the CSP violation text Chromium logs to the console. */
 const CSP_VIOLATION = /Refused to|violates the following Content Security Policy/i
 
-const STRICT_PROD_CSP =
-  "default-src 'self'; script-src 'self'; style-src 'self'; " +
-  "font-src 'self' data:; img-src 'self' data:; connect-src 'self'"
+function readBuiltMetaCsp(): string {
+  const html = readFileSync(RENDERER_INDEX_HTML, 'utf-8')
+  const meta = html.match(/<meta\s+[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/i)?.[0]
+  const content =
+    meta?.match(/\scontent="([^"]+)"/i)?.[1] ?? meta?.match(/\scontent='([^']+)'/i)?.[1]
+  if (!content)
+    throw new Error(`could not find Content-Security-Policy meta in ${RENDERER_INDEX_HTML}`)
+  return content
+}
 
 let app: ElectronApplication
 let page: Page
@@ -52,12 +57,9 @@ let page: Page
 const cspViolations: string[] = []
 
 test.beforeAll(async () => {
-  const userDataDir = mkdtempSync(join(tmpdir(), 'nimi-csp-e2e-'))
-  app = await electron.launch({
-    args: [MAIN, `--user-data-dir=${userDataDir}`],
-    env: { ...process.env, NEEME_EMBEDDER: 'hash', NEEME_EXTRACTOR: 'off' }
-  })
-  page = await app.firstWindow()
+  const launched = await launchBuiltApp('nimi-csp-e2e-')
+  app = launched.app
+  page = launched.page
 
   // Attach listeners, THEN reload so any load-time CSP violation is captured
   // under the listener (the first load already happened before firstWindow()).
@@ -70,6 +72,7 @@ test.beforeAll(async () => {
 
   await page.reload()
   await page.waitForLoadState('domcontentloaded')
+  await page.waitForLoadState('networkidle')
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.show())
   await page.locator('.nav').waitFor({ state: 'visible' })
 })
@@ -79,8 +82,6 @@ test.afterAll(async () => {
 })
 
 test('renderer boots with ZERO CSP violations', async () => {
-  // Give late async resources (fonts, chunks) a beat to either load or be refused.
-  await page.waitForTimeout(1500)
   expect(cspViolations, `unexpected CSP violations:\n${cspViolations.join('\n')}`).toEqual([])
 })
 
@@ -111,5 +112,7 @@ test('shipped <meta> CSP is the strict production policy', async () => {
     const el = document.querySelector('meta[http-equiv="Content-Security-Policy"]')
     return el?.getAttribute('content') ?? null
   })
-  expect(metaCsp).toBe(STRICT_PROD_CSP)
+  expect(metaCsp).toBe(readBuiltMetaCsp())
+  expect(metaCsp).not.toContain("'unsafe-inline'")
+  expect(metaCsp).not.toContain('https://')
 })

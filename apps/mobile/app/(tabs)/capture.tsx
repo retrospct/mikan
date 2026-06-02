@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useState, type ReactElement } from 'react'
 import {
-  View,
   Text,
   TextInput,
   Pressable,
@@ -16,11 +15,11 @@ import { addNote, unwrap } from '@nimi/contract/api'
  * Capture screen — quick text note → POST /notes (neeme FastAPI).
  * Companion scope: text only; file capture requires IPC to the desktop worker.
  */
-export default function CaptureScreen() {
+export default function CaptureScreen(): ReactElement {
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
 
-  async function handleSave() {
+  async function handleSave(): Promise<void> {
     const trimmed = text.trim()
     if (!trimmed) return
     setSaving(true)
@@ -56,11 +55,7 @@ export default function CaptureScreen() {
         onPress={handleSave}
         disabled={!text.trim() || saving}
       >
-        {saving ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Save</Text>
-        )}
+        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save</Text>}
       </Pressable>
     </KeyboardAvoidingView>
   )

@@ -1,6 +1,5 @@
 import Constants from 'expo-constants'
 import { configureClient } from '@nimi/contract/api/runtime'
-import { getToken } from '@nimi/contract/api/token-store'
 
 /**
  * t3-turbo pattern: the app layer injects its base URL into the shared client.
@@ -26,7 +25,6 @@ function getBaseUrl(): string {
 
 export function initApiClient(): void {
   configureClient({
-    baseUrl: getBaseUrl(),
-    getToken: () => getToken()
+    baseUrl: getBaseUrl()
   })
 }

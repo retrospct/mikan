@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // t3-turbo pattern: Expo SDK 52+ getDefaultConfig auto-detects the pnpm
 // workspace root and sets watchFolders / nodeModulesPaths. One addition
 // nimi needs that t3-turbo doesn't: unstable_enablePackageExports because
@@ -13,8 +14,6 @@ const config = getDefaultConfig(__dirname)
 config.resolver.unstable_enablePackageExports = true
 
 // Metro cache stored in node_modules/.cache/metro so Turborepo can cache it.
-config.cacheStores = [
-  new FileStore({ root: path.join(__dirname, 'node_modules/.cache/metro') })
-]
+config.cacheStores = [new FileStore({ root: path.join(__dirname, 'node_modules/.cache/metro') })]
 
 module.exports = config

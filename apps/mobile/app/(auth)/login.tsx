@@ -1,9 +1,8 @@
-import { useState } from 'react'
+import { useState, type ReactElement } from 'react'
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
-import { makeRedirectUri } from 'expo-auth-session'
-import { buildCodeAsync, generateRandom } from 'expo-auth-session/build/PKCE'
+import { AuthRequest, makeRedirectUri, ResponseType } from 'expo-auth-session'
 import Constants from 'expo-constants'
 import { persistToken } from '../../src/utils/auth'
 
@@ -14,18 +13,18 @@ const LOGTO_APP_ID = process.env.EXPO_PUBLIC_LOGTO_APP_ID ?? ''
 
 /**
  * Logto PKCE login via system browser (RFC 8252 + RFC 7636).
- * expo-auth-session v56: PKCE via buildCodeAsync() (verifier + S256 challenge).
+ * expo-auth-session generates the verifier/challenge and state for us.
  * System browser via expo-web-browser: credentials never touch the in-app WebView.
  * Same Logto app as desktop (scheme: nimi://).
  */
-export default function LoginScreen() {
+export default function LoginScreen(): ReactElement {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const redirectUri = makeRedirectUri({ scheme: 'nimi', path: 'callback' })
 
-  async function handleLogin() {
+  async function handleLogin(): Promise<void> {
     if (!LOGTO_ENDPOINT || !LOGTO_APP_ID) {
       setError('Logto is not configured (EXPO_PUBLIC_LOGTO_* missing)')
       return
@@ -33,27 +32,25 @@ export default function LoginScreen() {
     setLoading(true)
     setError(null)
     try {
-      const { codeVerifier, codeChallenge } = await buildCodeAsync()
-      const state = generateRandom(16)
-
-      const authUrl =
-        `${LOGTO_ENDPOINT}/oidc/auth?` +
-        new URLSearchParams({
-          client_id: LOGTO_APP_ID,
-          redirect_uri: redirectUri,
-          response_type: 'code',
-          scope: 'openid offline_access profile email',
-          code_challenge: codeChallenge,
-          code_challenge_method: 'S256',
-          state
-        }).toString()
+      const request = new AuthRequest({
+        clientId: LOGTO_APP_ID,
+        redirectUri,
+        responseType: ResponseType.Code,
+        scopes: ['openid', 'offline_access', 'profile', 'email'],
+        usePKCE: true
+      })
+      const authUrl = await request.makeAuthUrlAsync({
+        authorizationEndpoint: `${LOGTO_ENDPOINT}/oidc/auth`
+      })
 
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri)
       if (result.type !== 'success') return
 
       const params = new URLSearchParams(new URL(result.url).search)
+      if (params.get('state') !== request.state) throw new Error('Invalid auth state')
       const code = params.get('code')
       if (!code) throw new Error('No code in callback')
+      if (!request.codeVerifier) throw new Error('Missing PKCE code verifier')
 
       const tokenRes = await fetch(`${LOGTO_ENDPOINT}/oidc/token`, {
         method: 'POST',
@@ -63,7 +60,7 @@ export default function LoginScreen() {
           client_id: LOGTO_APP_ID,
           code,
           redirect_uri: redirectUri,
-          code_verifier: codeVerifier
+          code_verifier: request.codeVerifier
         }).toString()
       })
       const tokens = (await tokenRes.json()) as {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactElement } from 'react'
 import { FlatList, View, Text, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native'
 import { getRecent, unwrap } from '@nimi/contract/api'
 import type { ItemSummary } from '@nimi/contract/api'
@@ -10,20 +10,19 @@ import type { ItemSummary } from '@nimi/contract/api'
  * This is the mobile companion's remote-only path; no local libSQL.
  * A real multi-user feed requires #10 sync + user_id scoping to be deployed.
  */
-export default function FeedScreen() {
+export default function FeedScreen(): ReactElement {
   const [items, setItems] = useState<ItemSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function load(isRefresh = false) {
+  async function load(isRefresh = false): Promise<void> {
     if (isRefresh) setRefreshing(true)
     else setLoading(true)
     setError(null)
     try {
       const res = await unwrap(getRecent())
-      // RecentResponse is { items: ItemSummary[] }
-      setItems((res as { items: ItemSummary[] }).items ?? [])
+      setItems(res.items ?? [])
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load feed')
     } finally {
@@ -32,7 +31,11 @@ export default function FeedScreen() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    queueMicrotask(() => {
+      void load()
+    })
+  }, [])
 
   if (loading) {
     return (
@@ -48,6 +51,13 @@ export default function FeedScreen() {
       keyExtractor={(item) => item.id}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
       contentContainerStyle={items.length === 0 ? styles.center : styles.list}
+      ListHeaderComponent={
+        error && items.length > 0 ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null
+      }
       ListEmptyComponent={
         <Text style={styles.empty}>
           {error ?? 'No captures yet. Add one from the Capture tab.'}
@@ -69,6 +79,13 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   list: { padding: 16, gap: 12 },
   empty: { color: '#888', textAlign: 'center', fontSize: 15 },
+  errorBanner: {
+    backgroundColor: '#fee2e2',
+    borderRadius: 10,
+    marginBottom: 12,
+    padding: 12
+  },
+  errorText: { color: '#991b1b', fontSize: 14 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,

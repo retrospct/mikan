@@ -1,4 +1,5 @@
 import type { CreateClientConfig } from './generated/client.gen'
+import { client } from './generated/client.gen'
 import { getToken } from './token-store'
 
 /**
@@ -21,8 +22,13 @@ export function configureClient(opts: {
   baseUrl?: string
   getToken?: () => string | undefined
 }): void {
-  if (opts.baseUrl) _baseUrl = opts.baseUrl
-  if (opts.getToken) _getToken = opts.getToken
+  if (opts.baseUrl !== undefined) _baseUrl = opts.baseUrl
+  if (opts.getToken !== undefined) _getToken = opts.getToken
+
+  client.setConfig({
+    baseUrl: _baseUrl,
+    auth: () => _getToken()
+  })
 }
 
 export const createClientConfig: CreateClientConfig = (config) => ({

@@ -7,7 +7,7 @@
  * Deploy:
  *   cd services/token-broker && vercel --prod
  */
-import { createApp } from '../src/app.ts'
+import { createApp } from '../src/app'
 
 const app = createApp()
 

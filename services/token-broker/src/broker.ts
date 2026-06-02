@@ -12,8 +12,8 @@
  * Hono handler maps to the appropriate HTTP status code.
  */
 import { createHash } from 'node:crypto'
-import { verifyLogtoToken, LogtoVerifyError } from './logto.ts'
-import { provisionOrLookupDb, getDbUrl, mintDbToken, TursoApiError } from './turso.ts'
+import { LogtoVerifyError, verifyLogtoToken } from './logto'
+import { getDbUrl, mintDbToken, provisionOrLookupDb, TursoApiError } from './turso'
 
 export { LogtoVerifyError, TursoApiError }
 

@@ -1,8 +1,7 @@
 # ADR 0001 — Sync & processing architecture for neeme
 
-**Status:** Proposed — sync *mechanism* decided (**Turso / libSQL embedded replicas**, aligning with [[0003-all-typescript-on-device-pipeline]] + the sync plan); supersedes this ADR's original "Exploring" Jazz/E2E lean for the *mechanism* question. **Privacy posture is NOT yet decided** — see the sign-off callout in the Update below.
-**Decision status:** **proposed, awaiting sign-off.** The mechanism (Turso) is settled; the **privacy-posture trade-off (trusted-cloud at-rest vs zero-knowledge/E2E) is a human decision and is still open.** Do not treat this ADR as Accepted until that is signed off.
-**Date:** 2026-06-01 (rev. 2 — 2026-06: reconciled with ADR 0003; recorded the driver shift privacy → speed/offline; chose Turso embedded replicas as the sync mechanism; flagged the privacy posture for human sign-off)
+**Status:** ✅ Accepted — **Turso / libSQL embedded replicas + client-side field encryption** (AES-256-GCM, `NEEME_SYNC_ENCRYPTION_KEY`). Privacy posture: **trusted-cloud at-rest with app-level encryption** — cloud holds ciphertext, not plaintext. Signed off by jlee, 2026-06-02.
+**Date:** 2026-06-01 (rev. 3 — 2026-06-02: privacy posture accepted; moved from "proposed" to Accepted)
 **Context owners:** jlee (+ Claude)
 **Related:** reframed by [[0003-all-typescript-on-device-pipeline]]; implementation plan in [docs/plans/sync-cloud-offload.plan.md](../plans/sync-cloud-offload.plan.md); see also [[0002-authentication]]
 
@@ -21,14 +20,15 @@
 
 0001's *original* driver was **privacy**. Under a privacy-first premise the decision **inverts**: **Jazz / Automerge + an encrypted relay (E2E / zero-knowledge)** would lead, and Turso would drop back to a trusted-cloud fallback for re-derivable data only. The Turso decision above is correct **only while speed/offline is the driver** (per 0003). **If privacy becomes the product driver, reopen this ADR toward the E2E/CRDT track.**
 
-> ⚠️ **PENDING HUMAN SIGN-OFF — privacy posture: trusted-cloud (at-rest) vs zero-knowledge (E2E)**
+> ✅ **ACCEPTED (2026-06-02) — Privacy posture: trusted-cloud at-rest + app-level field encryption**
 >
-> Turso embedded replicas are **encryption-at-rest under a trusted cloud — NOT zero-knowledge / E2E.** The cloud holds a **readable primary** (readable *with* the at-rest `encryptionKey`); the host (Turso, or whoever runs `sqld`) can in principle read user content. **This reverses this ADR's original privacy lean** and is a genuine product decision that must not be made unilaterally — so it is flagged here rather than declared Accepted.
+> Turso embedded replicas with **AES-256-GCM client-side field encryption** (`NEEME_SYNC_ENCRYPTION_KEY`). The cloud primary holds **ciphertext, not plaintext** — decryption happens only on-device against the local replica. Vectors/embeddings stay local-only and are never synced (re-derived per device via `reindexAll()`).
 >
-> - **Trusted-cloud (what the Turso mechanism gives us — proposed):** simplest, zero data-layer change, ships ROADMAP #10 now on infra nimi already uses. **Cost:** the host *could* read plaintext; privacy rests on operator trust + at-rest encryption, not a cryptographic guarantee.
-> - **Zero-knowledge / E2E (0001's original lean):** the server only ever holds ciphertext; clients hold keys. **Cost:** abandon the libSQL/Turso sync path, adopt **Jazz** (its own cojson data model alongside libSQL for vector search) or **Automerge/Yjs + an encrypted relay** (build the encryption + transport yourself); more build + ops, younger ecosystem, weaker desktop/RN maturity story, and the on-device vector index still has to live in libSQL.
+> - **What this gives:** zero data-layer change, ships now, $0–5/mo, cloud can't read content. Privacy rests on the cryptographic guarantee of AES-256-GCM, not just operator trust.
+> - **What it doesn't give:** metadata (row counts, timestamps, content-hash IDs, sizes) is visible to the cloud. If metadata-hiding is ever required, reopen toward Jazz/Automerge + encrypted relay.
+> - **Escalation path:** Turso BYOK (Pro, ~$417/mo) removes the DIY-crypto burden when funded. Jazz/Automerge if privacy becomes the product driver and metadata-hiding is required.
 >
-> **Recommended for #10 / v1 (proposed, awaiting sign-off):** accept **trusted-cloud** — scoped so the synced primary carries **items/todos** while **raw embeddings/vectors stay local-only and re-derivable**, minimizing what leaves the device — and **revisit E2E if/when privacy becomes the product driver.** This status moves to **Accepted** only after jlee signs off on the trusted-cloud posture; otherwise reopen toward the E2E track above.
+> Signed off by jlee, 2026-06-02.
 
 ## Problem
 

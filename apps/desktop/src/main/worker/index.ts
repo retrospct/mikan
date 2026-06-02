@@ -25,12 +25,18 @@ type Handler = (args: unknown[]) => unknown | Promise<unknown>
 // Tracks sync lifecycle so sync:get-status can report it. Never throws —
 // sync failures are soft errors that must not affect the local-first path.
 
+const initialSyncConfig = getSyncConfig()
 let syncState: SyncStatus = {
-  enabled: getSyncConfig().enabled,
+  enabled: initialSyncConfig.enabled,
   lastSyncAt: null,
   lastSyncDurationMs: null,
   syncing: false,
-  error: null
+  error:
+    initialSyncConfig.disabledReason === 'missing-or-invalid-key'
+      ? 'sync disabled: a valid NEEME_SYNC_ENCRYPTION_KEY is required for encryption at rest'
+      : initialSyncConfig.disabledReason === 'missing-url'
+        ? 'sync disabled: NEEME_SYNC_URL is not set'
+        : null
 }
 
 async function runSyncNow(): Promise<void> {
@@ -109,15 +115,14 @@ async function start(): Promise<void> {
   await initDb()
 
   // ── Boot-time sync (before reindex so the first index sees pulled items) ──
-  const syncConfig = getSyncConfig()
-  if (syncConfig.enabled) {
+  if (initialSyncConfig.enabled) {
     await runSyncNow()
 
     // Periodic sync — in addition to the libSQL syncInterval background pull,
     // an explicit loop lets us update syncState and log status.
     const interval = setInterval(() => {
       runSyncNow().catch(() => {}) // errors are handled inside runSyncNow
-    }, syncConfig.syncIntervalMs)
+    }, initialSyncConfig.syncIntervalMs)
     interval.unref()
   }
 

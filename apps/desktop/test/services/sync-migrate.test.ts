@@ -92,10 +92,11 @@ describe('buildReplicaWithRecovery', () => {
       backupAside: (p) => {
         backupArg = p
       },
+      restoreBackup: () => {},
       dbPath: '/data/neeme.db',
       now: () => 123
     })
-    expect(calls).toBe(2) // failed once, then rebuilt
+    expect(calls).toBe(2)
     expect(res.backupPath).toBe('/data/neeme.db.pre-sync-123')
     expect(backupArg).toBe('/data/neeme.db.pre-sync-123')
   })
@@ -108,12 +109,13 @@ describe('buildReplicaWithRecovery', () => {
         },
         dbExists: () => false,
         backupAside: () => {},
+        restoreBackup: () => {},
         dbPath: '/data/neeme.db'
       })
     ).toThrow(/invalid local state/)
   })
 
-  it('re-throws non-recoverable (e.g. network) construction errors', () => {
+  it('re-throws non-recoverable first-call errors without touching the backup', () => {
     let backedUp = false
     expect(() =>
       buildReplicaWithRecovery({
@@ -124,10 +126,34 @@ describe('buildReplicaWithRecovery', () => {
         backupAside: () => {
           backedUp = true
         },
+        restoreBackup: () => {},
         dbPath: '/data/neeme.db'
       })
     ).toThrow(/tls handshake/)
     expect(backedUp).toBe(false)
+  })
+
+  it('restores the backup when the second makeReplica fails (e.g. transient network error)', () => {
+    let calls = 0
+    let restored: string | undefined
+    expect(() =>
+      buildReplicaWithRecovery({
+        makeReplica: () => {
+          calls++
+          if (calls === 1) throw STATE_MISMATCH
+          throw new Error('error trying to connect: tls handshake eof') // second call fails
+        },
+        dbExists: () => true,
+        backupAside: () => {},
+        restoreBackup: (p) => {
+          restored = p
+        },
+        dbPath: '/data/neeme.db',
+        now: () => 456
+      })
+    ).toThrow(/tls handshake/)
+    expect(calls).toBe(2)
+    expect(restored).toBe('/data/neeme.db.pre-sync-456') // backup restored, user not left broken
   })
 })
 
@@ -188,7 +214,8 @@ describe('migrateUserData', () => {
       args: ['i1', 'n', 'enc:primary-wins', 'captured']
     })
 
-    await migrateUserData(src, dest)
+    const inserted = await migrateUserData(src, dest)
+    expect(inserted).toBe(0) // all rows ignored (already present from primary pull)
 
     const row = (await dest.execute({ sql: 'SELECT text FROM items WHERE id = ?', args: ['i1'] }))
       .rows[0]!

@@ -41,6 +41,8 @@ export interface ReplicaRecoveryOps {
   dbExists: () => boolean
   /** Move the existing plain DB (+ sidecars) aside to `backupPath`. */
   backupAside: (backupPath: string) => void
+  /** Restore a backup moved aside by backupAside (called when second makeReplica fails). */
+  restoreBackup: (backupPath: string) => void
   /** Target DB path, used to derive the backup path. */
   dbPath: string
   /** Injectable clock for deterministic backup names in tests. */
@@ -51,9 +53,15 @@ export interface ReplicaRecoveryOps {
  * Build the embedded replica, recovering from the one expected, recoverable
  * failure: a plain (sync-off) DB already exists and libSQL refuses to open it as
  * a replica. In that case we move the plain DB aside and bootstrap a fresh
- * replica, returning the backup path so its rows can be migrated in after the
- * first sync. Any other construction error (e.g. a network failure) is re-thrown
- * unchanged — the caller decides how to handle it.
+ * replica from the primary, returning the backup path so its rows can be migrated
+ * after the first sync.
+ *
+ * If the second makeReplica() call also fails (e.g. a transient network error
+ * after the plain DB was already moved aside), we restore the backup so the user
+ * is left in a valid local-first state instead of a broken one, then re-throw.
+ *
+ * Any other first-call construction error (e.g. a network failure when no DB
+ * exists yet) is re-thrown unchanged — the caller decides how to handle it.
  */
 export function buildReplicaWithRecovery(ops: ReplicaRecoveryOps): {
   client: Client
@@ -65,7 +73,15 @@ export function buildReplicaWithRecovery(ops: ReplicaRecoveryOps): {
     if (!isReplicaStateMismatch(err) || !ops.dbExists()) throw err
     const backupPath = `${ops.dbPath}.pre-sync-${(ops.now ?? Date.now)()}`
     ops.backupAside(backupPath)
-    return { client: ops.makeReplica(), backupPath }
+    try {
+      return { client: ops.makeReplica(), backupPath }
+    } catch (err2) {
+      // The plain DB was moved aside but the replica still can't be built
+      // (e.g. network is down). Restore the backup so the user isn't left
+      // with neither a working local DB nor a replica.
+      ops.restoreBackup(backupPath)
+      throw err2
+    }
   }
 }
 
@@ -79,27 +95,41 @@ function toStoredContent(value: InValue, encryptCol: boolean): InValue {
   return value.startsWith('enc:') ? value : encrypt(value)
 }
 
+/**
+ * Copy all rows from `table` in `src` into `dest` within a single transaction
+ * (atomic per-table, idempotent via INSERT OR IGNORE). Column names are
+ * double-quoted to handle any reserved-word collisions. Returns the number of
+ * rows actually inserted (rowsAffected, not the total selected).
+ */
 async function copyTable(src: Client, dest: Client, table: string): Promise<number> {
-  const res = await src.execute(`SELECT * FROM ${table}`)
+  const res = await src.execute(`SELECT * FROM "${table}"`)
   if (res.rows.length === 0) return 0
   const encCols = ENCRYPTED_COLUMNS[table] ?? []
-  let n = 0
-  for (const row of res.rows as Row[]) {
-    const cols = Object.keys(row)
-    const args = cols.map((c) => toStoredContent(row[c] as InValue, encCols.includes(c)))
-    await dest.execute({
-      sql: `INSERT OR IGNORE INTO ${table} (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
-      args
-    })
-    n++
+  let inserted = 0
+  await dest.execute('BEGIN')
+  try {
+    for (const row of res.rows as Row[]) {
+      const cols = Object.keys(row)
+      const quotedCols = cols.map((c) => `"${c}"`).join(', ')
+      const args = cols.map((c) => toStoredContent(row[c] as InValue, encCols.includes(c)))
+      const r = await dest.execute({
+        sql: `INSERT OR IGNORE INTO "${table}" (${quotedCols}) VALUES (${cols.map(() => '?').join(', ')})`,
+        args
+      })
+      inserted += r.rowsAffected
+    }
+    await dest.execute('COMMIT')
+  } catch (err) {
+    await dest.execute('ROLLBACK').catch(() => {})
+    throw err
   }
-  return n
+  return inserted
 }
 
 /**
  * Copy user rows src → dest (INSERT OR IGNORE, so rows already pulled from the
  * primary are not duplicated). Tables missing from src are skipped. Returns the
- * number of rows processed.
+ * number of rows actually inserted.
  */
 export async function migrateUserData(src: Client, dest: Client): Promise<number> {
   let total = 0

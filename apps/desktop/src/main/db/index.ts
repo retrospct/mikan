@@ -81,6 +81,7 @@ function buildClient(): Client {
     makeReplica: buildReplicaClient,
     dbExists: () => existsSync(dbPath),
     backupAside: (backup) => moveDbAside(dbPath, backup),
+    restoreBackup: (backup) => moveDbAside(backup, dbPath),
     dbPath
   })
   if (backupPath) {

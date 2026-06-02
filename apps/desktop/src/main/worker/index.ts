@@ -10,14 +10,42 @@
  *   worker → parent : { ready: true }  (once the schema is up)  | { fatal }
  */
 import { IPC } from '@nimi/contract/ipc'
-import type { ConnectorId } from '@nimi/contract/ipc'
-import { initDb } from '../db'
+import type { ConnectorId, SyncStatus } from '@nimi/contract/ipc'
+import { initDb, syncNow } from '../db'
+import { getSyncConfig } from '../db/sync-config'
 import { pipelineService } from '../services/pipeline-service'
 import { todoService } from '../services/todo-service'
 import { uncoverService } from '../services/uncover-service'
 import { connectorService } from '../services/connector-service'
 
 type Handler = (args: unknown[]) => unknown | Promise<unknown>
+
+// ── Sync state tracker ────────────────────────────────────────────────────
+//
+// Tracks sync lifecycle so sync:get-status can report it. Never throws —
+// sync failures are soft errors that must not affect the local-first path.
+
+let syncState: SyncStatus = {
+  enabled: getSyncConfig().enabled,
+  lastSyncAt: null,
+  syncing: false,
+  error: null
+}
+
+async function runSyncNow(): Promise<void> {
+  if (!syncState.enabled) return
+  syncState = { ...syncState, syncing: true, error: null }
+  try {
+    await syncNow()
+    syncState = { ...syncState, syncing: false, lastSyncAt: Date.now(), error: null }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    syncState = { ...syncState, syncing: false, error: msg }
+    console.error('[worker] sync failed (local data still available):', err)
+  }
+}
+
+// ── IPC handlers ──────────────────────────────────────────────────────────
 
 const handlers: Record<string, Handler> = {
   [IPC.pipelineCaptureText]: ([text, name]) =>
@@ -59,7 +87,11 @@ const handlers: Record<string, Handler> = {
       gmail: { itemCount: gmailCount, lastSyncAt: gmailSync },
       gcal: { itemCount: gcalCount, lastSyncAt: gcalSync }
     }
-  }
+  },
+
+  // Sync (ROADMAP #10) — request-response; safe when sync is disabled.
+  [IPC.syncGetStatus]: () => ({ ...syncState }) satisfies SyncStatus,
+  [IPC.syncNow]: () => runSyncNow()
 }
 
 interface CallMessage {
@@ -71,6 +103,19 @@ interface CallMessage {
 async function start(): Promise<void> {
   const port = process.parentPort
   await initDb()
+
+  // ── Boot-time sync (before reindex so the first index sees pulled items) ──
+  const syncConfig = getSyncConfig()
+  if (syncConfig.enabled) {
+    await runSyncNow()
+
+    // Periodic sync — in addition to the libSQL syncInterval background pull,
+    // an explicit loop lets us update syncState and log status.
+    const interval = setInterval(() => {
+      runSyncNow().catch(() => {}) // errors are handled inside runSyncNow
+    }, syncConfig.syncIntervalMs)
+    interval.unref()
+  }
 
   // Keep the vector index consistent with the active embedder (reindex if it
   // changed). Best-effort: a model-load/network failure must not block startup —

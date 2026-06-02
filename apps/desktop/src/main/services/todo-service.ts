@@ -4,6 +4,7 @@ import { todoContext, todos, type Todo as TodoRow, type TodoContextRow } from '.
 import { pipelineService } from './pipeline-service'
 import { draftService, rowToTaskDraft } from './draft-service'
 import { drafter } from '../pipeline/draft'
+import { encrypt, decrypt } from '../db/crypto'
 import {
   CAP_REACHED,
   type ContentType,
@@ -20,6 +21,10 @@ import { toBacklogItem, toTask } from './project'
  * `todos.py` / neeme-mono). Capped at CAP open items per day with a "finish the
  * whole list" latch; context is surfaced from the on-device pipeline's semantic
  * search over captured items and persisted (pin/dismiss verdicts stick).
+ *
+ * Encryption: when NEEME_SYNC_ENCRYPTION_KEY is set, todo title and notes are
+ * encrypted before being written to the DB (cloud primary holds ciphertext) and
+ * decrypted on read. The functions are no-ops without a key set.
  */
 const CAP = 5
 const CONTEXT_TOP_K = 6
@@ -29,8 +34,9 @@ const todayISO = (): string => new Date().toISOString().slice(0, 10)
 function toTodo(row: TodoRow): Todo {
   return {
     id: row.id,
-    title: row.title,
-    notes: row.notes,
+    // Decrypt title and notes on read; identity pass-through when no key is set.
+    title: decrypt(row.title),
+    notes: row.notes !== null ? decrypt(row.notes) : null,
     status: row.status as TodoStatus,
     day: row.day,
     position: row.position,
@@ -146,7 +152,7 @@ export const todoService = {
     const position = await countForDay(day)
     const [created] = await db
       .insert(todos)
-      .values({ title, notes: notes ?? null, day, position })
+      .values({ title: encrypt(title), notes: notes ? encrypt(notes) : null, day, position })
       .returning()
     const todo = toTodo(created!)
     const pool = await surfaceContext(todo)

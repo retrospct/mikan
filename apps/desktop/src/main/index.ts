@@ -121,7 +121,10 @@ app.whenReady().then(async () => {
     IPC.todoSchedule,
     IPC.todoContextSearch,
     IPC.todoContextPin,
-    IPC.todoContextDismiss
+    IPC.todoContextDismiss,
+    // Sync (ROADMAP #10) — forwarded to the worker which owns the DB + sync state.
+    IPC.syncGetStatus,
+    IPC.syncNow
   ]
   for (const channel of DATA_CHANNELS) {
     ipcMain.handle(channel, (_e, ...args: unknown[]) => call(channel, args))

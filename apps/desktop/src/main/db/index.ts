@@ -3,6 +3,7 @@ import { createClient } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
 import * as schema from './schema'
 import { userDataDir } from '../runtime/paths'
+import { getSyncConfig } from './sync-config'
 
 /**
  * Local-first data layer on libSQL (a SQLite fork). For now this is a plain
@@ -15,18 +16,44 @@ import { userDataDir } from '../runtime/paths'
  * libSQL is deliberate: the same driver later turns this local file into a
  * Turso *embedded replica* that syncs to the cloud, without rewriting the data
  * layer. Sync stays opt-in (and will only ever push encrypted data).
+ *
+ * Opt-in sync: set NEEME_SYNC=on + NEEME_SYNC_URL + NEEME_SYNC_AUTH_TOKEN.
+ * When the flag is off (the default, and in every test), this module behaves
+ * identically to before — a bare file: client, no network calls whatsoever.
  */
 const dbPath = join(userDataDir(), 'neeme.db')
+
+const syncConfig = getSyncConfig()
 
 // Exported so the pipeline can use libSQL's native vector functions
 // (vector32 / vector_distance_cos / libsql_vector_idx) via raw SQL — Drizzle's
 // query builder doesn't model the F32_BLOB type.
-export const client = createClient({ url: `file:${dbPath}` })
+export const client = syncConfig.enabled
+  ? createClient({
+      url: `file:${dbPath}`,
+      syncUrl: syncConfig.syncUrl,
+      authToken: syncConfig.authToken,
+      // Periodic background pull in addition to the worker's explicit syncNow() calls.
+      syncInterval: syncConfig.syncIntervalMs / 1000
+    })
+  : createClient({ url: `file:${dbPath}` })
 
 export const db = drizzle(client, { schema })
 
 /** Embedding dimension for the chunk vector column (matches the embedder seam). */
 export const EMBED_DIM = 384
+
+/**
+ * Trigger an immediate sync against the cloud primary (embedded-replica mode only).
+ *
+ * Safe to call unconditionally — returns immediately when sync is disabled so the
+ * worker never needs to branch on NEEME_SYNC. Sync failures should be caught by the
+ * caller: they must never crash or block the local-first data path.
+ */
+export async function syncNow(): Promise<void> {
+  if (!syncConfig.enabled) return
+  await client.sync()
+}
 
 /**
  * Bootstrap the schema. For the first slice we create tables directly; once the

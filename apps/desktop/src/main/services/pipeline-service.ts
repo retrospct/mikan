@@ -5,6 +5,7 @@ import { chunkText } from '../pipeline/chunk'
 import { embedder } from '../pipeline/embed'
 import { detectContentType, extract, extractMedia, suffixOf } from '../pipeline/extract'
 import { putRaw } from '../pipeline/raw-store'
+import { encrypt, decrypt } from '../db/crypto'
 import type { CaptureResult, ContentType, Item, ItemStatus, SearchHit } from '@nimi/contract/ipc'
 import type { FedItem, MatchHit, Memory } from '@nimi/contract/views'
 import { toFedItem, toMatchHits, toMemory } from './project'
@@ -14,6 +15,13 @@ import { toFedItem, toMatchHits, toMemory } from './project'
  * chunk → embed → index in libSQL; and semantic search over the chunks. The IPC
  * handlers call into this — the renderer never touches Drizzle or libSQL.
  * Ported from the Python `neeme` pipeline + the neeme-mono engine.
+ *
+ * Encryption: when NEEME_SYNC_ENCRYPTION_KEY is set, items.text is encrypted
+ * before being written to the DB (so the cloud primary holds ciphertext) and
+ * decrypted on read. The encrypt/decrypt functions are no-ops when the key is
+ * absent — unencrypted local usage is identical to before.
+ * chunks.text stores plaintext excerpts (they are local-only derived data;
+ * addressed by the future vector-index-split / neeme-vec.db refactor).
  */
 
 function toItem(row: ItemRow): Item {
@@ -23,7 +31,8 @@ function toItem(row: ItemRow): Item {
     contentType: row.contentType as ContentType,
     sizeBytes: row.sizeBytes,
     status: row.status as ItemStatus,
-    text: row.text,
+    // Decrypt text on read; identity pass-through when no key is set.
+    text: decrypt(row.text),
     connector: row.connector ?? undefined,
     externalId: row.externalId ?? undefined,
     uri: row.uri ?? undefined,
@@ -43,9 +52,18 @@ async function capture(bytes: Uint8Array, name: string, mime?: string): Promise<
   const { text, status } = await extract(contentType, bytes)
   const [created] = await db
     .insert(items)
-    .values({ id, sourceName: name, contentType, sizeBytes, storedPath, text, status })
+    .values({
+      id,
+      sourceName: name,
+      contentType,
+      sizeBytes,
+      storedPath,
+      text: encrypt(text),
+      status
+    })
     .returning()
 
+  // Index plaintext in the local vector index (chunks are a local-only artifact).
   if (text) await indexItem(id, text)
 
   // Kick off background OCR/ASR — returns immediately, extraction runs in the queue.
@@ -88,14 +106,19 @@ async function runExtraction(
 ): Promise<void> {
   if (contentType !== 'image' && contentType !== 'audio') return
   const result = await extractMedia(contentType, storedPath, mime)
-  await db.update(items).set({ text: result.text, status: result.status }).where(eq(items.id, id))
+  // Encrypt text before persisting; index plaintext in the local vector store.
+  await db
+    .update(items)
+    .set({ text: encrypt(result.text), status: result.status })
+    .where(eq(items.id, id))
   if (result.text) await indexItem(id, result.text)
   console.log('[pipeline] extracted', contentType, id, `status=${result.status}`)
 }
 
 // ── indexItem ──────────────────────────────────────────────────────────────
 
-/** Chunk + embed an item's text into the vector index (capture + reindex share this). */
+/** Chunk + embed an item's text into the vector index (capture + reindex share this).
+ *  Always receives plaintext — caller is responsible for decrypting if needed. */
 async function indexItem(id: string, text: string): Promise<void> {
   const chunks = chunkText(text)
   const vectors = await embedder.embed(chunks)
@@ -152,7 +175,7 @@ export const pipelineService = {
         // Calendar events mutate — upsert text + re-index.
         await db
           .update(items)
-          .set({ text, status: 'extracted', uri: uri ?? null })
+          .set({ text: encrypt(text), status: 'extracted', uri: uri ?? null })
           .where(eq(items.externalId, externalId))
         if (text) await indexItem(existing[0].id, text)
         const refreshed = await db.select().from(items).where(eq(items.id, existing[0].id)).limit(1)
@@ -182,7 +205,7 @@ export const pipelineService = {
         contentType: 'text',
         sizeBytes,
         storedPath,
-        text,
+        text: encrypt(text),
         status: 'extracted',
         connector,
         externalId,
@@ -247,6 +270,7 @@ export const pipelineService = {
     return res.rows.map((r) => ({
       itemId: String(r.item_id),
       chunkIdx: Number(r.chunk_idx),
+      // chunks.text stores plaintext (indexed from decrypted content; local-only artifact)
       text: String(r.chunk_text),
       score: Number(r.dist),
       sourceName: String(r.source_name),
@@ -275,14 +299,16 @@ export const pipelineService = {
   },
 
   /** Re-embed every item's text into the vector index (drops + rebuilds chunks).
-   *  The index is a rebuildable artifact derived from items.text. */
+   *  The index is a rebuildable artifact derived from items.text.
+   *  Reads and decrypts text before re-indexing so the vector space uses plaintext. */
   async reindexAll(): Promise<number> {
     const rows = await db.select().from(items)
     await client.execute('DELETE FROM chunks')
     let n = 0
     for (const row of rows) {
-      if (!row.text) continue
-      await indexItem(row.id, row.text)
+      const plaintext = decrypt(row.text)
+      if (!plaintext) continue
+      await indexItem(row.id, plaintext)
       n++
     }
     return n

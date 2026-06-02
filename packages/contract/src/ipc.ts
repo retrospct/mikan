@@ -50,7 +50,12 @@ export const IPC = {
   /** Internal channel to read per-provider DB stats (item count + last sync). */
   connectorsGetStats: 'connectors:get-stats',
   // UI shell (tray/menu-bar window — see src/main/window/tray-window.ts)
-  traySetBadge: 'tray:set-badge'
+  traySetBadge: 'tray:set-badge',
+  // Sync (cloud offload — ROADMAP #10; see docs/plans/sync-cloud-offload.plan.md)
+  /** Query current sync status from the worker (request-response). */
+  syncGetStatus: 'sync:get-status',
+  /** Trigger an immediate sync; resolves when complete (request-response). */
+  syncNow: 'sync:now'
 } as const
 
 // --- Pipeline data model (worker-internal vocabulary) ---------------------
@@ -241,4 +246,20 @@ export interface NimiApi {
   auth: AuthApi
   connectors: ConnectorsApi
   ui: UiApi
+}
+
+// --- Sync (ROADMAP #10 — cloud offload via Turso embedded replicas) -------
+
+/**
+ * Snapshot of the Turso embedded-replica sync state. Returned by `sync:get-status`
+ * and used by a future settings UI to display a sync indicator.
+ *
+ * `enabled` mirrors NEEME_SYNC: false means sync is off and the other fields
+ * reflect the last known state (or null). `lastSyncAt` is a Unix timestamp (ms).
+ */
+export interface SyncStatus {
+  enabled: boolean
+  lastSyncAt: number | null
+  syncing: boolean
+  error: string | null
 }

@@ -17,6 +17,7 @@
     "test:smoke": "tsx test/smoke/capture-file.ts",
     "test:smoke:ocr": "tsx test/smoke/ocr-live.ts",
     "test:smoke:asr": "tsx test/smoke/asr-live.ts",
+    "test:smoke:sync": "tsx test/smoke/sync-live.ts",
     "test:e2e": "playwright test",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",

@@ -67,6 +67,26 @@ The E2E reads ground truth back through `window.api.pipeline.archive()` (the app
 connection — a separate SQLite reader hits WAL-visibility races). It launches with
 `--user-data-dir=<tmp>` for an isolated throwaway DB.
 
+### Sync + encryption-at-rest tests (#10)
+
+Opt-in Turso sync with mandatory field encryption. Full procedure:
+**`docs/testing/sync-encryption-runbook.md`**.
+
+```bash
+# Tier 1 — gate check (no creds): NEEME_SYNC=on without a valid key must stay local
+pnpm --filter @nimi/desktop test:smoke:sync
+
+# Tier 2 — live two-device replica loop (needs a Turso DB; key is REQUIRED)
+NEEME_SYNC=on NEEME_SYNC_URL=libsql://<db>.turso.io \
+NEEME_SYNC_AUTH_TOKEN=<token> NEEME_SYNC_ENCRYPTION_KEY=<64-hex> \
+pnpm --filter @nimi/desktop test:smoke:sync
+```
+
+Sync **fails closed**: `NEEME_SYNC=on` enables sync only with a valid 64-hex
+`NEEME_SYNC_ENCRYPTION_KEY`, so plaintext is never written to the cloud primary. See
+`docs/setup/turso-credentials.md` for Turso setup (and use Cloud Agents → Secrets for the
+four env vars when running as a cloud agent).
+
 ### Tier 3 — packaged installer on a second computer (Mac/Windows)
 
 ```bash

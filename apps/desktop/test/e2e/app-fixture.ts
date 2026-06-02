@@ -12,19 +12,26 @@ export async function launchBuiltApp(tempPrefix: string): Promise<{
   cleanupUserDataDir: () => void
 }> {
   const userDataDir = mkdtempSync(join(tmpdir(), tempPrefix))
-  const app = await electron.launch({
-    args: [MAIN, `--user-data-dir=${userDataDir}`],
-    env: { ...process.env, NEEME_EMBEDDER: 'hash', NEEME_EXTRACTOR: 'off' }
-  })
-  const page = await app.firstWindow()
-  await page.waitForLoadState('domcontentloaded')
-  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.show())
-  // BottomNav appears once the app finishes its initial load (phase: 'ready').
-  await page.locator('.nav').waitFor({ state: 'visible' })
-  return {
-    app,
-    page,
-    userDataDir,
-    cleanupUserDataDir: () => rmSync(userDataDir, { recursive: true, force: true })
+  let app: ElectronApplication | undefined
+  try {
+    app = await electron.launch({
+      args: [MAIN, `--user-data-dir=${userDataDir}`],
+      env: { ...process.env, NEEME_EMBEDDER: 'hash', NEEME_EXTRACTOR: 'off' }
+    })
+    const page = await app.firstWindow()
+    await page.waitForLoadState('domcontentloaded')
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.show())
+    // BottomNav appears once the app finishes its initial load (phase: 'ready').
+    await page.locator('.nav').waitFor({ state: 'visible' })
+    return {
+      app,
+      page,
+      userDataDir,
+      cleanupUserDataDir: () => rmSync(userDataDir, { recursive: true, force: true })
+    }
+  } catch (error) {
+    await app?.close().catch(() => undefined)
+    rmSync(userDataDir, { recursive: true, force: true })
+    throw error
   }
 }

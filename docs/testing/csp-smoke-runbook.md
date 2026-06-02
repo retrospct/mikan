@@ -1,17 +1,17 @@
 # Runbook: CSP hardening + local fonts — GUI Test (#11)
 
-Verifies the production Content-Security-Policy and offline font bundling from
-commit `f522bab`: the renderer must boot with **zero CSP violations**, load the
+Verifies the production Content-Security-Policy and offline font bundling for
+GUI hardening #11: the renderer must boot with **zero CSP violations**, load the
 bundled Hanken Grotesk + JetBrains Mono fonts locally (no Google Fonts), and ship
 the strict production CSP. See `docs/SECURITY.md` for the policy rationale.
 
 ## Test pyramid
 
-| Tier | Command | Needs secret? | Needs display? | Covers |
-|---|---|---|---|---|
-| **1 — Static** | `pnpm typecheck && pnpm --filter @nimi/desktop build` | No | No | Types, build, font assets emitted |
-| **2 — E2E smoke** | `xvfb-run -a pnpm --filter @nimi/desktop test:e2e` | No | Xvfb | `test/e2e/csp.spec.ts`: violations, fonts, no Google Fonts, strict meta |
-| **3 — GUI/visual** | This runbook (§1–§2) | No | Yes | Renders correctly with bundled fonts; artifact capture |
+| Tier               | Command                                               | Needs secret? | Needs display? | Covers                                                                  |
+| ------------------ | ----------------------------------------------------- | ------------- | -------------- | ----------------------------------------------------------------------- |
+| **1 — Static**     | `pnpm typecheck && pnpm --filter @nimi/desktop build` | No            | No             | Types, build, font assets emitted                                       |
+| **2 — E2E smoke**  | `xvfb-run -a pnpm --filter @nimi/desktop test:e2e`    | No            | Xvfb           | `test/e2e/csp.spec.ts`: violations, fonts, no Google Fonts, strict meta |
+| **3 — GUI/visual** | This runbook (§1–§2)                                  | No            | Yes            | Renders correctly with bundled fonts; artifact capture                  |
 
 Tiers 1–2 are automated by `.github/workflows/e2e-smoke.yml` on every PR.
 
@@ -51,9 +51,12 @@ Policy" messages.
 Confirm fonts loaded (DevTools console):
 
 ```js
-document.fonts.check('16px "Hanken Grotesk"')   // → true
-document.fonts.check('16px "JetBrains Mono"')    // → true
-performance.getEntriesByType('resource').map(r => r.name).filter(n => n.includes('fonts.g'))  // → []
+document.fonts.check('16px "Hanken Grotesk"') // → true
+document.fonts.check('16px "JetBrains Mono"') // → true
+performance
+  .getEntriesByType('resource')
+  .map((r) => r.name)
+  .filter((n) => n.includes('fonts.g')) // → []
 ```
 
 **Expected:** both font checks `true`; no `fonts.googleapis.com` / `fonts.gstatic.com`
@@ -70,9 +73,9 @@ Mono) typefaces (not the system fallback).
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Fonts look like system default | `@fontsource` imports missing in `main.tsx` | confirm imports; rebuild |
-| `Refused to load the font …` in console | a remote font origin crept back into the CSP/HTML | remove it; fonts must be local |
-| DevTools won't open | off-screen tray window in VM | use Tier 2 `csp.spec.ts` |
-| `Error: Electron uninstall` | binary not downloaded | `node node_modules/electron/install.js` |
+| Symptom                                 | Likely cause                                      | Fix                                     |
+| --------------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| Fonts look like system default          | `@fontsource` imports missing in `main.tsx`       | confirm imports; rebuild                |
+| `Refused to load the font …` in console | a remote font origin crept back into the CSP/HTML | remove it; fonts must be local          |
+| DevTools won't open                     | off-screen tray window in VM                      | use Tier 2 `csp.spec.ts`                |
+| `Error: Electron uninstall`             | binary not downloaded                             | `node node_modules/electron/install.js` |

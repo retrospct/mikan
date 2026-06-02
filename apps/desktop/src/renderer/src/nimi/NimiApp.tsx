@@ -23,6 +23,7 @@ import { TaskDetail } from './task'
 import { FeedView } from './feed'
 import { AddSheet } from './add'
 import { PlanRitual } from './plan'
+import { SettingsView } from './settings'
 import { AllDone } from './celebrate'
 import { SearchOverlay } from './search'
 import { NIcon } from './icons'
@@ -105,6 +106,7 @@ export default function NimiApp(): JSX.Element {
   const [archive, setArchive] = useState<Memory[]>([])
   const [tab, setTab] = useState<'today' | 'feed'>('today')
   const [overlay, setOverlay] = useState<'add' | 'plan' | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [headState, setHeadState] = useState<NimiMarkState>('idle')
   const [planned, setPlanned] = useState(true) // a returning day is already planned
@@ -277,7 +279,7 @@ export default function NimiApp(): JSX.Element {
   const openIndex = tasks.findIndex((x) => x.id === openId)
   // hide the nav while a recorder is up (round STOP would stack on the + FAB) and on the
   // task detail (a focused drill-in with its own footer + back). Plan keeps the nav.
-  const hideNav = feedRecording || addRecording || !!openId
+  const hideNav = feedRecording || addRecording || !!openId || settingsOpen
   const cancelPlan = (): void => {
     setOverlay(null)
     setPlanned(true)
@@ -347,6 +349,7 @@ export default function NimiApp(): JSX.Element {
                     onTomorrow={beginNewDay}
                     onSearch={openGlobalSearch}
                     onWeather={() => setOverlay('plan')}
+                    onSettings={() => setSettingsOpen(true)}
                   />
                 ) : (
                   <FeedView
@@ -408,6 +411,8 @@ export default function NimiApp(): JSX.Element {
                     onClose={() => setSearchMode(null)}
                   />
                 )}
+
+                {settingsOpen && <SettingsView onBack={() => setSettingsOpen(false)} />}
               </MemoryContext.Provider>
             )}
           </div>
@@ -418,6 +423,7 @@ export default function NimiApp(): JSX.Element {
               onTab={(x) => {
                 setOpenId(null)
                 setOverlay(null)
+                setSettingsOpen(false)
                 if (!planned) setPlanned(true)
                 setTab(x as 'today' | 'feed')
               }}

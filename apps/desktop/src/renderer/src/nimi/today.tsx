@@ -5,7 +5,6 @@ import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { NimiMark, NimiNote } from './mark'
 import { AuthControl } from './auth'
-import { ConnectorsControl } from './connectors'
 import { SyncControl } from './sync'
 import { MemoryContext } from './api'
 import type { Task } from '@nimi/contract/views'
@@ -31,12 +30,14 @@ function AppHeader({
   nimiState,
   badge,
   onSearch,
-  onTomorrow
+  onTomorrow,
+  onSettings
 }: {
   nimiState: NimiMarkState
   badge: number
   onSearch: () => void
   onTomorrow: () => void
+  onSettings: () => void
 }): JSX.Element {
   return (
     <header className="hdr">
@@ -52,13 +53,15 @@ function AppHeader({
       </div>
       <div className="hdr-r">
         <SyncControl />
-        <ConnectorsControl />
         <AuthControl />
         <button className="hdr-btn" aria-label="Plan tomorrow" onClick={onTomorrow}>
           <NIcon name="dayNext" size={18} />
         </button>
         <button className="hdr-btn" aria-label="Search your memory" onClick={onSearch}>
           <NIcon name="search" size={18} />
+        </button>
+        <button className="hdr-btn" aria-label="Settings" onClick={onSettings}>
+          <NIcon name="settings" size={18} />
         </button>
       </div>
     </header>
@@ -210,6 +213,7 @@ interface TodayViewProps {
   onTomorrow: () => void
   onSearch: () => void
   onWeather: () => void
+  onSettings: () => void
   nimiState: NimiMarkState
 }
 
@@ -227,6 +231,7 @@ export function TodayView({
   onTomorrow,
   onSearch,
   onWeather,
+  onSettings,
   nimiState
 }: TodayViewProps): JSX.Element {
   const filled = tasks.length
@@ -237,7 +242,13 @@ export function TodayView({
     return (
       <div className="view">
         <div className="scroll">
-          <AppHeader nimiState={nimiState} badge={badge} onSearch={onSearch} onTomorrow={onPlan} />
+          <AppHeader
+            nimiState={nimiState}
+            badge={badge}
+            onSearch={onSearch}
+            onTomorrow={onPlan}
+            onSettings={onSettings}
+          />
           <div className="dayzero">
             <NimiMark state="idle" size={66} />
             <div className="dayzero-h">A fresh day</div>
@@ -265,6 +276,7 @@ export function TodayView({
           badge={badge}
           onSearch={onSearch}
           onTomorrow={onTomorrow}
+          onSettings={onSettings}
         />
         <MemoryWeather
           count={tasks.reduce((a, t) => a + (t.ctx ? t.ctx.length : 0), 0)}

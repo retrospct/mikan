@@ -9,10 +9,16 @@
  *   NEEME_SYNC_URL          libSQL sync URL (e.g. libsql://<db>.turso.io)
  *   NEEME_SYNC_AUTH_TOKEN   DB-scoped auth token (short-lived; main fetches from broker)
  *   NEEME_SYNC_INTERVAL_S   Periodic sync interval in seconds (default 300 = 5 min)
+ *   NEEME_SYNC_ENCRYPTION_KEY  64-hex AES-256-GCM key — REQUIRED to enable sync
+ *
+ * Encryption at rest is mandatory: when sync is requested but no valid encryption
+ * key is present, sync is refused (stays local-first) so plaintext content is
+ * never written to the cloud primary. See db/crypto.ts and ADR 0001.
  */
+import { hasValidEncryptionKey } from './crypto'
 
 export interface SyncConfig {
-  /** True only when NEEME_SYNC=on and NEEME_SYNC_URL is present. */
+  /** True only when NEEME_SYNC=on, NEEME_SYNC_URL is present, and a valid key is set. */
   enabled: boolean
   /** libSQL sync URL, e.g. libsql://<db>.turso.io */
   syncUrl?: string
@@ -20,6 +26,8 @@ export interface SyncConfig {
   authToken?: string
   /** Sync interval in milliseconds. Default 300 000 (5 minutes). */
   syncIntervalMs: number
+  /** When NEEME_SYNC=on but sync was refused, why (for logs + SyncStatus.error). */
+  disabledReason?: 'missing-url' | 'missing-or-invalid-key'
 }
 
 const MIN_INTERVAL_S = 10
@@ -44,7 +52,17 @@ export function getSyncConfig(): SyncConfig {
   const syncUrl = process.env.NEEME_SYNC_URL
   if (!syncUrl) {
     console.warn('[sync] NEEME_SYNC=on but NEEME_SYNC_URL is not set — sync disabled')
-    return { enabled: false, syncIntervalMs }
+    return { enabled: false, syncIntervalMs, disabledReason: 'missing-url' }
+  }
+
+  // Encryption at rest is required: never push plaintext content to the cloud.
+  // If the key is missing or malformed, fail closed — stay fully local-first.
+  if (!hasValidEncryptionKey()) {
+    console.error(
+      '[sync] refusing to enable sync without a valid NEEME_SYNC_ENCRYPTION_KEY ' +
+        '(64 hex chars) — staying local-first so plaintext is never written to the cloud'
+    )
+    return { enabled: false, syncIntervalMs, disabledReason: 'missing-or-invalid-key' }
   }
 
   return {

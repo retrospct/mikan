@@ -6,12 +6,21 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { getSyncConfig } from '../../src/main/db/sync-config'
-import { encrypt, decrypt, generateKey } from '../../src/main/db/crypto'
+import { encrypt, decrypt, generateKey, hasValidEncryptionKey } from '../../src/main/db/crypto'
 
 // ── Sync config seam ──────────────────────────────────────────────────────
 
 describe('getSyncConfig', () => {
-  const envKeys = ['NEEME_SYNC', 'NEEME_SYNC_URL', 'NEEME_SYNC_AUTH_TOKEN', 'NEEME_SYNC_INTERVAL_S']
+  const envKeys = [
+    'NEEME_SYNC',
+    'NEEME_SYNC_URL',
+    'NEEME_SYNC_AUTH_TOKEN',
+    'NEEME_SYNC_INTERVAL_S',
+    'NEEME_SYNC_ENCRYPTION_KEY'
+  ]
+
+  // A valid 64-hex (32-byte) key — sync now requires one to enable.
+  const VALID_KEY = 'a'.repeat(64)
 
   // Snapshot env before each test; restore after.
   let saved: Record<string, string | undefined> = {}
@@ -42,15 +51,43 @@ describe('getSyncConfig', () => {
 
   it('is disabled when NEEME_SYNC=on but NEEME_SYNC_URL is missing', () => {
     process.env.NEEME_SYNC = 'on'
-    expect(getSyncConfig().enabled).toBe(false)
+    const cfg = getSyncConfig()
+    expect(cfg.enabled).toBe(false)
+    expect(cfg.disabledReason).toBe('missing-url')
   })
 
-  it('is enabled when NEEME_SYNC=on and NEEME_SYNC_URL is set', () => {
+  it('is disabled when NEEME_SYNC=on + URL set but NEEME_SYNC_ENCRYPTION_KEY is missing', () => {
     process.env.NEEME_SYNC = 'on'
     process.env.NEEME_SYNC_URL = 'libsql://test.turso.io'
     const cfg = getSyncConfig()
+    expect(cfg.enabled).toBe(false)
+    expect(cfg.disabledReason).toBe('missing-or-invalid-key')
+  })
+
+  it('is disabled when the encryption key is the wrong length', () => {
+    process.env.NEEME_SYNC = 'on'
+    process.env.NEEME_SYNC_URL = 'libsql://test.turso.io'
+    process.env.NEEME_SYNC_ENCRYPTION_KEY = 'abc123'
+    const cfg = getSyncConfig()
+    expect(cfg.enabled).toBe(false)
+    expect(cfg.disabledReason).toBe('missing-or-invalid-key')
+  })
+
+  it('is disabled when the encryption key is 64 chars but not hex', () => {
+    process.env.NEEME_SYNC = 'on'
+    process.env.NEEME_SYNC_URL = 'libsql://test.turso.io'
+    process.env.NEEME_SYNC_ENCRYPTION_KEY = 'z'.repeat(64)
+    expect(getSyncConfig().enabled).toBe(false)
+  })
+
+  it('is enabled when NEEME_SYNC=on, NEEME_SYNC_URL, and a valid encryption key are all set', () => {
+    process.env.NEEME_SYNC = 'on'
+    process.env.NEEME_SYNC_URL = 'libsql://test.turso.io'
+    process.env.NEEME_SYNC_ENCRYPTION_KEY = VALID_KEY
+    const cfg = getSyncConfig()
     expect(cfg.enabled).toBe(true)
     expect(cfg.syncUrl).toBe('libsql://test.turso.io')
+    expect(cfg.disabledReason).toBeUndefined()
   })
 
   it('uses default 5-minute interval when NEEME_SYNC_INTERVAL_S is absent', () => {
@@ -71,7 +108,9 @@ describe('getSyncConfig', () => {
     process.env.NEEME_SYNC = 'on'
     process.env.NEEME_SYNC_URL = 'libsql://test.turso.io'
     process.env.NEEME_SYNC_AUTH_TOKEN = 'tok_abc'
+    process.env.NEEME_SYNC_ENCRYPTION_KEY = VALID_KEY
     const cfg = getSyncConfig()
+    expect(cfg.enabled).toBe(true)
     expect(cfg.authToken).toBe('tok_abc')
   })
 })
@@ -142,5 +181,41 @@ describe('encrypt / decrypt', () => {
     const result = decrypt(encryptedWithKey1)
     // Should return the raw encrypted string (not throw, not return plaintext).
     expect(result).toBe(encryptedWithKey1)
+  })
+})
+
+// ── Encryption key validator (sync gate) ──────────────────────────────────
+
+describe('hasValidEncryptionKey', () => {
+  const KEY_ENV = 'NEEME_SYNC_ENCRYPTION_KEY'
+  let savedKey: string | undefined
+  beforeEach(() => {
+    savedKey = process.env[KEY_ENV]
+    delete process.env[KEY_ENV]
+  })
+  afterEach(() => {
+    if (savedKey === undefined) delete process.env[KEY_ENV]
+    else process.env[KEY_ENV] = savedKey
+  })
+
+  it('is false when the key is absent', () => {
+    expect(hasValidEncryptionKey()).toBe(false)
+  })
+
+  it('is false when the key is the wrong length', () => {
+    process.env[KEY_ENV] = 'deadbeef'
+    expect(hasValidEncryptionKey()).toBe(false)
+  })
+
+  it('is false when the key is 64 chars but not hex', () => {
+    process.env[KEY_ENV] = 'z'.repeat(64)
+    expect(hasValidEncryptionKey()).toBe(false)
+  })
+
+  it('is true for a valid 64-hex key (incl. generateKey output)', () => {
+    process.env[KEY_ENV] = 'A'.repeat(64) // hex is case-insensitive
+    expect(hasValidEncryptionKey()).toBe(true)
+    process.env[KEY_ENV] = generateKey()
+    expect(hasValidEncryptionKey()).toBe(true)
   })
 })

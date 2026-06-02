@@ -31,10 +31,40 @@ renderer (sandboxed, context-isolated, NO node)
 
 ## Content Security Policy
 
-Set in `apps/desktop/src/renderer/index.html`. Keep `script-src 'self'` (no `unsafe-inline`/`eval`).
-Tighten `connect-src` once the legacy cloud API is fully retired (the renderer talks to
-the backend over IPC, not HTTP). Bundling fonts locally would let us drop the Google
-Fonts origins entirely (offline-first).
+The **production** policy is offline-first with no remote origins:
+
+```
+default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self' data:; img-src 'self' data:; connect-src 'self'
+```
+
+It is enforced in **two places** (defense-in-depth):
+
+- A `<meta http-equiv>` tag in `apps/desktop/src/renderer/index.html`.
+- A `Content-Security-Policy` **response header** set in the main process
+  (`apps/desktop/src/main/index.ts`, via `session.defaultSession.webRequest.onHeadersReceived`).
+  A compromised renderer bundle could strip the meta tag; it cannot remove the header.
+  The header is gated on `app.isPackaged` so it only applies to the shipped app.
+
+Why each directive is safe to keep tight:
+
+- **`script-src 'self'`** — no inline/`eval` scripts (hard invariant).
+- **`style-src 'self'`** — Tailwind ships as a same-origin linked stylesheet; React's
+  `style={{}}` props apply via the CSSOM and the accent tweak uses `el.style.setProperty`,
+  both exempt from CSP — so no `'unsafe-inline'` is needed in production.
+- **`font-src 'self' data:`** — the UI fonts (Hanken Grotesk + JetBrains Mono) are
+  bundled locally via `@fontsource` (imported in `src/renderer/src/main.tsx`); there are
+  no Google Fonts origins anymore. `data:` is required because Vite inlines small font
+  subsets (e.g. cyrillic) as `data:` URIs; the larger subsets are same-origin asset
+  files. `data:` fonts cannot load remote content, so this stays offline-first.
+- **`connect-src 'self'`** — the renderer talks to the worker over IPC, not HTTP. The
+  legacy FastAPI HTTP client (`ApiStatus` / `@nimi/contract/api`) is not mounted in the app.
+
+**Dev exception.** `electron-vite dev` needs `style-src 'unsafe-inline'` (Vite injects
+`<style>` tags for HMR) and `connect-src http://localhost:8000` (the optional FastAPI
+round-trip smoke). A serve-only Vite plugin in `electron.vite.config.ts` rewrites the meta
+CSP for the dev server only, and the runtime header is skipped in dev — so the policy that
+actually **ships** stays strict. Keep the three copies (meta, `DEV_CSP`, runtime header)
+in sync when changing the policy.
 
 ## Keep this true
 

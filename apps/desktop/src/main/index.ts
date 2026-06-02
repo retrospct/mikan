@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { startWorker, call } from './worker/client'
@@ -67,6 +67,28 @@ app.on('web-contents-created', (_event, contents) => {
 app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+
+  // --- Security: Content-Security-Policy as a response header (defense-in-depth) ---
+  // The renderer's index.html carries the same policy in a <meta> tag, but a
+  // compromised renderer bundle could strip that tag; a response header set here
+  // cannot be removed from inside the renderer. Enforce only for the packaged app:
+  // in dev, electron-vite serves a deliberately relaxed meta (Vite injects <style>
+  // for HMR + the optional FastAPI smoke origin), and a strict header would
+  // intersect with it and blank-screen the dev renderer. Keep this in sync with
+  // the meta tag (renderer/index.html) + DEV_CSP (electron.vite.config.ts).
+  if (app.isPackaged) {
+    const CSP =
+      "default-src 'self'; script-src 'self'; style-src 'self'; " +
+      "font-src 'self' data:; img-src 'self' data:; connect-src 'self'"
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [CSP]
+        }
+      })
+    })
+  }
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

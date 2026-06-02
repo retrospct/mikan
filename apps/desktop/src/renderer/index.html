@@ -4,25 +4,33 @@
     <meta charset="UTF-8" />
     <title>Nimi</title>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
-         connect-src must list the Nimi API origin or the renderer's fetch() is
-         blocked (CSP falls back to default-src 'self', which excludes it). Local
-         dev points at http://localhost:8000 (VITE_NEEME_API_URL). When a deployed
-         backend lands (with auth), add its https origin here.
+         This is the PRODUCTION policy (offline-first, no remote origins):
+         - script-src 'self'           — no inline/eval scripts (hard invariant).
+         - style-src  'self'           — Tailwind ships as a same-origin linked
+                                          stylesheet; React's style={{}} props apply
+                                          via the CSSOM (exempt from CSP), and the
+                                          accent tweak uses el.style.setProperty
+                                          (also CSSOM), so no 'unsafe-inline' needed.
+         - font-src   'self' data:     — fonts are bundled locally via @fontsource
+                                          (see src/main.tsx); no Google Fonts. data:
+                                          is needed because Vite inlines small font
+                                          subsets (e.g. cyrillic) as data: URIs; the
+                                          rest are same-origin asset files.
+         - connect-src 'self'          — the renderer talks to the worker over IPC,
+                                          not HTTP. The legacy FastAPI HTTP client
+                                          (ApiStatus) is not mounted in the app.
+         A defense-in-depth copy of this policy is also set as a response header in
+         the main process (apps/desktop/src/main/index.ts), which a compromised
+         renderer bundle cannot strip the way it could this meta tag.
 
-         The Nimi design uses Hanken Grotesk + JetBrains Mono from Google Fonts,
-         so style-src allows fonts.googleapis.com (the stylesheet) and font-src
-         allows fonts.gstatic.com (the font files). The system-font fallback stack
-         in nimi.css keeps the UI legible offline; bundling the fonts locally (e.g.
-         @fontsource) for a fully offline-first build is a follow-up. -->
+         In DEV (electron-vite dev) this meta is rewritten by a serve-only Vite
+         plugin (electron.vite.config.ts) to add style-src 'unsafe-inline' (Vite
+         injects <style> tags for HMR) and connect-src http://localhost:8000 (the
+         optional FastAPI round-trip smoke via ApiStatus). The built HTML keeps the
+         strict policy below. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8000"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self' data:; img-src 'self' data:; connect-src 'self'"
     />
   </head>
 

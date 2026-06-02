@@ -47,6 +47,12 @@ importers:
       '@electron-toolkit/utils':
         specifier: ^4.0.0
         version: 4.0.0(electron@42.3.0)
+      '@fontsource/hanken-grotesk':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/jetbrains-mono':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@huggingface/transformers':
         specifier: ^4.2.0
         version: 4.2.0
@@ -836,6 +842,12 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@fontsource/hanken-grotesk@5.2.8':
+    resolution: {integrity: sha512-J/e6hdfNCbyc4WK5hmZtk0zjaIsFx3pvCdPVxY25iYw2C9v1ZggGz4nfHnRjMhcz4WfaadUuwLNtvj8sQ70tkg==}
+
+  '@fontsource/jetbrains-mono@5.2.8':
+    resolution: {integrity: sha512-6w8/SG4kqvIMu7xd7wt6x3idn1Qux3p9N62s6G3rfldOUYHpWcc2FKrqf+Vo44jRvqWj2oAtTHrZXEP23oSKwQ==}
 
   '@hey-api/codegen-core@0.8.2':
     resolution: {integrity: sha512-R2NMf3wq97rh1mjz33WJQU8svz3F0RYUjvx/QzXucjpSqQ3O5huTdDjErG4fMxSr1X+X56NuDrqtGfHmo1TRUQ==}
@@ -4555,6 +4567,10 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@fontsource/hanken-grotesk@5.2.8': {}
+
+  '@fontsource/jetbrains-mono@5.2.8': {}
 
   '@hey-api/codegen-core@0.8.2':
     dependencies:

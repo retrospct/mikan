@@ -1,0 +1,26 @@
+# Dependabot — auto-open PRs for dependency updates so the next CVE (like the
+# drizzle-orm / esbuild alerts that motivated ROADMAP #11) surfaces as a PR
+# instead of a silent alert. Minor/patch updates are grouped to keep PR noise low;
+# majors come through individually so risky bumps get reviewed on their own.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        update-types:
+          - minor
+          - patch

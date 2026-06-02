@@ -1,7 +1,34 @@
 import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+
+// The renderer's index.html ships the strict PRODUCTION CSP. The dev server,
+// however, needs two relaxations the built app does not:
+//   - style-src 'unsafe-inline' — Vite injects <style> tags for CSS/HMR in dev
+//     (prod links a same-origin stylesheet instead, covered by style-src 'self').
+//   - connect-src http://localhost:8000 — the optional FastAPI round-trip smoke
+//     (ApiStatus / @nimi/contract/api), which isn't mounted in the shipped app.
+// This serve-only plugin rewrites the meta CSP for dev so we never have to loosen
+// the policy that actually ships. Keep DEV_CSP in sync with the meta tag + the
+// runtime header in src/main/index.ts.
+const DEV_CSP =
+  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+  "font-src 'self' data:; img-src 'self' data:; connect-src 'self' http://localhost:8000"
+
+function devCspPlugin(): Plugin {
+  return {
+    name: 'nimi-dev-csp',
+    apply: 'serve',
+    transformIndexHtml(html) {
+      return html.replace(
+        /(<meta\s+http-equiv="Content-Security-Policy"\s+content=")[^"]*(")/,
+        `$1${DEV_CSP}$2`
+      )
+    }
+  }
+}
 
 // `@nimi/contract` is an internal workspace package consumed *from .ts source*.
 // externalizeDepsPlugin externalizes everything in `dependencies` (so native
@@ -38,6 +65,6 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [react(), tailwindcss()]
+    plugins: [react(), tailwindcss(), devCspPlugin()]
   }
 })

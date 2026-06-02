@@ -103,18 +103,25 @@ async function deviceB(): Promise<void> {
 /** Gate check (no creds needed): NEEME_SYNC=on without a valid key must stay local. */
 async function gateCheck(): Promise<void> {
   const saved = {
-    on: process.env.NEEME_SYNC,
-    url: process.env.NEEME_SYNC_URL,
-    key: process.env.NEEME_SYNC_ENCRYPTION_KEY
+    NEEME_SYNC: process.env.NEEME_SYNC,
+    NEEME_SYNC_URL: process.env.NEEME_SYNC_URL,
+    NEEME_SYNC_ENCRYPTION_KEY: process.env.NEEME_SYNC_ENCRYPTION_KEY
   }
+  // Restore env exactly — assigning `undefined` to process.env stringifies it to
+  // "undefined" (truthy), which would later fool hasCreds(); delete instead.
+  const restoreEnv = (): void => {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k]
+      else process.env[k] = v
+    }
+  }
+
   process.env.NEEME_SYNC = 'on'
   process.env.NEEME_SYNC_URL = 'libsql://gate-check.invalid.turso.io'
   delete process.env.NEEME_SYNC_ENCRYPTION_KEY
   const { getSyncConfig } = await import('../../src/main/db/sync-config')
   const cfg = getSyncConfig()
-  process.env.NEEME_SYNC = saved.on
-  process.env.NEEME_SYNC_URL = saved.url
-  if (saved.key !== undefined) process.env.NEEME_SYNC_ENCRYPTION_KEY = saved.key
+  restoreEnv()
   const ok = cfg.enabled === false && cfg.disabledReason === 'missing-or-invalid-key'
   console.log(
     `[gate] on + url + no key => enabled=${cfg.enabled} reason=${cfg.disabledReason} (${ok ? 'PASS' : 'FAIL'})`

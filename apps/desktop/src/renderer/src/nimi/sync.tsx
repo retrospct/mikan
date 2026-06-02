@@ -4,7 +4,7 @@
 // Renders nothing when sync is simply off with no error — it only earns header
 // space when there's something worth showing: an error, an active sync, or a
 // healthy "synced" state. The full error message is exposed via the tooltip.
-import type { JSX } from 'react'
+import { useState, type JSX } from 'react'
 import { NIcon } from './icons'
 import { useSync } from '../hooks/useSync'
 
@@ -20,19 +20,29 @@ function relTime(ts: number | null): string {
 
 export function SyncControl(): JSX.Element | null {
   const { status, syncNow } = useSync()
+  const [showDetail, setShowDetail] = useState(false)
 
   // Error takes priority. `enabled:false` + error = a config problem (e.g. a
   // missing encryption key); `enabled:true` + error = a transient sync failure.
+  // Click reveals the full reason inline (not just the native-title tooltip).
   if (status.error) {
     return (
-      <span
-        className="sync-pill sync-pill-err"
-        title={status.error}
-        role="status"
-        aria-label={`Sync ${status.enabled ? 'error' : 'off'}: ${status.error}`}
-      >
-        <NIcon name="globe" size={12} />
-        {status.enabled ? 'Sync error' : 'Sync off'}
+      <span className="sync-wrap">
+        <button
+          className="sync-pill sync-pill-err"
+          title={status.error}
+          aria-expanded={showDetail}
+          aria-label={`Sync ${status.enabled ? 'error' : 'off'}: ${status.error}`}
+          onClick={() => setShowDetail((v) => !v)}
+        >
+          <NIcon name="globe" size={12} />
+          {status.enabled ? 'Sync error' : 'Sync off'}
+        </button>
+        {showDetail && (
+          <div className="sync-pop" role="status">
+            {status.error}
+          </div>
+        )}
       </span>
     )
   }

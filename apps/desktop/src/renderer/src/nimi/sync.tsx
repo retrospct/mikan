@@ -30,7 +30,6 @@ export function SyncControl(): JSX.Element | null {
       <span className="sync-wrap">
         <button
           className="sync-pill sync-pill-err"
-          title={status.error}
           aria-expanded={showDetail}
           aria-label={`Sync ${status.enabled ? 'error' : 'off'}: ${status.error}`}
           onClick={() => setShowDetail((v) => !v)}

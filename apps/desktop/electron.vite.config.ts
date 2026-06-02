@@ -1,21 +1,27 @@
-import { resolve } from 'path'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import type { Plugin } from 'vite'
-import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+import { resolve } from 'path'
+import type { Plugin } from 'vite'
 
 // The renderer's index.html ships the strict PRODUCTION CSP. The dev server,
-// however, needs two relaxations the built app does not:
+// however, needs relaxations the built app does not:
+//   - script-src 'unsafe-inline' 'unsafe-eval' — @vitejs/plugin-react injects an
+//     INLINE React Refresh preamble <script>, and Vite's dev client uses eval for
+//     HMR module evaluation. Under script-src 'self' the preamble is refused, React
+//     never mounts, and the window renders black. Prod bundles real script files
+//     (covered by script-src 'self'), so this never ships.
 //   - style-src 'unsafe-inline' — Vite injects <style> tags for CSS/HMR in dev
 //     (prod links a same-origin stylesheet instead, covered by style-src 'self').
-//   - connect-src http://localhost:8000 — the optional FastAPI round-trip smoke
-//     (ApiStatus / @nimi/contract/api), which isn't mounted in the shipped app.
+//   - connect-src ws:/http: localhost — Vite HMR websocket + the optional FastAPI
+//     round-trip smoke (ApiStatus / @nimi/contract/api), neither of which ships.
 // This serve-only plugin rewrites the meta CSP for dev so we never have to loosen
 // the policy that actually ships. Keep DEV_CSP in sync with the meta tag + the
 // runtime header in src/main/index.ts.
 const DEV_CSP =
-  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
-  "font-src 'self' data:; img-src 'self' data:; connect-src 'self' http://localhost:8000"
+  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+  "style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; " +
+  "connect-src 'self' ws://localhost:* http://localhost:*"
 
 function devCspPlugin(): Plugin {
   return {

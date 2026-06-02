@@ -1,46 +1,26 @@
-import type { CreateClientConfig } from './generated/client.gen'
 import { client } from './generated/client.gen'
-import { getToken } from './token-store'
+import { buildClientConfig, setClientOptions } from './client-config'
 
 /**
- * Runtime configuration for the generated Nimi API client.
+ * Live-client configuration for the generated Nimi API client.
+ *
+ * The actual config seam (`createClientConfig`, base URL + auth state) lives in
+ * `client-config.ts`, which the generated client imports at module-eval time.
+ * This file holds the part that touches the live `client` singleton — kept
+ * separate so `client-config.ts` never imports `client` and the two modules
+ * don't form an initialization cycle.
  *
  * t3-turbo pattern: the shared package holds zero URL/auth config.
  * Each app calls `configureClient()` at startup with its own env var:
  *   - Desktop (electron-vite): import.meta.env.VITE_NEEME_API_URL
  *   - Mobile (Expo): process.env.EXPO_PUBLIC_NEEME_API_URL (+ LAN fallback)
- *
- * Plain `fetch` only — no Electron/Node/Vite imports — so this stays
- * reusable across desktop renderer, React Native, and any future surface.
  */
-
-let _baseUrl: string = 'http://localhost:8000'
-let _getToken: () => string | undefined = () => getToken()
-
-function buildClientConfig(
-  config: Parameters<CreateClientConfig>[0] = {}
-): ReturnType<CreateClientConfig> {
-  return {
-    ...config,
-    baseUrl: _baseUrl,
-    auth: () => _getToken()
-  }
-}
 
 /** Call once at app startup, before any API calls are made. */
 export function configureClient(opts: {
   baseUrl?: string
   getToken?: () => string | undefined
 }): void {
-  if (opts.baseUrl !== undefined) {
-    const baseUrl = opts.baseUrl.trim()
-    if (baseUrl) _baseUrl = baseUrl
-  }
-  if (opts.getToken !== undefined) _getToken = opts.getToken
-
+  setClientOptions(opts)
   client.setConfig(buildClientConfig())
 }
-
-// Defaults for the generated singleton's initial construction; configureClient()
-// applies app-specific values to that singleton before requests are made.
-export const createClientConfig: CreateClientConfig = (config) => buildClientConfig(config)

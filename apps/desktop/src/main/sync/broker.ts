@@ -8,11 +8,15 @@
  *   - refreshed proactively ~60 s before it expires
  *   - never handed to the renderer (only main + worker touch it)
  *
- * When NEEME_SYNC_BROKER_URL is not set, all functions are no-ops, preserving
- * the existing static NEEME_SYNC_AUTH_TOKEN spike path.
+ * When no broker URL is configured, all functions are no-ops, preserving the
+ * existing static NEEME_SYNC_AUTH_TOKEN spike path.
  *
- * Config:
- *   NEEME_SYNC_BROKER_URL — Deployed broker URL, e.g. https://token-broker.vercel.app
+ * Config (two layers, runtime wins):
+ *   - process.env.NEEME_SYNC_BROKER_URL — runtime override for dev / tests /
+ *     cloud agents that export the var into the shell.
+ *   - import.meta.env.MAIN_VITE_NEEME_SYNC_BROKER_URL — build-time value inlined
+ *     by electron-vite, so packaged releases (no shell env) still find the broker.
+ *   e.g. https://nimi-token-broker.vercel.app
  */
 import { app, safeStorage } from 'electron'
 import { readFile, writeFile, rm } from 'node:fs/promises'
@@ -28,7 +32,10 @@ function cacheFile(): string {
 }
 
 function brokerUrl(): string | undefined {
-  return process.env.NEEME_SYNC_BROKER_URL?.replace(/\/+$/, '')
+  // Runtime override (dev/tests/cloud agents) takes priority over the build-time
+  // value inlined into packaged releases.
+  const url = process.env.NEEME_SYNC_BROKER_URL || import.meta.env.MAIN_VITE_NEEME_SYNC_BROKER_URL
+  return url?.replace(/\/+$/, '')
 }
 
 /** True when broker mode is configured (NEEME_SYNC_BROKER_URL is set). */

@@ -4281,6 +4281,21 @@ a,
 [role='button'] {
   -webkit-app-region: no-drag;
 }
+/* `.hdr` and `.push-hd` are flex containers used as drag regions. Chromium fails
+   to carve the `no-drag` click-through hole for a flex *item* unless that item
+   establishes its own layer, so the back button + header controls swallow clicks
+   despite being `no-drag`. `position: relative` (no visual change) fixes the
+   hit-test. The inert text zones (`.hdr-greet`, `.push-hd-main`) stay draggable. */
+.hdr-btn,
+.sync-wrap,
+.sync-pill,
+.priv-pill,
+.connector-connect,
+.connector-disconnect,
+.push-back {
+  position: relative;
+  -webkit-app-region: no-drag;
+}
 
 /* density */
 html[data-density='compact'] .task-row {
@@ -4394,4 +4409,67 @@ html[data-density='compact'] .mem {
 
 .connector-disconnect:hover {
   opacity: 1;
+}
+
+/* ── Settings page ─────────────────────────────────────────────────────────── */
+
+.settings-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-section-h {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.settings-section-s {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* Roomier connector rows on the full settings page (vs. the tight header chip). */
+.settings-page .connectors-panel {
+  gap: 8px;
+  margin-right: 0;
+  margin-top: 4px;
+}
+
+.settings-page .connector-row {
+  padding: 11px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+  gap: 10px;
+}
+
+.settings-page .connector-icon {
+  opacity: 0.75;
+}
+
+.settings-page .connector-label {
+  font-size: 13px;
+}
+
+.settings-page .connector-meta {
+  font-size: 11px;
+}
+
+.settings-page .connector-connect {
+  font-size: 12px;
+  padding: 5px 12px;
 }

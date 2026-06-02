@@ -6,10 +6,14 @@
   "packageManager": "pnpm@10.26.0",
   "author": "jlee",
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "dev": "turbo run dev --filter=!@nimi/mobile",
+    "build": "turbo run build --filter=!@nimi/mobile",
+    "typecheck": "turbo run typecheck --filter=!@nimi/mobile",
+    "test": "turbo run test --filter=!@nimi/mobile",
+    "dev:desktop": "turbo run dev --filter=@nimi/desktop... --filter=@nimi/token-broker...",
+    "build:desktop": "turbo run build --filter=@nimi/desktop... --filter=@nimi/token-broker...",
+    "dev:mobile": "turbo run dev --filter=@nimi/mobile...",
+    "build:mobile": "turbo run build --filter=@nimi/mobile...",
     "lint": "eslint --cache .",
     "format": "prettier --write .",
     "gen:api": "pnpm --filter @nimi/contract gen:api"

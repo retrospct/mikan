@@ -3,6 +3,10 @@ dist
 out
 .turbo
 
+# Playwright E2E run artifacts (screenshots / error-context on failure)
+test-results/
+playwright-report/
+
 # macOS native helper binary (compiled locally — see apps/desktop/resources/mac/nimi-extract.swift)
 apps/desktop/resources/mac/nimi-extract
 .DS_Store

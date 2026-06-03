@@ -16,22 +16,24 @@
 // Data comes from the `data` seam (apps/.../nimi/api.ts): the real `window.api`
 // in Electron, an in-memory mock in the browser preview. AI-only fields come back
 // null until the drafting layer lands (docs/INTEGRATION.md).
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { JSX } from 'react'
-import { TodayView, BottomNav } from './today'
-import { TaskDetail } from './task'
-import { FeedView } from './feed'
-import { AddSheet } from './add'
-import { PlanRitual } from './plan'
-import { SettingsView } from './settings'
-import { AllDone } from './celebrate'
-import { SearchOverlay } from './search'
-import { NIcon } from './icons'
-import { NimiMark, Dots } from './mark'
-import { data, MemoryContext } from './api'
 import type { BacklogItem, Memory, Task } from '@nimi/contract/views'
-import type { NimiMarkState } from './types'
+import type { JSX } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
+import { AddSheet } from './add'
+import { data, MemoryContext } from './api'
+import { AuthGate, AuthSplash } from './auth-gate'
+import { AllDone } from './celebrate'
+import { FeedView } from './feed'
+import { NIcon } from './icons'
+import { Dots, NimiMark } from './mark'
 import './nimi.css'
+import { PlanRitual } from './plan'
+import { SearchOverlay } from './search'
+import { SettingsView } from './settings'
+import { TaskDetail } from './task'
+import { BottomNav, TodayView } from './today'
+import type { NimiMarkState } from './types'
 
 const CAP = 5
 
@@ -100,6 +102,10 @@ function ErrorView({ onRetry }: { onRetry: () => void }): JSX.Element {
 }
 
 export default function NimiApp(): JSX.Element {
+  // Auth gate: when Logto is configured, the whole app sits behind a sign-in
+  // screen. `ready` guards against flashing the gate before a cached session is
+  // restored; when Logto is unconfigured (dev/CI) the gate never shows.
+  const { state: auth, ready: authReady, login } = useAuth()
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading')
   const [tasks, setTasks] = useState<Task[]>([])
   const [backlog, setBacklog] = useState<BacklogItem[]>([])
@@ -313,6 +319,20 @@ export default function NimiApp(): JSX.Element {
     void data.todos.pinContext(openTask.id, memId).then((t) => {
       if (t) updateTask(t.id, { ctx: t.ctx, pinned: t.pinned, relMap: t.relMap ?? {} })
     })
+  }
+
+  // Hold behind the gate while configured + signed-out. While auth is still
+  // hydrating in a configured build, show a neutral splash instead of the app.
+  const gated = auth.configured && (!authReady || !auth.isAuthenticated)
+  if (gated) {
+    return (
+      <div className="desk">
+        <div className="desk-wall" />
+        <div className="app-frame">
+          {authReady ? <AuthGate onLogin={login} /> : <AuthSplash />}
+        </div>
+      </div>
+    )
   }
 
   return (

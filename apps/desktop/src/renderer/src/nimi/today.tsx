@@ -1,13 +1,12 @@
 // today.tsx — header, memory weather, Today list, task cards, bottom nav.
-import { useContext, useEffect, useRef, useState } from 'react'
-import type { JSX } from 'react'
-import { NIcon } from './icons'
-import { kindIcon } from './iconKind'
-import { NimiMark, NimiNote } from './mark'
-import { AuthControl } from './auth'
-import { SyncControl } from './sync'
-import { MemoryContext } from './api'
 import type { Task } from '@nimi/contract/views'
+import type { JSX } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { MemoryContext } from './api'
+import { kindIcon } from './iconKind'
+import { NIcon } from './icons'
+import { NimiMark, NimiNote } from './mark'
+import { SyncControl } from './sync'
 import type { NimiMarkState } from './types'
 
 function greeting(): string {
@@ -53,7 +52,6 @@ function AppHeader({
       </div>
       <div className="hdr-r">
         <SyncControl />
-        <AuthControl />
         <button className="hdr-btn" aria-label="Plan tomorrow" onClick={onTomorrow}>
           <NIcon name="dayNext" size={18} />
         </button>

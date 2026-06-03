@@ -1,18 +1,20 @@
-import { app, shell, BrowserWindow, ipcMain, session } from 'electron'
-import { join } from 'path'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
-import { startWorker, call } from './worker/client'
-import { initTrayWindow, showWindow, setBadge } from './window/tray-window'
+import type { ConnectorId, ConnectorsState, IngestResult, UpdateStatus } from '@nimi/contract/ipc'
+import { IPC } from '@nimi/contract/ipc'
+import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
+import { join } from 'path'
 import * as auth from './auth/logto'
 import * as googleAuth from './connectors/google-auth'
+import { clearSyncToken, restoreCachedToken } from './sync/broker'
 import {
-  isBrokerConfigured,
-  restoreCachedToken,
-  getSyncToken,
-  clearSyncToken
-} from './sync/broker'
-import { IPC } from '@nimi/contract/ipc'
-import type { ConnectorId, ConnectorsState, IngestResult, UpdateStatus } from '@nimi/contract/ipc'
+    getRecoveryKey,
+    getSyncSettings,
+    importRecoveryKey,
+    prepareSyncEnv,
+    setSyncEnabled
+} from './sync/sync-control'
+import { initTrayWindow, setBadge, showWindow } from './window/tray-window'
+import { call, startWorker } from './worker/client'
 
 // Register `neeme://` as the OAuth callback scheme. In dev (electron launched
 // with a script arg) we must pass execPath + the project dir so the OS routes
@@ -124,36 +126,13 @@ app.whenReady().then(async () => {
   })
   await auth.init()
 
-  // ── Broker token (ADR 0008) — fetch before forking the worker so the libSQL
-  // client is built with the right syncUrl + authToken on first boot.
-  //
-  // Flow:
-  //   1. Restore any disk-cached broker token (encrypted in safeStorage).
-  //   2. If sync + broker are configured and auth has a valid session, get a
-  //      fresh token (from cache or from the broker), then inject into process.env
-  //      so the worker's getSyncConfig() picks them up unchanged.
-  //   3. If auth has no session yet (first install, or logged out), the worker
-  //      starts in local-only mode. The next boot after login will have the token.
-  // ──────────────────────────────────────────────────────────────────────────────
+  // ── Sync env (ADR 0008 + ROADMAP #10) — resolve NEEME_SYNC* from the saved
+  // toggle pref + per-device keychain key (and a broker token, if logged in)
+  // BEFORE forking the worker, so its libSQL client is built with the right
+  // sync target + encryption key on first boot. Restore the disk-cached broker
+  // token first so prepareSyncEnv can reuse it. See src/main/sync/sync-control.ts.
   await restoreCachedToken()
-
-  if (isBrokerConfigured() && process.env.NEEME_SYNC === 'on') {
-    const logtoToken = await auth.getAccessToken().catch(() => undefined)
-    if (logtoToken) {
-      try {
-        const token = await getSyncToken(logtoToken)
-        if (token) {
-          process.env.NEEME_SYNC_URL = token.syncUrl
-          process.env.NEEME_SYNC_AUTH_TOKEN = token.authToken
-          console.log('[broker-client] Sync credentials injected (expires', new Date(token.expiresAt).toISOString(), ')')
-        }
-      } catch (err) {
-        console.warn('[broker-client] Failed to fetch sync token; worker will start in local-only mode:', err)
-      }
-    } else {
-      console.log('[broker-client] No Logto session at boot; worker starts in local-only mode')
-    }
-  }
+  await prepareSyncEnv()
 
   // Data layer runs in a utilityProcess (off the main loop). Main is a thin
   // router: every data channel is forwarded to the worker, which owns the DB +
@@ -189,6 +168,14 @@ app.whenReady().then(async () => {
   ipcMain.handle(IPC.authLogout, () => auth.logout())
   ipcMain.handle(IPC.authGetToken, () => auth.getAccessToken())
   ipcMain.handle(IPC.authGetState, () => auth.getState())
+
+  // Sync settings (main-owned: they manipulate env + restart the worker, so they
+  // can't be plain worker-forwarded data channels). The toggle pref + recovery key
+  // live in main; getStatus/now stay forwarded to the worker (DATA_CHANNELS above).
+  ipcMain.handle(IPC.syncGetSettings, () => getSyncSettings())
+  ipcMain.handle(IPC.syncSetEnabled, (_e, enabled: boolean) => setSyncEnabled(enabled))
+  ipcMain.handle(IPC.syncGetRecoveryKey, () => getRecoveryKey())
+  ipcMain.handle(IPC.syncSetRecoveryKey, (_e, hex: string) => importRecoveryKey(hex))
 
   // Connectors (Google OAuth + periodic ingest) — main-only, like auth.
   // Inert until MAIN_VITE_GOOGLE_CLIENT_ID is set.

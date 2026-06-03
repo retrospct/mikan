@@ -1,5 +1,5 @@
+import type { SyncSettings, SyncStatus } from '@nimi/contract/ipc'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { SyncStatus } from '@nimi/contract/ipc'
 import { isElectron } from '../nimi/api'
 
 const DEFAULT: SyncStatus = {
@@ -71,4 +71,71 @@ export function useSync(): { status: SyncStatus; syncNow: () => void } {
   if (!isElectron) return { status: DEFAULT, syncNow: NOOP }
 
   return { status, syncNow }
+}
+
+const DEFAULT_SETTINGS: SyncSettings = { enabled: false, hasKey: false, available: false }
+
+/**
+ * Settings-side companion to useSync: the main-owned sync *settings* (toggle
+ * intent, key presence, broker availability) plus the actions that mutate them.
+ * Each action restarts the data worker in main and resolves with fresh settings.
+ */
+export function useSyncSettings(): {
+  settings: SyncSettings
+  busy: boolean
+  setEnabled: (enabled: boolean) => Promise<void>
+  importKey: (hex: string) => Promise<void>
+  revealKey: () => Promise<string | null>
+} {
+  const [settings, setSettings] = useState<SyncSettings>(DEFAULT_SETTINGS)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!isElectron) return
+    let active = true
+    window.api.sync
+      .getSettings()
+      .then((s) => active && setSettings(s))
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const setEnabled = useCallback((enabled: boolean): Promise<void> => {
+    if (!isElectron) return Promise.resolve()
+    setBusy(true)
+    return window.api.sync
+      .setEnabled(enabled)
+      .then((s) => setSettings(s))
+      .catch((e) => console.error('sync setEnabled failed', e))
+      .finally(() => setBusy(false))
+  }, [])
+
+  // Errors propagate so the caller can surface an "invalid key" message.
+  const importKey = useCallback((hex: string): Promise<void> => {
+    if (!isElectron) return Promise.reject(new Error('not available'))
+    setBusy(true)
+    return window.api.sync
+      .setRecoveryKey(hex)
+      .then((s) => setSettings(s))
+      .finally(() => setBusy(false))
+  }, [])
+
+  const revealKey = useCallback((): Promise<string | null> => {
+    if (!isElectron) return Promise.resolve(null)
+    return window.api.sync.getRecoveryKey()
+  }, [])
+
+  if (!isElectron) {
+    return {
+      settings: DEFAULT_SETTINGS,
+      busy: false,
+      setEnabled: () => Promise.resolve(),
+      importKey: () => Promise.reject(new Error('not available')),
+      revealKey: () => Promise.resolve(null)
+    }
+  }
+
+  return { settings, busy, setEnabled, importKey, revealKey }
 }

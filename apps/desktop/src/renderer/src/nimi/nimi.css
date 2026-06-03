@@ -4440,6 +4440,181 @@ html[data-density='compact'] .mem {
   color: var(--ink-3);
 }
 
+/* A label/value row with a trailing control (account, sync toggle). */
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.settings-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.settings-row-ttl {
+  font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-row-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.16s var(--ease-out),
+    border-color 0.16s var(--ease-out),
+    opacity 0.16s var(--ease-out);
+}
+.settings-btn:hover:not(:disabled) {
+  border-color: var(--accent-line);
+}
+.settings-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.settings-btn-quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--ink-2);
+  padding: 6px 2px;
+}
+.settings-btn-quiet:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: transparent;
+}
+.settings-btn-danger {
+  color: #e5484d;
+  border-color: color-mix(in srgb, #e5484d 38%, var(--hairline));
+}
+.settings-btn-danger:hover:not(:disabled) {
+  border-color: #e5484d;
+  background: color-mix(in srgb, #e5484d 12%, var(--surface-2));
+}
+
+/* Toggle switch (role="switch"). */
+.settings-toggle {
+  flex: none;
+  position: relative;
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  background: var(--surface-3);
+  cursor: pointer;
+  transition:
+    background 0.18s var(--ease-out),
+    border-color 0.18s var(--ease-out);
+}
+.settings-toggle.on {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+.settings-toggle:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.settings-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.18s var(--ease-out);
+}
+.settings-toggle.on .settings-toggle-knob {
+  transform: translateX(16px);
+}
+
+.settings-note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.settings-note-err {
+  color: #e5484d;
+}
+
+/* Recovery-key block. */
+.settings-key,
+.settings-import {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.settings-key-h {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.settings-key-s {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.settings-key-reveal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.settings-key-code {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  background: var(--surface-3);
+  color: var(--accent-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+.settings-input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 9px;
+  background: var(--surface-3);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.settings-input:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+.settings-import-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* Roomier connector rows on the full settings page (vs. the tight header chip). */
 .settings-page .connectors-panel {
   gap: 8px;
@@ -4470,4 +4645,91 @@ html[data-density='compact'] .mem {
 .settings-page .connector-connect {
   font-size: 12px;
   padding: 5px 12px;
+}
+
+/* ── Login gate ──────────────────────────────────────────────────────────── */
+.auth-gate {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: radial-gradient(120% 40% at 50% -6%, var(--accent-faint), transparent 60%),
+    var(--bg);
+  /* Frameless tray window: the gate has no header, so let it be dragged from the
+     backdrop. Interactive elements opt back out via the global no-drag rule. */
+  -webkit-app-region: drag;
+}
+.auth-gate-card {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  animation: nm-view 0.42s var(--ease-out) both;
+}
+.auth-gate-brand {
+  margin-bottom: 2px;
+}
+.auth-gate-ttl {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.auth-gate-sub {
+  margin: 0;
+  max-width: 30ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.auth-gate-cta {
+  margin-top: 6px;
+  width: 100%;
+  padding: 12px 18px;
+  border: 1px solid var(--accent-line);
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.16s var(--ease-out),
+    border-color 0.16s var(--ease-out);
+}
+.auth-gate-cta:hover {
+  background: color-mix(in oklch, var(--accent) 26%, transparent);
+  border-color: var(--accent);
+}
+.auth-gate-waiting {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.auth-gate-secondary {
+  background: none;
+  border: none;
+  color: var(--ink-3);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.auth-gate-secondary:hover {
+  color: var(--ink-2);
+}
+.auth-gate-foot {
+  margin: 10px 0 0;
+  max-width: 32ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
 }

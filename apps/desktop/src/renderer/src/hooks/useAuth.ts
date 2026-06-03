@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { setToken, clearToken } from '@nimi/contract/api/token-store'
+import { clearToken, setToken } from '@nimi/contract/api/token-store'
 import type { AuthState } from '@nimi/contract/ipc'
+import { useEffect, useState } from 'react'
 import { isElectron } from '../nimi/api'
 
 const EMPTY: AuthState = { configured: false, isAuthenticated: false, claims: null }
@@ -16,13 +16,27 @@ const NOOP = (): void => {}
  * returns a static unconfigured state and no-op actions — auth is a main-process
  * concern with no mock, so the UI just renders as if it weren't configured.
  */
-export function useAuth(): { state: AuthState; login: () => void; logout: () => void } {
+export function useAuth(): {
+  state: AuthState
+  ready: boolean
+  login: () => void
+  logout: () => void
+} {
   const [state, setState] = useState<AuthState>(EMPTY)
+  // `ready` flips true once main has reported the initial auth state. The login
+  // gate waits on this so it never flashes the sign-in screen (or the app) before
+  // a cached session has been restored. Outside Electron there's nothing to wait
+  // for, so it's ready immediately.
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     if (!isElectron) return
     let active = true
-    window.api.auth.getState().then((s) => active && setState(s))
+    window.api.auth.getState().then((s) => {
+      if (!active) return
+      setState(s)
+      setReady(true)
+    })
     window.api.auth.getAccessToken().then((t) => {
       if (!active) return
       if (t) setToken(t)
@@ -40,10 +54,11 @@ export function useAuth(): { state: AuthState; login: () => void; logout: () => 
     }
   }, [])
 
-  if (!isElectron) return { state: EMPTY, login: NOOP, logout: NOOP }
+  if (!isElectron) return { state: EMPTY, ready: true, login: NOOP, logout: NOOP }
 
   return {
     state,
+    ready,
     login: () => void window.api.auth.login().catch((e) => console.error('login failed', e)),
     logout: () => void window.api.auth.logout().catch((e) => console.error('logout failed', e))
   }

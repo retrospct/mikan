@@ -56,6 +56,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Ensure Electron binary is present
+        # Playwright's `_electron` launcher needs the real Electron binary AND the
+        # `path.txt` that electron's postinstall writes next to it. With the cached
+        # pnpm store (actions/setup-node `cache: pnpm`) that postinstall side-effect
+        # isn't reliably restored, so `electron.launch` fails with
+        # `ENOENT ... electron/path.txt`. Re-running electron's own installer is
+        # idempotent and guarantees both the binary and path.txt (shamefully-hoist
+        # puts electron at the repo-root node_modules). See AGENTS.md.
+        run: node node_modules/electron/install.js
+
       - name: Install Electron/Chromium system libraries + Xvfb
         # Electron shares Chromium's shared-library set; `playwright install-deps
         # chromium` resolves the right apt packages across Ubuntu versions so we

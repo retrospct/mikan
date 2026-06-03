@@ -1,8 +1,9 @@
 name: Claude Code Review
 
+# Manual-only: this review never runs automatically on pushes/PRs. Trigger it
+# on demand from the Actions tab (workflow_dispatch) with a PR number, or just
+# mention @claude on the PR (handled by claude.yml).
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -12,9 +13,6 @@ on:
 
 jobs:
   claude-review:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (!contains(github.actor, '[bot]') && github.event.pull_request.head.repo.fork == false)
     runs-on: ubuntu-latest
     permissions:
       contents: read

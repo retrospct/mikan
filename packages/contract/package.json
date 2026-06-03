@@ -16,7 +16,7 @@
     "gen:api": "openapi-ts"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "0.97.3",
+    "@hey-api/openapi-ts": "0.98.1",
     "prettier": "^3.7.4",
     "typescript": "^6.0.3",
     "vite": "^7.2.6"

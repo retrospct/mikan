@@ -1,6 +1,6 @@
-import { join } from 'path'
-import { existsSync } from 'fs'
-import { app, utilityProcess, type UtilityProcess } from 'electron'
+import { app, utilityProcess, type UtilityProcess } from 'electron';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 /**
  * Main-side handle to the data utilityProcess. Main stays a thin router: it forks
@@ -65,6 +65,25 @@ export function startWorker(): Promise<void> {
     })
   })
   return ready
+}
+
+/**
+ * Stop the running worker and start a fresh one. Used when sync config changes at
+ * runtime (Settings toggle / recovery-key import): the worker reads getSyncConfig()
+ * once at module load, so the only way to apply new NEEME_SYNC* env is to re-fork.
+ *
+ * We wait for the old process to fully exit (its `exit` handler clears child/ready
+ * and rejects in-flight calls) before forking, so the module-level child/ready never
+ * gets clobbered by a late exit event from the previous worker.
+ */
+export async function restartWorker(): Promise<void> {
+  const old = child
+  if (old) {
+    const exited = new Promise<void>((resolve) => old.once('exit', () => resolve()))
+    old.kill()
+    await exited
+  }
+  await startWorker()
 }
 
 /** Forward an IPC call to the worker and await its reply. */

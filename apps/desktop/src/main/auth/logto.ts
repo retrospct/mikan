@@ -19,19 +19,19 @@
  * — see ./oidc.ts. The access token is opaque to us; our backend remains the
  * trust boundary that verifies it (still deferred — no backend yet).
  */
+import type { AuthClaims, AuthState } from '@nimi/contract/ipc'
 import { app, safeStorage, shell } from 'electron'
 import { createRemoteJWKSet } from 'jose'
-import { readFile, writeFile, rm } from 'node:fs/promises'
+import { readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { AuthClaims, AuthState } from '@nimi/contract/ipc'
 import {
-  buildAuthorizeUrl,
-  claimsFromPayload,
-  pkceChallenge,
-  randomNonce,
-  randomState,
-  randomVerifier,
-  verifyIdToken
+    buildAuthorizeUrl,
+    claimsFromPayload,
+    pkceChallenge,
+    randomNonce,
+    randomState,
+    randomVerifier,
+    verifyIdToken
 } from './oidc'
 
 const REDIRECT_URI = 'neeme://callback'
@@ -118,7 +118,11 @@ async function exchange(body: URLSearchParams, expectedNonce?: string): Promise<
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body
   })
-  if (!res.ok) throw new Error(`Logto token request failed (HTTP ${res.status})`)
+  if (!res.ok) {
+    const err = new Error(`Logto token request failed (HTTP ${res.status})`)
+    ;(err as { status?: number }).status = res.status
+    throw err
+  }
   const t = (await res.json()) as TokenResponse
   let claims: AuthClaims | null = session?.claims ?? null
   if (t.id_token) {
@@ -149,6 +153,19 @@ async function refresh(): Promise<void> {
       client_id: appId
     })
   )
+}
+
+/**
+ * True only when the auth server actively *rejected* our refresh token (HTTP
+ * 400/401 — e.g. `invalid_grant` after revocation/expiry). Network failures,
+ * timeouts, and 5xx are transient: offline at launch must NOT log a returning
+ * user out, otherwise a hard login gate would lock them out of their own
+ * local-first data with no network. Those cases keep the cached session (sync
+ * just goes without a fresh token until connectivity returns).
+ */
+function isAuthRejection(err: unknown): boolean {
+  const status = (err as { status?: number } | null)?.status
+  return status === 400 || status === 401
 }
 
 /** Kick off interactive login by opening the system browser to Logto. */
@@ -207,10 +224,15 @@ export async function getAccessToken(): Promise<string | undefined> {
   try {
     await refresh()
     return session?.accessToken
-  } catch {
-    session = null
-    await persist()
-    emit()
+  } catch (err) {
+    // Only sign out on a hard rejection of the refresh token. On a transient
+    // failure (offline / 5xx) keep the session: the user stays signed in and
+    // simply has no fresh access token until they're back online.
+    if (isAuthRejection(err)) {
+      session = null
+      await persist()
+      emit()
+    }
     return undefined
   }
 }
@@ -254,8 +276,11 @@ export async function init(): Promise<void> {
         expiresAt: 0,
         claims: parsed.claims ?? null
       }
-      await refresh().catch(() => {
-        session = null
+      // Silent refresh on boot. If it fails only because we're offline (or the
+      // server is briefly down), keep the restored session so the login gate
+      // still opens to the user's local data; only a real auth rejection drops it.
+      await refresh().catch((err) => {
+        if (isAuthRejection(err)) session = null
       })
     }
   } catch {

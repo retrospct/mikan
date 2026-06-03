@@ -54,7 +54,40 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # Root cause of the recurring `electron.launch: ENOENT ... path.txt`:
+        # pnpm's side-effects cache (amplified by actions/setup-node `cache: pnpm`)
+        # restores electron's package from the store WITHOUT its extracted dist/ +
+        # path.txt and treats the build as already done, so electron's postinstall
+        # never runs and the binary is never materialized. This regressed with the
+        # Node 24 / pnpm 10 (action v6) bump. Disabling the side-effects cache for
+        # this install forces electron's postinstall to actually run and download.
+        run: |
+          echo "side-effects-cache=false" >> .npmrc
+          pnpm install --frozen-lockfile
+
+      - name: Ensure Electron binary is present
+        # electron's own postinstall (install.js → extract-zip) is broken under
+        # Node 24: the download is fine (checksum-validated) but extract-zip writes
+        # an almost-empty dist/ (only `locales/`, no `electron` binary, no
+        # path.txt), so Playwright's `_electron` dies with `ENOENT ... path.txt`.
+        # Bypass the broken extractor entirely: fetch the official release zip and
+        # unzip it with the system `unzip`, then write path.txt ourselves. Finally
+        # assert require('electron') resolves so any regression fails here, loudly.
+        run: |
+          electron_dir="$(node -e "console.log(require('path').dirname(require.resolve('electron/package.json')))")"
+          ver="$(node -e "console.log(require('$electron_dir/package.json').version)")"
+          url="https://github.com/electron/electron/releases/download/v${ver}/electron-v${ver}-linux-x64.zip"
+          echo "electron package: $electron_dir (v$ver)"
+          echo "fetching $url"
+          sudo apt-get install -y --no-install-recommends unzip >/dev/null
+          curl -fL --retry 3 --retry-all-errors -o /tmp/electron.zip "$url"
+          rm -rf "$electron_dir/dist"
+          mkdir -p "$electron_dir/dist"
+          unzip -q -o /tmp/electron.zip -d "$electron_dir/dist"
+          chmod +x "$electron_dir/dist/electron"
+          printf 'electron' > "$electron_dir/path.txt"
+          echo "--- dist/ ---"; ls "$electron_dir/dist" | head
+          node -e "console.log('electron binary resolved at:', require('electron'))"
 
       - name: Install Electron/Chromium system libraries + Xvfb
         # Electron shares Chromium's shared-library set; `playwright install-deps

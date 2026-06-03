@@ -56,6 +56,14 @@ export const IPC = {
   syncGetStatus: 'sync:get-status',
   /** Trigger an immediate sync; resolves when complete (request-response). */
   syncNow: 'sync:now',
+  /** Read the user-facing sync settings (pref + key presence + availability). main-owned. */
+  syncGetSettings: 'sync:get-settings',
+  /** Turn the cloud replica on/off; persists the pref + restarts the worker. main-owned. */
+  syncSetEnabled: 'sync:set-enabled',
+  /** Reveal this device's 64-hex encryption/recovery key (or null). main-owned. */
+  syncGetRecoveryKey: 'sync:get-recovery-key',
+  /** Import a recovery key from another device; restarts the worker. main-owned. */
+  syncSetRecoveryKey: 'sync:set-recovery-key',
   // Auto-updater (ROADMAP #12 — electron-updater via GitHub Releases)
   /** Query current updater state (request-response). */
   updateGetStatus: 'update:get-status',
@@ -319,9 +327,33 @@ export interface SyncStatus {
   error: string | null
 }
 
+/**
+ * User-facing sync settings, owned by main (not the worker). Separate from
+ * {@link SyncStatus}, which reports the live replica state:
+ *   - `enabled` is the persisted *intent* (the Settings toggle), which can be on
+ *     even while the live replica is briefly down (offline, awaiting login).
+ *   - `hasKey` is whether this device already has an at-rest encryption key
+ *     (so the UI can offer "reveal recovery key").
+ *   - `available` mirrors broker configuration: false in builds without
+ *     NEEME_SYNC_BROKER_URL, where the toggle can't do anything useful.
+ */
+export interface SyncSettings {
+  enabled: boolean
+  hasKey: boolean
+  available: boolean
+}
+
 export interface SyncApi {
   /** Current Turso embedded-replica sync status (request-response). */
   getStatus: () => Promise<SyncStatus>
   /** Trigger an immediate sync; resolves when complete. No-op when sync is disabled. */
   now: () => Promise<void>
+  /** Read the user-facing sync settings (toggle intent + key presence + availability). */
+  getSettings: () => Promise<SyncSettings>
+  /** Turn the cloud replica on/off. Persists the pref and restarts the data worker. */
+  setEnabled: (enabled: boolean) => Promise<SyncSettings>
+  /** Reveal this device's 64-hex recovery key (to add another device), or null if none. */
+  getRecoveryKey: () => Promise<string | null>
+  /** Import a recovery key from another device. Replaces this device's key + restarts. */
+  setRecoveryKey: (hex: string) => Promise<SyncSettings>
 }

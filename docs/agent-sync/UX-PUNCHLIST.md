@@ -36,9 +36,25 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
   `nimi/settings.tsx` (Settings overlay host), `NimiApp.tsx` overlay/`settingsOpen`
   state, main wiring in `src/main/index.ts` (~L140–156 broker token inject,
   L188–191 auth IPC).
-
----
-
+- [x] **Login gate, not a header lock.** When Logto is configured the whole app
+  now sits behind a full-screen sign-in gate (`nimi/auth-gate.tsx`, wired in
+  `NimiApp.tsx`). `useAuth` gained a `ready` flag so the gate never flashes before
+  a cached session restores; `src/main/auth/logto.ts` now keeps a cached session
+  on offline/transient refresh failures (only a real 400/401 signs you out), so a
+  hard gate never locks an offline user out of local-first data.
+- [x] **Sign out moved to Settings.** The header `AuthControl` lock chip is gone
+  (`auth.tsx` deleted); Settings has an **Account** section with identity + Sign
+  out (`nimi/settings.tsx`).
+- [x] **Sync has a real activation path.** Settings **Sync** section: a toggle
+  (persisted pref in main, restarts the data worker), live status line, a
+  per-device encryption key auto-generated into the OS keychain on first enable,
+  and **reveal / import recovery key** to add devices (ADR 0008). Contract:
+  `sync:get-settings` / `set-enabled` / `get-recovery-key` / `set-recovery-key`;
+  main: `src/main/sync/sync-prefs.ts` + `sync-control.ts`; worker re-fork:
+  `worker/client.ts restartWorker()`.
+  - **Known limitation:** toggling sync on mid-session restarts the worker but the
+    renderer keeps its already-loaded data in React state — newly pulled remote
+    rows show on next navigation/reload, not instantly.
 ## Batch — 2026-06-02 (Today empty-state walkthrough)
 
 ![Today "A fresh day" empty state](assets/today-fresh-day.png)

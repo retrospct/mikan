@@ -1,10 +1,13 @@
 name: Auto Fix CI Failures
 
+# Manual-only: previously auto-triggered on every failed CI run via `workflow_run`.
+# Disabled per request — Claude should only run on an explicit @claude mention or
+# a manual dispatch. The `workflow_run`-context steps below only do anything when
+# launched from a real CI-completed event, so a bare manual dispatch is a safe
+# no-op (the job guard skips). To restore the old auto-fix behavior, re-add the
+# `workflow_run` trigger below.
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  workflow_dispatch:
 
 permissions:
   contents: write

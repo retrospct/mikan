@@ -66,22 +66,27 @@ jobs:
           pnpm install --frozen-lockfile
 
       - name: Ensure Electron binary is present
-        # The binary download was extracting a CORRUPT/partial zip (dist/ ended up
-        # with only `locales/`, no `electron` binary, no path.txt) because a stale
-        # broken artifact in ~/.cache/electron was being reused. Force a clean,
-        # checksum-verified fresh download so a bad fetch fails loudly instead of
-        # silently extracting garbage, then assert require('electron') resolves.
-        env:
-          force_no_cache: 'true' # install.js: bypass the (corrupt) ~/.cache/electron artifact
-          electron_use_remote_checksums: '1' # verify the download; reject a partial/corrupt zip
-          DEBUG: '@electron/get:*' # surface the download URL + cache decisions if it still fails
+        # electron's own postinstall (install.js → extract-zip) is broken under
+        # Node 24: the download is fine (checksum-validated) but extract-zip writes
+        # an almost-empty dist/ (only `locales/`, no `electron` binary, no
+        # path.txt), so Playwright's `_electron` dies with `ENOENT ... path.txt`.
+        # Bypass the broken extractor entirely: fetch the official release zip and
+        # unzip it with the system `unzip`, then write path.txt ourselves. Finally
+        # assert require('electron') resolves so any regression fails here, loudly.
         run: |
           electron_dir="$(node -e "console.log(require('path').dirname(require.resolve('electron/package.json')))")"
-          echo "electron package: $electron_dir"
-          rm -rf "$HOME/.cache/electron" "$electron_dir/dist" "$electron_dir/path.txt"
-          node "$electron_dir/install.js"
-          echo "--- dist/ after install ---"
-          ls -la "$electron_dir/dist" | head
+          ver="$(node -e "console.log(require('$electron_dir/package.json').version)")"
+          url="https://github.com/electron/electron/releases/download/v${ver}/electron-v${ver}-linux-x64.zip"
+          echo "electron package: $electron_dir (v$ver)"
+          echo "fetching $url"
+          sudo apt-get install -y --no-install-recommends unzip >/dev/null
+          curl -fL --retry 3 --retry-all-errors -o /tmp/electron.zip "$url"
+          rm -rf "$electron_dir/dist"
+          mkdir -p "$electron_dir/dist"
+          unzip -q -o /tmp/electron.zip -d "$electron_dir/dist"
+          chmod +x "$electron_dir/dist/electron"
+          printf 'electron' > "$electron_dir/path.txt"
+          echo "--- dist/ ---"; ls "$electron_dir/dist" | head
           node -e "console.log('electron binary resolved at:', require('electron'))"
 
       - name: Install Electron/Chromium system libraries + Xvfb

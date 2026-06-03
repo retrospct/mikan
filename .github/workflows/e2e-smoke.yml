@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       # Skip the ONNX/MiniLM model download — the smoke suite never needs the
       # real embedder, and the network fetch is slow + flaky in CI.
       NEEME_EMBEDDER: hash
@@ -49,7 +50,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies

@@ -14,6 +14,7 @@ jobs:
     permissions:
       contents: write
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       NEEME_EMBEDDER: hash
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Code-signing (Developer ID Application cert as base64-encoded .p12)
@@ -49,13 +50,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Decode App Store Connect API key
+      node-version: '24'
         # notarytool expects a file path, not inline content.
         # Decode the base64 secret to a temp file and point APPLE_API_KEY at it.
         run: |

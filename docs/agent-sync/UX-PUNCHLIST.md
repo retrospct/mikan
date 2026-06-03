@@ -10,6 +10,35 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
 
 ---
 
+## Batch — 2026-06-02 (Auth: real login screen, not a header lock)
+
+### 0. Replace the header lock icon with a proper login screen / gate
+- **Symptom:** sign-in is a single lock-icon button tucked in the header
+  (`auth.tsx` `AuthControl`, ~L16–21) that only appears when Logto is configured
+  (`!state.configured` → renders `null`). It reads as a minor affordance, not the
+  front door. When authenticated it becomes a `priv-pill` name/sign-out chip (~L25–30).
+- **Want:** a dedicated login screen/surface (like the Settings overlay pattern in
+  `NimiApp.tsx`) that presents sign-in as a first-class flow, with the lock chip in
+  the header reduced to identity/sign-out only.
+- **Decision needed (product):** is login **required** (a gate the app sits behind)
+  or **optional**? Nimi is local-first and fully usable offline today, so a hard
+  gate conflicts with that. Recommended model: app works locally without login;
+  **login is what unlocks sync** (per-user Turso DB via the broker, ADR 0008), so
+  the login screen is reachable from Settings and from any "turn on sync" CTA.
+- **Linked gap — sync has no activation path:** sync is purely env-gated
+  (`NEEME_SYNC=on` runtime + valid `NEEME_SYNC_ENCRYPTION_KEY`, see
+  `db/sync-config.ts`), so in a shipped release it's **dormant** — there is no UI
+  toggle and `NEEME_SYNC` is never set. The login screen work should land alongside
+  a "Sync" toggle in Settings that (a) drives login, (b) flips sync on, and (c)
+  surfaces `useSync` status/errors. Without this, login + broker + per-user DB are
+  all wired but unreachable by a normal user.
+- **Pointers:** `auth.tsx`, `hooks/useAuth.ts`, `hooks/useSync.ts`,
+  `nimi/settings.tsx` (Settings overlay host), `NimiApp.tsx` overlay/`settingsOpen`
+  state, main wiring in `src/main/index.ts` (~L140–156 broker token inject,
+  L188–191 auth IPC).
+
+---
+
 ## Batch — 2026-06-02 (Today empty-state walkthrough)
 
 ![Today "A fresh day" empty state](assets/today-fresh-day.png)

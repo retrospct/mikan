@@ -58,17 +58,26 @@ jobs:
 
       - name: Ensure Electron binary is present
         # Playwright's `_electron` launcher reads `electron/path.txt` to find the
-        # binary. With the cached pnpm store (actions/setup-node `cache: pnpm`) the
-        # extracted binary `dist/` is restored but `path.txt` is NOT — and
-        # electron's install.js treats "dist present" as "already installed", so it
-        # skips and never (re)writes path.txt. Result: `electron.launch` fails with
+        # binary. The cached pnpm store (actions/setup-node `cache: pnpm`) restores
+        # electron's extracted `dist/` but DROPS `path.txt`, so electron's
+        # install.js (isInstalled() needs both dist/version AND path.txt) thinks
+        # it's not installed and tries to re-download — which is flaky in CI and
+        # leaves path.txt unwritten, so `electron.launch` dies with
         # `ENOENT ... path.txt` (broken on every run since the Node 24 / v6 bump).
-        # Wipe dist/ + path.txt to force a clean reinstall, then assert the launcher
-        # can resolve the binary so a regression fails here, loudly, not mid-suite.
+        # Fix: if the extracted binary is already cached, just restore path.txt so
+        # install.js no-ops; only download when the binary is genuinely missing.
+        # Then assert the launcher resolves so a regression fails here, loudly.
         run: |
           electron_dir="$(node -e "console.log(require('path').dirname(require.resolve('electron/package.json')))")"
           echo "electron package: $electron_dir"
-          rm -rf "$electron_dir/dist" "$electron_dir/path.txt"
+          case "$(uname -s)" in
+            Darwin) pp='Electron.app/Contents/MacOS/Electron' ;;
+            *)      pp='electron' ;;
+          esac
+          if [ -e "$electron_dir/dist/$pp" ] && [ ! -f "$electron_dir/path.txt" ]; then
+            printf '%s' "$pp" > "$electron_dir/path.txt"
+            echo "restored path.txt -> $pp"
+          fi
           node "$electron_dir/install.js"
           node -e "console.log('electron binary resolved at:', require('electron'))"
 

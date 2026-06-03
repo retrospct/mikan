@@ -9,15 +9,21 @@ todos:
   - id: spike-embed
     status: pending
     content: 'Spike B — embeddings on a real iOS device/dev-client: run react-native-executorch useTextEmbeddings with ALL_MINILM_L6_V2, embed a few strings, and measure cold-load + per-embed latency and app-size delta (~110MB iOS model). Critically, compare the output vectors against desktop''s transformers.js Xenova/all-MiniLM-L6-v2 export for the SAME input text — quantify cosine similarity between the two exports to decide whether cross-device vectors are directly comparable (needed for sync) or whether each device must re-embed.'
+  - id: instrumentation
+    status: pending
+    content: 'Instrument on-device performance + reliability on BOTH surfaces so the local-vs-cloud go/no-go is data-driven, not a vibe. Capture per device-tier: embed latency (cold model load + per-chunk), search latency at 1k/10k/100k chunks, index throughput, native-module load-failure rate (onnxruntime-node on desktop OS/arch matrix; op-sqlite + executorch on the EAS/device matrix), model-download success rate, memory/footprint, and (mobile) battery/thermal under bulk indexing + iOS background-suspension behavior. Define explicit p95 thresholds on the lowest device tier we commit to support — those thresholds are the trigger to reach into the cloud pocket.'
   - id: extract-pipeline-pkg
     status: pending
-    content: 'Extract the platform-neutral pipeline orchestration from apps/desktop/src/main into a new packages/pipeline (@nimi/pipeline), consumed from .ts source like @nimi/contract. Move the orchestration of capture → chunk → embed → index → search (the logic in services/pipeline-service.ts) behind explicit seams: Embedder (already exists in pipeline/embed.ts), a new VectorStore/Db seam (currently raw libSQL SQL inline in pipeline-service.ts), a BlobStore seam (currently pipeline/raw-store.ts uses node fs), and the existing Extractor seams (pipeline/ocr.ts, pipeline/asr.ts). Keep @nimi/contract free of runtime deps; pipeline package holds runtime logic with platform deps injected.'
+    content: 'Extract the platform-neutral pipeline orchestration from apps/desktop/src/main into a new packages/pipeline (@nimi/pipeline), consumed from .ts source like @nimi/contract. Move the orchestration of capture → chunk → embed → index → search (the logic in services/pipeline-service.ts) behind explicit seams: Embedder (already exists in pipeline/embed.ts), a new VectorStore/Db seam (currently raw libSQL SQL inline in pipeline-service.ts), a BlobStore seam (currently pipeline/raw-store.ts uses node fs), and the existing Extractor seams (pipeline/ocr.ts, pipeline/asr.ts). Keep @nimi/contract free of runtime deps; pipeline package holds runtime logic with platform deps injected. Preserve a swappable cloud seam at each stage (CloudEmbedder, cloud offload for heavy extraction) even though only local adapters ship — the cloud path stays "in the pocket."'
   - id: desktop-adapter
     status: pending
     content: 'Refactor apps/desktop to consume @nimi/pipeline via desktop adapters (the existing @libsql/client store, onnxruntime-node/transformers.js embedder, node-fs blob store). This is a behavior-preserving refactor — the existing vitest suite (158 tests, NEEME_EMBEDDER=hash) and the e2e/smoke tiers must stay green with no functional change. Land this BEFORE mobile adapters so the seams are proven on the platform that already works.'
   - id: mobile-adapters
     status: pending
-    content: 'Implement the mobile adapters behind @nimi/pipeline seams: op-sqlite VectorStore (libsql native vector or sqlite-vec vec0, per Spike A), executorch Embedder (useTextEmbeddings ALL_MINILM_L6_V2, per Spike B), and an expo-file-system BlobStore. Requires an Expo dev-client / EAS build (op-sqlite + executorch are native modules — no Expo Go), which #14 already needs for Logto. Reuse @nimi/contract/views projection (the analog of services/project.ts) so mobile renders the same view-models.'
+    content: 'Implement the mobile adapters behind @nimi/pipeline seams: op-sqlite VectorStore (libsql native vector or sqlite-vec vec0, per Spike A), executorch Embedder (useTextEmbeddings ALL_MINILM_L6_V2, per Spike B), and an expo-file-system BlobStore (content-hash original-object store, the RN analog of pipeline/raw-store.ts). Requires an Expo dev-client / EAS build (op-sqlite + executorch are native modules — no Expo Go), which #14 already needs for Logto. Reuse @nimi/contract/views projection (the analog of services/project.ts) so mobile renders the same view-models.'
+  - id: raw-blob-offload
+    status: pending
+    content: 'Close the original-object gap (applies to BOTH surfaces). Today original captured bytes live ONLY in the local content-hash blob store (pipeline/raw-store.ts → userData/raw/<shard>/<sha256>), written plaintext, NOT encrypted, NOT synced, and NOT in MIGRATABLE_TABLES — so a cloud migration carries an item''s text + todos but leaves its source file behind, and a second device never sees originals. Design encryption-at-rest for raw blobs (mirroring the items.text key story) and a blob offload/sync path (client-encrypted object storage keyed by the same sha256) so the original object travels with the record. Sequence behind the DB-row migration that already exists in db/migrate.ts.'
   - id: mobile-ui-localfirst
     status: pending
     content: 'Rewire the apps/mobile Feed + capture screens to read/write the LOCAL pipeline first (capture-a-note → local index → local semantic search), demoting @nimi/contract/api (neeme FastAPI) from "only data path" to an optional sync/offload path. Mirror the desktop renderer seam pattern (apps/desktop/src/renderer/src/nimi/api.ts) so the same view-model surface backs both local and remote.'
@@ -103,6 +109,90 @@ guarded by the existing test suite — `pnpm --filter @nimi/desktop test` (158 t
 plus the smoke/e2e tiers. Proving the seams on the platform that already works de-risks the whole
 effort before any RN code exists. If the desktop refactor can't stay green, the seam boundaries are
 wrong and we learn it cheaply.
+
+## What gets stored, and where (the three tiers)
+
+A capture fans out into **three distinct storage tiers** — they have different durability,
+encryption, and sync properties, and the plan must port all three (not just the searchable index):
+
+| Tier | What | Where (desktop today) | Encrypted at rest? | Syncs? | Mobile adapter |
+|---|---|---|---|---|---|
+| **Original object** | the captured bytes (PDF, image, audio, …) | content-hash blob store — [`pipeline/raw-store.ts`](../../apps/desktop/src/main/pipeline/raw-store.ts) → `userData/raw/<first-2-hex>/<sha256><ext>` | ❌ **no** — plaintext on disk | ❌ **no** | `expo-file-system` `BlobStore` |
+| **Item record** | metadata + extracted text | libSQL `items` row — `id`(=sha256), `sourceName`, `contentType`, `sizeBytes`, **`storedPath`** (pointer to the blob), `text`, `status` | `text` only, when a key is set | ✅ rows sync | op-sqlite (same schema) |
+| **Search index** | chunk excerpts + 384-dim vectors | libSQL `chunks` (`text` + `embedding F32_BLOB(384)`) | ❌ plaintext, **local-only** | ❌ rebuilt locally | op-sqlite VectorStore |
+
+Key facts that shape the rest of the plan:
+
+- **Content addressing = free dedup.** The object id **is** the sha256 of the bytes
+  ([`putRaw()`](../../apps/desktop/src/main/pipeline/raw-store.ts)); re-capturing identical bytes is a
+  no-op, and `capture()` short-circuits on `items.id`.
+- **Search and the original are deliberately decoupled.** A hit resolves `chunks → items.storedPath`
+  to get back to the source file. The index is a rebuildable artifact; the catalog row syncs; the
+  original bytes do neither today.
+- **The original-object gap is the most load-bearing open item.** Originals are written **unencrypted**
+  and **never leave the capturing device** (not in `MIGRATABLE_TABLES`). This is the same gap that
+  surfaces under migration and under "cloud in pocket" (below). See the `raw-blob-offload` todo.
+
+## Cloud as a pocketed fallback (both surfaces)
+
+**Principle:** ship on-device-first on desktop *and* mobile; keep the cloud pipeline **out of the
+build but never out of the seams.** [ADR 0003](../adr/0003-all-typescript-on-device-pipeline.md)
+already demotes cloud to *offload + sync*; this plan keeps that optionality alive so reaching for
+cloud later is a config swap, not a rewrite. The proof-of-pattern already exists: `CloudDrafter`
+(Anthropic BYO-key, [ADR 0004](../adr/0004-ai-drafting-model.md)) is a cloud path behind the
+`Drafter` seam. `CloudEmbedder` slots into the `Embedder` seam identically.
+
+**This only holds under two conditions:**
+
+1. **Seams stay swappable across both surfaces** — which is exactly why the orchestration is extracted
+   into the shared `@nimi/pipeline` (else desktop and mobile drift into two divergent cloud
+   integrations).
+2. **We instrument, so the go/no-go is measured** (see the `instrumentation` todo). The trigger to pull
+   cloud from the pocket is a p95 above a UX threshold **on the lowest device tier we commit to
+   support** — not a hunch. Note the likely first trigger: desktop search uses `libsql_vector_idx`
+   (DiskANN, scales), but mobile sqlite-vec `vec0` is closer to brute-force, so mobile may hit a
+   scaling wall sooner.
+
+**Two different "cloud pockets," opposite privacy postures — keep them distinct:**
+
+- **Cloud sync + offload of heavy compute** (VLM caption, big LLM): consistent with local-first —
+  content can stay encrypted; the device hands off a discrete task. Cheap to keep pocketed.
+- **Cloud *embedding* of user content**: sends plaintext (or embeds server-side), which **breaks the
+  "cloud only ever gets ciphertext" invariant** enforced in [`sync-config.ts`](../../apps/desktop/src/main/db/sync-config.ts).
+  Not a free fallback — it reopens the consent/privacy model.
+
+**Correctness footgun:** mixing cloud + local embedders fragments the vector space unless they share a
+model. Keep one canonical embedder per space; since vectors are rebuildable, prefer re-embedding a
+space over mixing.
+
+## Local → cloud migration (already half-built)
+
+The migration a user would consent to — moving their local store to the cloud — **already exists for
+the desktop sync-on case** and generalizes cleanly:
+
+- When sync is first enabled on a device with a plain local DB, libSQL won't open it as a replica.
+  [`buildReplicaWithRecovery()`](../../apps/desktop/src/main/db/migrate.ts) backs the plain DB aside,
+  bootstraps a fresh replica from the Turso primary, then
+  [`migrateUserData()`](../../apps/desktop/src/main/db/migrate.ts) re-imports the user's rows
+  (`INSERT OR IGNORE`, per-table transactions, idempotent), **re-encrypting content under the active
+  key** so the cloud primary only ever holds ciphertext. The backup is deleted on success, kept on
+  failure for retry.
+- **Vectors don't migrate — they rebuild.** `chunks` is intentionally omitted from `MIGRATABLE_TABLES`
+  (it's regenerated from `items.text` by reindex). So you migrate **text as ciphertext** and each
+  device **re-embeds locally** — which sidesteps the cross-device embedder-parity worry entirely (and
+  is a privacy win, since embeddings can leak semantics).
+- **Consent is enforced by key possession, not just a checkbox.** [`sync-config.ts`](../../apps/desktop/src/main/db/sync-config.ts)
+  fails closed without a valid `NEEME_SYNC_ENCRYPTION_KEY` — without the user's key, nothing semantic
+  leaves the device.
+
+**Gaps to close for a *full* migration (both surfaces):**
+
+- **Raw blobs don't migrate** (the original-object gap above) — DB rows go, source files stay behind.
+- **The migrate logic is desktop-only** (`@libsql/client`); the mobile op-sqlite equivalent should live
+  behind the same `@nimi/pipeline` store seam, not be re-implemented.
+- **Key custody is undecided** — account-derived vs passphrase vs OS keychain vs recovery flow
+  (ADR 0001/0008 cover the token/auth side, not key management). Lose the key = lose the data, by
+  design.
 
 ## Phasing
 

@@ -4266,34 +4266,32 @@ html[data-theme='light'] .desk {
   }
 }
 
-/* frameless tray window: drag the app by its top bars; keep controls clickable.
-   `-webkit-app-region` is a no-op in a normal (framed) or browser window. */
-.hdr,
-.push-hd {
+/* frameless tray window: make ONLY the inert header zones draggable.
+   `-webkit-app-region` is a no-op in a normal (framed) or browser window.
+
+   We deliberately do NOT make the whole header bar a drag region. Carving each
+   control back out with `-webkit-app-region: no-drag` is unreliable in Chromium:
+   a `no-drag` flex *item* — especially one nested inside a sub-container like
+   `.hdr-r` — frequently fails to get its click-through hole, so the back button
+   and header controls swallow clicks (badly so in the packaged frameless window).
+   Instead, only the non-interactive brand / greeting / title zones are draggable,
+   so no interactive element ever sits inside a drag region. */
+.hdr-l,
+.hdr-greet,
+.hdr-mark,
+.push-hd-main {
   -webkit-app-region: drag;
 }
+/* Belt-and-suspenders: an interactive element must never be draggable, even if it
+   ever lands inside a drag zone. */
 button,
 input,
 textarea,
+select,
 a,
 .task,
 .slot,
 [role='button'] {
-  -webkit-app-region: no-drag;
-}
-/* `.hdr` and `.push-hd` are flex containers used as drag regions. Chromium fails
-   to carve the `no-drag` click-through hole for a flex *item* unless that item
-   establishes its own layer, so the back button + header controls swallow clicks
-   despite being `no-drag`. `position: relative` (no visual change) fixes the
-   hit-test. The inert text zones (`.hdr-greet`, `.push-hd-main`) stay draggable. */
-.hdr-btn,
-.sync-wrap,
-.sync-pill,
-.priv-pill,
-.connector-connect,
-.connector-disconnect,
-.push-back {
-  position: relative;
   -webkit-app-region: no-drag;
 }
 

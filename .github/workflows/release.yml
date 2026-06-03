@@ -25,17 +25,18 @@ jobs:
       APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
       APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
       # ── Public client config, inlined at build time by electron-vite ──────────
-      # These are NOT secrets: a native PKCE app has no client secret, and the
-      # endpoint/appId/resource are visible in the auth URL anyway. They live as
-      # repo/Environment *Variables* (Settings → Secrets and variables → Actions →
-      # Variables). The privileged TURSO_PLATFORM_TOKEN stays on Vercel (broker),
-      # never in the desktop build. Without these, a tagged release ships with
-      # Logto + broker inert (no sign-in, no sync).
-      MAIN_VITE_LOGTO_ENDPOINT: ${{ vars.MAIN_VITE_LOGTO_ENDPOINT }}
-      MAIN_VITE_LOGTO_APP_ID: ${{ vars.MAIN_VITE_LOGTO_APP_ID }}
-      MAIN_VITE_LOGTO_RESOURCE: ${{ vars.MAIN_VITE_LOGTO_RESOURCE }}
-      MAIN_VITE_NEEME_SYNC_BROKER_URL: ${{ vars.MAIN_VITE_NEEME_SYNC_BROKER_URL }}
-      MAIN_VITE_GOOGLE_CLIENT_ID: ${{ vars.MAIN_VITE_GOOGLE_CLIENT_ID }}
+      # Not confidential (a native PKCE app has no real client secret, and the
+      # endpoint/appId/resource are visible in the auth URL anyway), but stored as
+      # repo *Secrets* to keep them out of CI logs. They MUST be read from
+      # `secrets.*` here — when referenced as `vars.*` while saved as Secrets, they
+      # resolve to empty strings and the release ships with Logto + broker inert
+      # (no sign-in, no sync). The privileged TURSO_PLATFORM_TOKEN stays on Vercel
+      # (broker), never in the desktop build.
+      MAIN_VITE_LOGTO_ENDPOINT: ${{ secrets.MAIN_VITE_LOGTO_ENDPOINT }}
+      MAIN_VITE_LOGTO_APP_ID: ${{ secrets.MAIN_VITE_LOGTO_APP_ID }}
+      MAIN_VITE_LOGTO_RESOURCE: ${{ secrets.MAIN_VITE_LOGTO_RESOURCE }}
+      MAIN_VITE_NEEME_SYNC_BROKER_URL: ${{ secrets.MAIN_VITE_NEEME_SYNC_BROKER_URL }}
+      MAIN_VITE_GOOGLE_CLIENT_ID: ${{ secrets.MAIN_VITE_GOOGLE_CLIENT_ID }}
       # Google "client secret" is non-confidential for a native app (it ships in
       # the binary regardless), but kept as a Secret to keep it out of CI logs.
       MAIN_VITE_GOOGLE_CLIENT_SECRET: ${{ secrets.MAIN_VITE_GOOGLE_CLIENT_SECRET }}

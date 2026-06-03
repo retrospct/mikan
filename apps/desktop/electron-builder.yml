@@ -12,6 +12,15 @@ files:
 asarUnpack:
   - resources/**
   - node_modules/ffmpeg-static/**
+# Register the `neeme://` deep-link scheme in the bundle (macOS Info.plist
+# CFBundleURLTypes / Windows registry) so the Logto OAuth callback
+# (neeme://callback) routes back to the app. Without this, runtime
+# setAsDefaultProtocolClient('neeme') is the only registration and the packaged
+# login round-trip is unreliable.
+protocols:
+  - name: Nimi
+    schemes:
+      - neeme
 win:
   executableName: nimi
 nsis:

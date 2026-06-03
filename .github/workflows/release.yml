@@ -14,7 +14,6 @@ jobs:
     permissions:
       contents: write
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       NEEME_EMBEDDER: hash
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Code-signing (Developer ID Application cert as base64-encoded .p12)
@@ -42,15 +41,21 @@ jobs:
       MAIN_VITE_GOOGLE_CLIENT_SECRET: ${{ secrets.MAIN_VITE_GOOGLE_CLIENT_SECRET }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-      node-version: '24'
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Decode App Store Connect API key
         # notarytool expects a file path, not inline content.
         # Decode the base64 secret to a temp file and point APPLE_API_KEY at it.
         run: |

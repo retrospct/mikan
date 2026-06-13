@@ -18,7 +18,7 @@ import type {
 } from '@nimi/contract/views'
 import { CAP_REACHED, type CaptureResult, type NimiApi, type Todo } from '@nimi/contract/ipc'
 
-type MockApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui'>
+type MockApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui' | 'update'>
 
 // The day's focus cap (mirrors NimiApp's CAP) — lets the mock raise CAP_REACHED
 // so the add-todo → backlog fallback is exercisable in the browser.
@@ -514,6 +514,17 @@ export function makeMockApi(): MockApi {
     },
     ui: {
       setBadge: async (): Promise<void> => {}
+    },
+    update: {
+      getStatus: async () => ({
+        stage: 'idle' as const,
+        version: null,
+        progress: null,
+        error: null
+      }),
+      quitAndInstall: async (): Promise<void> => {},
+      checkNow: async (): Promise<void> => {},
+      onChanged: () => () => {}
     }
   }
 }

@@ -7,9 +7,11 @@
 //     gate in NimiApp; the header no longer carries an auth control).
 //   - Sync: the cloud-replica toggle + per-device encryption / recovery key.
 //   - Connections: the Gmail + Google Calendar connectors (self-contained).
+//   - Updates: current version + check / restart-to-update.
 import { useState, type JSX } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useSync, useSyncSettings } from '../hooks/useSync'
+import { useUpdate } from '../hooks/useUpdate'
 import { ConnectorsControl } from './connectors'
 import { NIcon } from './icons'
 import { relativeTime } from './time'
@@ -96,8 +98,8 @@ function SyncSection(): JSX.Element {
     <section className="settings-section">
       <div className="settings-section-h">Sync</div>
       <div className="settings-section-s">
-        Keep your notes in sync across your devices. Content is end-to-end encrypted
-        with a key that lives only on your devices — Nimi&apos;s cloud never sees plaintext.
+        Keep your notes in sync across your devices. Content is end-to-end encrypted with a key that
+        lives only on your devices — Nimi&apos;s cloud never sees plaintext.
       </div>
 
       <div className="settings-row">
@@ -129,8 +131,8 @@ function SyncSection(): JSX.Element {
         <div className="settings-key">
           <div className="settings-key-h">Recovery key</div>
           <div className="settings-key-s">
-            Save this to add another device or restore access. Anyone with it can read
-            your synced notes — keep it safe, and never share it.
+            Save this to add another device or restore access. Anyone with it can read your synced
+            notes — keep it safe, and never share it.
           </div>
           {revealed ? (
             <div className="settings-key-reveal">
@@ -152,8 +154,8 @@ function SyncSection(): JSX.Element {
           {importOpen ? (
             <>
               <div className="settings-key-s">
-                Paste the recovery key from another device. This replaces this device&apos;s
-                key — do it on a fresh device, before turning on sync.
+                Paste the recovery key from another device. This replaces this device&apos;s key —
+                do it on a fresh device, before turning on sync.
               </div>
               <input
                 className="settings-input"
@@ -195,6 +197,50 @@ function SyncSection(): JSX.Element {
   )
 }
 
+function UpdateSection(): JSX.Element {
+  const { status, checkNow, quitAndInstall } = useUpdate()
+  const { stage, version, progress, error } = status
+
+  const busy = stage === 'checking' || stage === 'downloading'
+
+  const statusLine =
+    stage === 'checking'
+      ? 'Checking for updates…'
+      : stage === 'available'
+        ? `Downloading ${version ?? 'update'}…`
+        : stage === 'downloading'
+          ? `Downloading${progress !== null ? ` ${progress}%` : '…'}`
+          : stage === 'ready'
+            ? `v${version} ready — restart to install`
+            : stage === 'error'
+              ? (error ?? 'Update check failed')
+              : 'Up to date'
+
+  return (
+    <section className="settings-section">
+      <div className="settings-section-h">Updates</div>
+      <div className="settings-row">
+        <div className="settings-row-main">
+          <div className="settings-row-ttl">Nimi</div>
+          <div className="settings-row-sub">
+            {stage === 'error' ? statusLine : `v${__APP_VERSION__} — ${statusLine}`}
+          </div>
+        </div>
+        {stage === 'ready' ? (
+          <button className="settings-btn" onClick={quitAndInstall}>
+            Restart to update
+          </button>
+        ) : (
+          <button className="settings-btn" disabled={busy} onClick={checkNow}>
+            {stage === 'checking' ? 'Checking…' : 'Check for updates'}
+          </button>
+        )}
+      </div>
+      {stage === 'error' && <div className="settings-note settings-note-err">{error}</div>}
+    </section>
+  )
+}
+
 export function SettingsView({ onBack }: { onBack: () => void }): JSX.Element {
   return (
     <div className="push settings-page">
@@ -216,11 +262,13 @@ export function SettingsView({ onBack }: { onBack: () => void }): JSX.Element {
         <section className="settings-section">
           <div className="settings-section-h">Connections</div>
           <div className="settings-section-s">
-            Link Gmail and Google Calendar so Nimi can quietly pull in context. Connect,
-            disconnect, or sync each whenever you like.
+            Link Gmail and Google Calendar so Nimi can quietly pull in context. Connect, disconnect,
+            or sync each whenever you like.
           </div>
           <ConnectorsControl />
         </section>
+
+        <UpdateSection />
       </div>
     </div>
   )

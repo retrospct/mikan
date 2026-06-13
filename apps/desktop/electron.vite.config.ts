@@ -1,8 +1,13 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import type { Plugin } from 'vite'
+
+const { version: APP_VERSION } = JSON.parse(readFileSync('./package.json', 'utf-8')) as {
+  version: string
+}
 
 // The renderer's index.html ships the strict PRODUCTION CSP. The dev server,
 // however, needs relaxations the built app does not:
@@ -66,6 +71,12 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin({ exclude: PRELOAD_BUNDLE })]
   },
   renderer: {
+    define: {
+      // Baked in at build time so the renderer can display the installed version
+      // without an IPC round-trip. CI stamps package.json before building, so
+      // this always matches the version shown in the GitHub Release.
+      __APP_VERSION__: JSON.stringify(APP_VERSION)
+    },
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src')

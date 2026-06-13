@@ -7,11 +7,11 @@ import * as auth from './auth/logto'
 import * as googleAuth from './connectors/google-auth'
 import { clearSyncToken, restoreCachedToken } from './sync/broker'
 import {
-    getRecoveryKey,
-    getSyncSettings,
-    importRecoveryKey,
-    prepareSyncEnv,
-    setSyncEnabled
+  getRecoveryKey,
+  getSyncSettings,
+  importRecoveryKey,
+  prepareSyncEnv,
+  setSyncEnabled
 } from './sync/sync-control'
 import { initTrayWindow, setBadge, showWindow } from './window/tray-window'
 import { call, startWorker } from './worker/client'
@@ -216,7 +216,9 @@ app.whenReady().then(async () => {
     if (!accessToken) throw new Error(`${provider} is not connected`)
     const result = await call<IngestResult>(IPC.connectorsIngest, [provider, accessToken])
     // Broadcast updated state after sync (best-effort).
-    buildConnectorsState().then(broadcastConnectorsState).catch(() => {})
+    buildConnectorsState()
+      .then(broadcastConnectorsState)
+      .catch(() => {})
     return result
   }
 
@@ -229,7 +231,9 @@ app.whenReady().then(async () => {
   ipcMain.handle(IPC.connectorsConnect, async (_e, provider: ConnectorId) => {
     await googleAuth.connect(provider)
     // Kick off an immediate first sync in the background so the feed populates.
-    runSync(provider).catch((err) => console.error(`[connectors] initial sync failed for ${provider}`, err))
+    runSync(provider).catch((err) =>
+      console.error(`[connectors] initial sync failed for ${provider}`, err)
+    )
     broadcastConnectorsState(googleAuth.getState())
   })
 
@@ -244,15 +248,18 @@ app.whenReady().then(async () => {
 
   // Periodic background sync — every NEEME_CONNECTOR_SYNC_MINUTES (default 15).
   const syncMinutes = Math.max(1, parseInt(process.env.NEEME_CONNECTOR_SYNC_MINUTES ?? '15', 10))
-  const syncInterval = setInterval(() => {
-    const providers: ConnectorId[] = ['gmail', 'gcal']
-    for (const provider of providers) {
-      if (!googleAuth.getState()[provider].connected) continue
-      runSync(provider).catch((err) =>
-        console.error(`[connectors] background sync failed for ${provider}`, err)
-      )
-    }
-  }, syncMinutes * 60 * 1000)
+  const syncInterval = setInterval(
+    () => {
+      const providers: ConnectorId[] = ['gmail', 'gcal']
+      for (const provider of providers) {
+        if (!googleAuth.getState()[provider].connected) continue
+        runSync(provider).catch((err) =>
+          console.error(`[connectors] background sync failed for ${provider}`, err)
+        )
+      }
+    },
+    syncMinutes * 60 * 1000
+  )
   // Ensure the interval doesn't keep the process alive after quit.
   syncInterval.unref()
 
@@ -328,11 +335,16 @@ function setupAutoUpdater(): void {
 
       ipcMain.handle(IPC.updateGetStatus, () => status)
       ipcMain.handle(IPC.updateQuitAndInstall, () => autoUpdater.quitAndInstall())
+      ipcMain.handle(IPC.updateCheckNow, () =>
+        autoUpdater
+          .checkForUpdatesAndNotify()
+          .catch((err) => console.error('[updater] manual check failed', err))
+      )
 
       // Check on startup; daily re-check keeps long-running instances up-to-date.
-      autoUpdater.checkForUpdatesAndNotify().catch((err) =>
-        console.error('[updater] initial check failed', err)
-      )
+      autoUpdater
+        .checkForUpdatesAndNotify()
+        .catch((err) => console.error('[updater] initial check failed', err))
       const dailyMs = 24 * 60 * 60 * 1000
       const timer = setInterval(
         () => autoUpdater.checkForUpdatesAndNotify().catch(() => {}),

@@ -69,6 +69,8 @@ export const IPC = {
   updateGetStatus: 'update:get-status',
   /** Apply the downloaded update: quit and install. */
   updateQuitAndInstall: 'update:quit-and-install',
+  /** Trigger an immediate update check (fire-and-forget; state flows back via updateChanged). */
+  updateCheckNow: 'update:check-now',
   /** main → renderer push: update state changed (checking, available, downloading, ready). */
   updateChanged: 'update:changed'
 } as const
@@ -289,6 +291,8 @@ export interface UpdateApi {
   getStatus: () => Promise<UpdateStatus>
   /** Quit the app and apply the downloaded update. Only meaningful when stage === 'ready'. */
   quitAndInstall: () => Promise<void>
+  /** Trigger an immediate check; state flows back via onChanged. */
+  checkNow: () => Promise<void>
   /** Subscribe to state changes; returns an unsubscribe fn. */
   onChanged: (cb: (status: UpdateStatus) => void) => () => void
 }

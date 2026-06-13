@@ -1,11 +1,11 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import {
-    IPC,
-    type AuthState,
-    type ConnectorId,
-    type ConnectorsState,
-    type NimiApi,
-    type UpdateStatus
+  IPC,
+  type AuthState,
+  type ConnectorId,
+  type ConnectorsState,
+  type NimiApi,
+  type UpdateStatus
 } from '@nimi/contract/ipc'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 
@@ -57,7 +57,9 @@ const api: NimiApi = {
     onChanged: (cb: (state: ConnectorsState) => void) => {
       const handler = (_e: IpcRendererEvent, state: ConnectorsState): void => cb(state)
       ipcRenderer.on(IPC.connectorsChanged, handler)
-      return (): void => { ipcRenderer.removeListener(IPC.connectorsChanged, handler) }
+      return (): void => {
+        ipcRenderer.removeListener(IPC.connectorsChanged, handler)
+      }
     }
   },
   sync: {
@@ -74,6 +76,7 @@ const api: NimiApi = {
   update: {
     getStatus: () => ipcRenderer.invoke(IPC.updateGetStatus),
     quitAndInstall: () => ipcRenderer.invoke(IPC.updateQuitAndInstall),
+    checkNow: () => ipcRenderer.invoke(IPC.updateCheckNow),
     onChanged: (cb: (status: UpdateStatus) => void) => {
       const handler = (_e: IpcRendererEvent, status: UpdateStatus): void => cb(status)
       ipcRenderer.on(IPC.updateChanged, handler)

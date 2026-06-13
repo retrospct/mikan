@@ -8,3 +8,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+/** Injected at build time by electron.vite.config.ts from apps/desktop/package.json. */
+declare const __APP_VERSION__: string

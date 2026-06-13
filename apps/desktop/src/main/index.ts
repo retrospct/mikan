@@ -1,10 +1,11 @@
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import type { ConnectorId, ConnectorsState, IngestResult, UpdateStatus } from '@nimi/contract/ipc'
 import { IPC } from '@nimi/contract/ipc'
-import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, session, shell } from 'electron'
 import { join } from 'path'
 import * as auth from './auth/logto'
 import * as googleAuth from './connectors/google-auth'
+import { installApplicationMenu } from './menu'
 import { clearSyncToken, restoreCachedToken } from './sync/broker'
 import {
   getRecoveryKey,
@@ -273,6 +274,21 @@ app.whenReady().then(async () => {
     setupAutoUpdater()
   }
 
+  // Native app-menu "Check for Updates…" (macOS-standard, like Cursor/Slack).
+  // In dev / unpackaged builds the updater never loads, so explain that instead.
+  installApplicationMenu(() => {
+    if (triggerManualUpdateCheck) {
+      triggerManualUpdateCheck()
+    } else {
+      void dialog.showMessageBox({
+        type: 'info',
+        message: 'Updates are unavailable in this build',
+        detail: 'Automatic updates only run in the packaged, signed app.',
+        buttons: ['OK']
+      })
+    }
+  })
+
   initTrayWindow()
 
   app.on('activate', function () {
@@ -295,6 +311,11 @@ app.on('window-all-closed', () => {
 // pattern. All update state is tracked locally and pushed to the renderer;
 // the renderer only ever calls `update:get-status` or `update:quit-and-install`.
 // Errors are logged but never crash the app.
+// Set by setupAutoUpdater once electron-updater has loaded; invoked by the
+// native "Check for Updates…" menu item. Null until then (and in dev), so the
+// menu handler can fall back to an explanatory dialog.
+let triggerManualUpdateCheck: (() => void) | null = null
+
 function setupAutoUpdater(): void {
   // Dynamic import keeps electron-updater out of the critical startup path and
   // avoids loading it at all in dev (this fn is only called when app.isPackaged).
@@ -307,6 +328,11 @@ function setupAutoUpdater(): void {
         error: null
       }
 
+      // Tracks whether the in-flight check was started from the menu, so we can
+      // surface a native "you're up to date" / error dialog for that path only
+      // (the Settings button already shows status inline in the renderer).
+      let manualCheck = false
+
       function push(next: Partial<UpdateStatus>): void {
         status = { ...status, ...next }
         for (const win of BrowserWindow.getAllWindows()) {
@@ -318,10 +344,24 @@ function setupAutoUpdater(): void {
       autoUpdater.autoInstallOnAppQuit = true
 
       autoUpdater.on('checking-for-update', () => push({ stage: 'checking', error: null }))
-      autoUpdater.on('update-available', (info) =>
+      autoUpdater.on('update-available', (info) => {
         push({ stage: 'available', version: info.version, error: null })
-      )
-      autoUpdater.on('update-not-available', () => push({ stage: 'idle', error: null }))
+        // checkForUpdatesAndNotify handles the download + native "ready to
+        // install" notification from here, so the manual-check dialog is done.
+        manualCheck = false
+      })
+      autoUpdater.on('update-not-available', () => {
+        push({ stage: 'idle', error: null })
+        if (manualCheck) {
+          manualCheck = false
+          void dialog.showMessageBox({
+            type: 'info',
+            message: "You're up to date",
+            detail: `nimi ${app.getVersion()} is the latest version.`,
+            buttons: ['OK']
+          })
+        }
+      })
       autoUpdater.on('download-progress', (p) =>
         push({ stage: 'downloading', progress: Math.round(p.percent) })
       )
@@ -331,6 +371,15 @@ function setupAutoUpdater(): void {
       autoUpdater.on('error', (err) => {
         console.error('[updater]', err)
         push({ stage: 'error', error: err.message, progress: null })
+        if (manualCheck) {
+          manualCheck = false
+          void dialog.showMessageBox({
+            type: 'error',
+            message: 'Update check failed',
+            detail: err.message,
+            buttons: ['OK']
+          })
+        }
       })
 
       ipcMain.handle(IPC.updateGetStatus, () => status)
@@ -340,6 +389,17 @@ function setupAutoUpdater(): void {
           .checkForUpdatesAndNotify()
           .catch((err) => console.error('[updater] manual check failed', err))
       )
+
+      // Native "Check for Updates…" menu item → reveal the window (so inline
+      // status is visible) and run a check that also reports its result via a
+      // native dialog.
+      triggerManualUpdateCheck = () => {
+        manualCheck = true
+        showWindow()
+        autoUpdater
+          .checkForUpdatesAndNotify()
+          .catch((err) => console.error('[updater] menu check failed', err))
+      }
 
       // Check on startup; daily re-check keeps long-running instances up-to-date.
       autoUpdater

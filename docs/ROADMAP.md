@@ -48,6 +48,30 @@ All 15 original items are shipped. The items below track work that emerged after
 | 15 | ~~Add-task context association (server-authoritative; `pinContext` upsert, `schedule` re-surfaces, UI kept-count)~~ ✅ (PR #63) | back + front | tasks get real context on add / schedule / pin             | M    | ✅ shipped  |
 | 16 | Dependabot bump sweep (PRs #39, #41, #42, #43, #61, #62)                                | back         | keep deps current                                          | S    | pending    |
 
+## v1.1 — Wire-up & hardening
+
+> **All 15 baseline items are plumbing-complete, but the app is not yet
+> product-complete.** A 2026-06-12 audit found that large parts of the shipping
+> renderer still run on prototype stand-ins (`ui-stubs.ts`, used in the Electron
+> build too) even where the real backend exists, plus reliability and partial-
+> encryption gaps. The work below connects the existing UI to the existing
+> backend and hardens it — **mostly wiring, not new features.** Full detail +
+> code pointers: front lane → `agent-sync/UX-PUNCHLIST.md`; back lane →
+> `agent-sync/APP-GAPS.md`.
+
+| #  | Workstream                                                                                   | Lane         | Doc                        | Size | When        |
+| -- | -------------------------------------------------------------------------------------------- | ------------ | -------------------------- | ---- | ----------- |
+| W1 | **Encrypt remaining content** (chunks/excerpt/AI rows; plaintext at rest + over sync today)  | back         | APP-GAPS §1                | M    | **P1**      |
+| W2 | **Crash recovery + RPC timeouts** (worker restart/backoff; unhandledRejection; net timeouts) | back         | APP-GAPS §2                | M    | **P1**      |
+| W3 | **Sync correctness** (token refresh in worker; login-enables-sync; refetch after re-fork)    | back + front | APP-GAPS §3 / UX §C         | M    | **P1**      |
+| W4 | **Wire fake UI to real backend** (voice→ASR, draft, uncoverTodos, feed persist, name, stats) | front        | UX-PUNCHLIST §A             | L    | P1          |
+| W5 | **Fix dead-ends + misleading copy** (task-detail buttons, add→Today vs "backlog", plan gate) | front        | UX-PUNCHLIST §B             | M    | P2          |
+| W6 | **State refresh** (archive/MemoryContext after capture + connector sync)                     | front        | UX-PUNCHLIST §C             | M    | P1          |
+| W7 | **Original Today-walkthrough UX** (search slot, fresh-day hero, FAB spec, backlog screen)    | front        | UX-PUNCHLIST (2026-06-02)   | M    | P2          |
+| W8 | **Missing mutators** (delete/edit/forget item, un-pin, edit todo title)                      | back + front | APP-GAPS §5                 | M    | P2          |
+| W9 | **Data-model cleanup** (versioned migrations, drizzle≠DDL drift, drop orphan `memories`)     | back         | APP-GAPS §4                 | S–M  | P3          |
+| 16 | Dependabot bump sweep (see post-v1 #16)                                                       | back         | —                          | S    | P3          |
+
 ## Decisions gating work
 
 - **AI model (gates #3):** → [ADR 0004](adr/0004-ai-drafting-model.md) _(accepted: cloud BYO-key behind a `Drafter` seam)_

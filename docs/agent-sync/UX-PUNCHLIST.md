@@ -10,6 +10,79 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
 
 ---
 
+## Batch — 2026-06-12 (Prototype data still shipping + state refresh)
+
+> **Theme: the UI is plumbing-complete but not product-complete.** Much of the
+> renderer was ported from the design mockup and still runs on prototype
+> stand-ins **in the shipping Electron build** (not just the browser preview) —
+> even where the real backend now exists. `nimi/ui-stubs.ts` is the giveaway:
+> its own header says it's "used in BOTH the Electron and browser-preview paths."
+> These items connect the existing UI to the existing `window.api` backend.
+> Sourced from a full renderer audit on 2026-06-12.
+
+### A. Fake / prototype data shipping in the real app (wire to `window.api`)
+
+- [ ] **Voice is cosmetic.** `nimi/voice.tsx` records nothing (timer + animated
+  bars only); "stop" pastes a canned transcript from `ui-stubs.ts:nextTranscript()`
+  (`add.tsx:152`, `feed.tsx:351`). Wire to real mic capture → `captureFile` →
+  ASR pipeline (the backend ASR seam already exists). **high**
+- [ ] **Task chat ("Ask Nimi") is scripted.** `task.tsx:599` `CHAT_REPLIES` +
+  `task.tsx:647` fallback. No backend chat channel exists yet — needs a contract
+  addition or should be hidden until one lands. **high**
+- [ ] **Task draft is hardcoded.** `task.tsx:340 tryDraft()` injects a two-paragraph
+  draft via `setTimeout`, ignoring the real `Task.draft` the drafter produces.
+  Render `Task.draft`/`Task.brief` instead; wire Edit/Redo/Copy. **high**
+- [ ] **Feed quick-add doesn't persist.** `feed.tsx:132 feedOne()` + `SAMPLE_TITLES`
+  build local-only fake `FedItem`s for the Note/Link/voice buttons (`feed.tsx:235,351`).
+  Route through `captureText`/`captureFile`. **high**
+- [ ] **"Found N connections" is random.** `add.tsx:178` `2 + Math.random()*4`
+  shown as a real result after feeding. Use the real capture/index result. **high**
+- [ ] **Add sheet calls the stub `uncoverTodos()`** (`add.tsx:11,186`, always `[]`)
+  instead of `data.pipeline.uncoverTodos()` — the real API now exists. **high**
+- [ ] **Hardcoded user name.** `today.tsx:19 FIRST_NAME = 'Jordan'` (used L74) and
+  `plan.tsx:57 'Good morning, Jordan'`. Use `useAuth().state.claims?.name`. **high**
+- [ ] **Fake memory-weather stats.** `today.tsx:76 '1,284 memories · last fed 9h ago'`
+  is literal. Use `archive.length` + most-recent feed timestamp. **high**
+- [ ] **Backend AI fields never rendered.** Memory cards pass `why={null}`
+  (`task.tsx:467,538`) though `Task.whyMap` is emitted; `relFor()` falls back to a
+  fake `0.6` fit (`task.tsx:14`). **med**
+- [ ] **Static suggestion chips** — `ui-stubs.ts:TASK_SUGGESTIONS`/`SEARCH_SUGGEST`
+  (`add.tsx`, `search.tsx`). Either derive from real data or accept as decorative. **low**
+
+### B. Incomplete / dead-end flows
+
+- [ ] **Dead buttons in task detail:** "Open source"/"Open in Mail" `onClick={() => {}}`
+  (`task.tsx:103`); draft Edit/Redo no handler (`task.tsx:247`); Copy draft toggles
+  icon only, never writes clipboard (`task.tsx:193`); chat Attach no handler (`task.tsx:722`). **high/med**
+- [ ] **Add success copy lies:** "Added to your backlog" (`add.tsx:511`) but on success
+  `addTodo` adds to **Today** (`NimiApp.tsx:217`). **high**
+- [ ] **Unplanned-day header mislabeled:** button is `aria-label="Plan tomorrow"`
+  but wired to `onPlan` → today's plan ritual (`today.tsx:55,247`). **high**
+- [ ] **Plan ritual is bypassable:** switching tabs or `cancelPlan()` sets
+  `planned = true` without planning (`NimiApp.tsx:293,445`). **high**
+- [ ] **Empty slots / weather open the wrong thing:** empty slot "pick one more"
+  → `onPlan` not `onAdd` (`today.tsx:185,303`); weather click → Plan overlay. **med**
+
+### C. State-sync bugs (renderer keeps stale data after a backend mutation)
+
+- [ ] **Archive never refreshes after capture.** `MemoryContext`/`archive` load once
+  on mount (`NimiApp.tsx:154`); `onFed` only cheers (`:237`). New captures, connector
+  syncs (`useConnectors.ts:61`), and ingested mail are invisible until reload. Broken
+  thumbs/search rows/task ctx for anything new. **high**
+- [ ] **Add is fire-and-forget.** `Promise.all(captures)` not awaited; "Filed away"
+  fires on a 1750ms timer regardless of success/failure (`add.tsx:177`). **high**
+- [ ] **Stale UI after worker restart** (sync toggle / key import) — renderer doesn't
+  refetch tasks/backlog/archive (`useSync.ts`, `NimiApp.tsx:153`). See APP-GAPS.md §Sync. **high**
+
+### D. Accessibility / keyboard / focus
+
+- [ ] Clickable `<div>`s with no role/tabIndex/keyboard: memory weather (`today.tsx:71`),
+  task rows (`today.tsx:143`), feed dropzone (`feed.tsx:179`). **med**
+- [ ] Overlays (add/chat/search/celebrate) have no Escape handler and no focus trap. **med**
+- [ ] Missing `aria-label`s on sheet-close buttons; bottom nav lacks `aria-current`. **low/med**
+
+---
+
 ## Batch — 2026-06-02 (Auth: real login screen, not a header lock)
 
 ### 0. Replace the header lock icon with a proper login screen / gate

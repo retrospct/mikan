@@ -398,19 +398,29 @@ export function makeMockApi(): MockApi {
     todos: {
       add: async (title: string, notes?: string): Promise<Task> => {
         if (tasks.length >= CAP) throw new Error(CAP_REACHED)
+        // Mirror surfaceContext: run the in-memory matcher so add in the browser
+        // preview populates ctx the same way the real worker does.
+        const query = notes ? `${title}\n${notes}` : title
+        const hits = matchTask(query)
+        const ctxIds = hits.map((h) => h.id)
+        const relMap: Record<string, number> = {}
+        for (const h of hits) relMap[h.id] = h.rel
+        const n = ctxIds.length
         const task: Task = {
           id: uid('t_'),
           title,
           when: 'today',
           status: 'gathered',
           done: false,
-          ctx: [],
+          ctx: ctxIds,
           pinned: [],
           draft: null,
           draftNote: null,
-          note: notes ?? null,
+          note: n
+            ? `I kept ${n} thing${n === 1 ? '' : 's'} nearby for when you start it.`
+            : (notes ?? null),
           noteKind: 'gathered',
-          relMap: {},
+          relMap,
           fresh: true
         }
         tasks = [...tasks, task]
@@ -476,7 +486,16 @@ export function makeMockApi(): MockApi {
       },
       searchMoreContext: async (id: string): Promise<Task | null> => {
         const t = find(id)
-        return t ? clone(t) : null
+        if (!t) return null
+        // Mirror surfaceContext: merge additional hits into the task's ctx pool.
+        const extra = matchTask(t.title)
+          .map((h) => h.id)
+          .filter((id) => !t.ctx.includes(id))
+        t.ctx = [...t.ctx, ...extra]
+        for (const h of matchTask(t.title)) {
+          if (extra.includes(h.id)) t.relMap = { ...t.relMap, [h.id]: h.rel }
+        }
+        return clone(t)
       },
       pinContext: async (id: string, itemId: string): Promise<Task | null> => {
         const t = find(id)

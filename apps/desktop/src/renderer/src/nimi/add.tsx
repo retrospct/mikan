@@ -9,11 +9,11 @@ import { VoiceRecorder } from './voice'
 import { data } from './api'
 import { captureFiles, kindOfFile } from './capture-file'
 import { TASK_SUGGESTIONS, uncoverTodos, nextTranscript } from './ui-stubs'
-import type { MemoryKind, UncoveredTodo, BacklogItem } from '@nimi/contract/views'
+import type { MemoryKind, Task, UncoveredTodo, BacklogItem } from '@nimi/contract/views'
 
 type AddTodo = (
   item: Partial<BacklogItem> & { title: string; why?: string; conf?: number | null; ctx?: string[] }
-) => void
+) => Promise<Task | null>
 
 // Three manual input modes. Photos & files are detected on attach (below).
 const ADD_MODES = [
@@ -417,7 +417,7 @@ function FeedPane({
                     disabled={on}
                     onClick={() => {
                       setAdded((s) => new Set(s).add(td.id as string))
-                      onAddTodo && onAddTodo({ ...td, ctx: [] })
+                      void (onAddTodo && onAddTodo({ ...td, ctx: [] }))
                     }}
                   >
                     {on ? (
@@ -479,23 +479,17 @@ function TodoPane({
     if (!tx) return
     setText(tx)
     setPhase('ranking')
-    // real semantic search for nearby memories; keep a short beat so the "Sizing
-    // it up" stage doesn't flash past when the search resolves instantly (mock).
-    void Promise.all([
-      data.pipeline.search(tx).catch(() => []),
-      new Promise((r) => setTimeout(r, 900))
-    ]).then(([matches]) => {
-      setKept(matches.length)
-      onAddTodo &&
-        onAddTodo({
-          id: 't_' + Date.now(),
-          title: tx,
-          why: 'You added this',
-          conf: null,
-          ctx: matches.map((m) => m.id)
-        })
+    // Keep the ~900ms beat so "Sizing it up" doesn't flash past when the worker
+    // responds instantly. Context count comes from the server-surfaced pool on
+    // the returned Task — the renderer doesn't run a separate pre-search.
+    void (async () => {
+      await new Promise((r) => setTimeout(r, 900))
+      const task = onAddTodo
+        ? await onAddTodo({ title: tx, why: 'You added this', conf: null })
+        : null
+      setKept(task?.ctx?.length ?? 0)
       setPhase('done')
-    })
+    })()
   }
 
   if (phase === 'ranking') {

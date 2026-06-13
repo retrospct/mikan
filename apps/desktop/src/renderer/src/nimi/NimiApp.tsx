@@ -204,17 +204,20 @@ export default function NimiApp(): JSX.Element {
   // the backlog. The contract has no "add to backlog", so a full day (CAP_REACHED)
   // or an unreachable worker falls back to local backlog state — the to-do is never
   // lost. See docs/INTEGRATION.md.
+  // Returns the created Task so callers (e.g. TodoPane) can read the server-surfaced
+  // ctx.length for the "kept N things" count, or null on the backlog fallback path.
   const addTodo = async (item: {
     id?: string
     title: string
     why?: string
     ctx?: string[]
     conf?: number | null
-  }): Promise<void> => {
+  }): Promise<Task | null> => {
     try {
       const task = await data.todos.add(item.title, item.why)
       setTasks((ts) => [...ts, { ...task, relMap: task.relMap ?? {}, fresh: true }])
       cheer()
+      return task
     } catch {
       setBacklog((b) => [
         {
@@ -228,6 +231,7 @@ export default function NimiApp(): JSX.Element {
         ...b
       ])
       cheer()
+      return null
     }
   }
   const onFed = (): void => cheer()
@@ -328,9 +332,7 @@ export default function NimiApp(): JSX.Element {
     return (
       <div className="desk">
         <div className="desk-wall" />
-        <div className="app-frame">
-          {authReady ? <AuthGate onLogin={login} /> : <AuthSplash />}
-        </div>
+        <div className="app-frame">{authReady ? <AuthGate onLogin={login} /> : <AuthSplash />}</div>
       </div>
     )
   }

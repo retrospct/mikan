@@ -1,6 +1,6 @@
 import { and, count, desc, eq, isNotNull, isNull } from 'drizzle-orm'
-import { db } from '../db'
-import { todoContext, todos, type Todo as TodoRow, type TodoContextRow } from '../db/schema'
+import { client, db } from '../db'
+import { items, todoContext, todos, type Todo as TodoRow, type TodoContextRow } from '../db/schema'
 import { pipelineService } from './pipeline-service'
 import { draftService, rowToTaskDraft } from './draft-service'
 import { drafter } from '../pipeline/draft'
@@ -266,7 +266,9 @@ export const todoService = {
     const [r] = await db.update(todos).set({ day, position }).where(eq(todos.id, id)).returning()
     if (!r) return null
     const todo = toTodo(r)
-    const pool = await listContext(todo.id)
+    // Re-surface context on schedule so a backlog item lands with a populated pool,
+    // mirroring the same surfaceContext call made in add().
+    const pool = await surfaceContext(todo)
     await draftService.regenerate(todo, pool)
     return taskOf(todo)
   },
@@ -281,10 +283,37 @@ export const todoService = {
   },
 
   async pinContext(id: string, itemId: string): Promise<Task | null> {
+    // Upsert rather than update-only: a memory kept from the search overlay may
+    // never have been auto-surfaced, so UPDATE would silently no-op and the
+    // optimistic UI state would be stripped on the next taskById read.
+    const [item] = await db.select().from(items).where(eq(items.id, itemId)).limit(1)
+    const chunkExcerpt = item
+      ? await client
+          .execute({
+            sql: 'SELECT text FROM chunks WHERE item_id = ? ORDER BY chunk_idx LIMIT 1',
+            args: [itemId]
+          })
+          .then((r) => (r.rows[0] ? String(r.rows[0].text) : null))
+          .catch(() => null)
+      : null
+    const now = new Date()
     await db
-      .update(todoContext)
-      .set({ state: 'pinned' })
-      .where(and(eq(todoContext.todoId, id), eq(todoContext.itemId, itemId)))
+      .insert(todoContext)
+      .values({
+        todoId: id,
+        itemId,
+        score: null,
+        sourceName: item?.sourceName ?? null,
+        contentType: item?.contentType ?? null,
+        excerpt: chunkExcerpt,
+        state: 'pinned',
+        lastSurfacedAt: now
+      })
+      .onConflictDoUpdate({
+        target: [todoContext.todoId, todoContext.itemId],
+        // Promote to pinned; preserve score/excerpt from earlier surfacing.
+        set: { state: 'pinned' }
+      })
     const [r] = await db.select().from(todos).where(eq(todos.id, id)).limit(1)
     if (!r) return null
     const todo = toTodo(r)

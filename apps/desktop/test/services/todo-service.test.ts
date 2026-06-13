@@ -334,4 +334,49 @@ describe('todoService context pool', () => {
     expect(pinned!.ctx[0]).toBe(secondId)
     expect(pinned!.pinned[0]).toBe(secondId)
   })
+
+  it('pinContext upserts a row for an item that was never auto-surfaced', async () => {
+    // Add the task first so surfaceContext runs against the current item set.
+    const task = await todoService.add('sprint planning velocity estimation')
+
+    // Capture a NEW item AFTER add() has run — it cannot have been part of the
+    // surfaceContext pass that just happened, so there is no todo_context row for it.
+    const { memory } = await pipelineService.captureText(
+      'brand new capture after task was already created',
+      'post-add-capture.md'
+    )
+    const unsurfacedItemId = memory.id
+
+    // Confirm it is not in the task's pool yet.
+    expect(task.ctx).not.toContain(unsurfacedItemId)
+
+    // Pin it — this exercises the upsert path (INSERT, not just UPDATE).
+    const result = await todoService.pinContext(task.id, unsurfacedItemId)
+    expect(result).not.toBeNull()
+    // The item must appear in both ctx and pinned (upsert created the row).
+    expect(result!.ctx).toContain(unsurfacedItemId)
+    expect(result!.pinned).toContain(unsurfacedItemId)
+  })
+})
+
+// ── schedule re-surfaces context ──────────────────────────────────────────────
+
+describe('todoService.schedule — re-surfaces context', () => {
+  it('populates the context pool when a backlog item is scheduled', async () => {
+    // Capture relevant content first.
+    await pipelineService.captureText(
+      'sprint planning backlog grooming velocity story points estimation',
+      'sprint-schedule.md'
+    )
+
+    // Add and immediately sweep to backlog.
+    const t = await todoService.add('sprint planning velocity')
+    await todoService.plan([], TODAY) // sweep all → backlog
+
+    // Schedule back onto today.
+    const scheduled = await todoService.schedule(t.id, TODAY)
+    expect(scheduled).not.toBeNull()
+    // surfaceContext should have run, giving the task a non-empty pool.
+    expect(scheduled!.ctx.length).toBeGreaterThan(0)
+  })
 })

@@ -7,7 +7,7 @@
 //      frameless-window + tray integration is a later main-process step). The app
 //      is a single centred column on the matcha wallpaper, "the same size as mobile".
 //   2. The design-time TweaksPanel (a variation explorer) is dropped. Its chosen
-//      defaults — dark / rose / stack / cozy / ambient-on — are applied to <html>.
+//      defaults — dark / matcha / stack / cozy / ambient-on — are applied to <html>.
 //      Accent (primary color) is now user-configurable in Settings (nimi/theme.ts);
 //      the header's "Plan tomorrow" button still triggers the new-day ritual.
 //   3. The prototype's menu-bar/tray search + badge live on the header here: the

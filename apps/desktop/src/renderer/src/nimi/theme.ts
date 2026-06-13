@@ -22,8 +22,15 @@ export interface AccentPalette {
   deep: string
 }
 
-// Ordered for the picker. Rose (red) is the product default.
+// Ordered for the picker (default first). Matcha (green) is the product default.
 export const ACCENTS: Record<AccentId, AccentPalette> = {
+  matcha: {
+    id: 'matcha',
+    label: 'Matcha',
+    solid: 'oklch(0.80 0.13 142)',
+    ink: 'oklch(0.90 0.09 142)',
+    deep: 'oklch(0.62 0.13 142)'
+  },
   rose: {
     id: 'rose',
     label: 'Rose',
@@ -38,13 +45,6 @@ export const ACCENTS: Record<AccentId, AccentPalette> = {
     ink: 'oklch(0.90 0.09 64)',
     deep: 'oklch(0.64 0.12 64)'
   },
-  matcha: {
-    id: 'matcha',
-    label: 'Matcha',
-    solid: 'oklch(0.80 0.13 142)',
-    ink: 'oklch(0.90 0.09 142)',
-    deep: 'oklch(0.62 0.13 142)'
-  },
   iris: {
     id: 'iris',
     label: 'Iris',
@@ -56,7 +56,7 @@ export const ACCENTS: Record<AccentId, AccentPalette> = {
 
 export const ACCENT_LIST: AccentPalette[] = Object.values(ACCENTS)
 
-export const DEFAULT_ACCENT: AccentId = 'rose'
+export const DEFAULT_ACCENT: AccentId = 'matcha'
 
 const STORAGE_KEY = 'nimi.accent'
 

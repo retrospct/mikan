@@ -7,8 +7,9 @@
 //      frameless-window + tray integration is a later main-process step). The app
 //      is a single centred column on the matcha wallpaper, "the same size as mobile".
 //   2. The design-time TweaksPanel (a variation explorer) is dropped. Its chosen
-//      defaults — dark / apricot / stack / cozy / ambient-on — are applied to <html>,
-//      and the header's "Plan tomorrow" button still triggers the new-day ritual.
+//      defaults — dark / rose / stack / cozy / ambient-on — are applied to <html>.
+//      Accent (primary color) is now user-configurable in Settings (nimi/theme.ts);
+//      the header's "Plan tomorrow" button still triggers the new-day ritual.
 //   3. The prototype's menu-bar/tray search + badge live on the header here: the
 //      "waiting" badge sits on the header mark, and global search replaces the (then
 //      meaningless) "On device" pill.
@@ -32,37 +33,21 @@ import { PlanRitual } from './plan'
 import { SearchOverlay } from './search'
 import { SettingsView } from './settings'
 import { TaskDetail } from './task'
+import { applyAccent, readAccent } from './theme'
 import { BottomNav, TodayView } from './today'
 import type { NimiMarkState } from './types'
 
 const CAP = 5
 
 // The product defaults the design landed on (formerly the TweaksPanel defaults).
+// Accent (primary color) is user-configurable in Settings; see nimi/theme.ts.
 const TWEAKS = {
   theme: 'dark',
-  accent: 'apricot',
   todayLayout: 'stack',
   captureStyle: 'drop',
   density: 'cozy',
   ambient: true
 } as const
-
-// accent palettes from the design (oklch). matcha is the CSS :root default; any
-// other accent (apricot is the current default) sets the --accent* vars on <html>.
-const ACCENTS: Record<string, { solid: string; ink: string; deep: string }> = {
-  matcha: {
-    solid: 'oklch(0.80 0.13 142)',
-    ink: 'oklch(0.90 0.09 142)',
-    deep: 'oklch(0.62 0.13 142)'
-  },
-  apricot: {
-    solid: 'oklch(0.80 0.12 64)',
-    ink: 'oklch(0.90 0.09 64)',
-    deep: 'oklch(0.64 0.12 64)'
-  },
-  rose: { solid: 'oklch(0.76 0.12 18)', ink: 'oklch(0.87 0.09 18)', deep: 'oklch(0.60 0.12 18)' },
-  iris: { solid: 'oklch(0.74 0.12 280)', ink: 'oklch(0.86 0.10 280)', deep: 'oklch(0.58 0.13 280)' }
-}
 
 // While the first load is in flight (today + backlog + archive). In the browser
 // the mock resolves instantly; in Electron this covers worker boot / model load.
@@ -129,10 +114,8 @@ export default function NimiApp(): JSX.Element {
     el.setAttribute('data-theme', TWEAKS.theme)
     el.setAttribute('data-density', TWEAKS.density)
     el.setAttribute('data-ambient', TWEAKS.ambient ? 'on' : 'off')
-    const a = ACCENTS[TWEAKS.accent] || ACCENTS.matcha
-    el.style.setProperty('--accent', a.solid)
-    el.style.setProperty('--accent-ink', a.ink)
-    el.style.setProperty('--accent-deep', a.deep)
+    // Accent persists across sessions and is user-configurable in Settings.
+    applyAccent(readAccent())
   }, [])
 
   // Prevent Electron from navigating the window when a file is dropped on

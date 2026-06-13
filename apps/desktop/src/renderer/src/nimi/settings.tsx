@@ -8,12 +8,14 @@
 //   - Sync: the cloud-replica toggle + per-device encryption / recovery key.
 //   - Connections: the Gmail + Google Calendar connectors (self-contained).
 //   - Updates: current version + check / restart-to-update.
-import { useState, type JSX } from 'react'
+import { useState, type CSSProperties, type JSX } from 'react'
+import { useAccent } from '../hooks/useAccent'
 import { useAuth } from '../hooks/useAuth'
 import { useSync, useSyncSettings } from '../hooks/useSync'
 import { useUpdate } from '../hooks/useUpdate'
 import { ConnectorsControl } from './connectors'
 import { NIcon } from './icons'
+import { ACCENT_LIST } from './theme'
 import { relativeTime } from './time'
 
 function AccountSection(): JSX.Element | null {
@@ -35,6 +37,40 @@ function AccountSection(): JSX.Element | null {
         <button className="settings-btn settings-btn-danger" onClick={logout}>
           Sign out
         </button>
+      </div>
+    </section>
+  )
+}
+
+/** Accent (primary color) picker — applies + persists immediately. */
+function AppearanceSection(): JSX.Element {
+  const { accent, setAccent } = useAccent()
+  return (
+    <section className="settings-section">
+      <div className="settings-section-h">Appearance</div>
+      <div className="settings-section-s">
+        Choose Nimi&apos;s primary color. It applies right away and is remembered on this device.
+      </div>
+      <div className="settings-swatches" role="radiogroup" aria-label="Primary color">
+        {ACCENT_LIST.map((a) => {
+          const selected = a.id === accent
+          return (
+            <button
+              key={a.id}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-label={a.label}
+              title={a.label}
+              className={`settings-swatch${selected ? ' on' : ''}`}
+              style={{ '--sw': a.solid } as CSSProperties}
+              onClick={() => setAccent(a.id)}
+            >
+              <span className="settings-swatch-dot" />
+              <span className="settings-swatch-lbl">{a.label}</span>
+            </button>
+          )
+        })}
       </div>
     </section>
   )
@@ -256,6 +292,8 @@ export function SettingsView({ onBack }: { onBack: () => void }): JSX.Element {
 
       <div className="settings-body">
         <AccountSection />
+
+        <AppearanceSection />
 
         <SyncSection />
 

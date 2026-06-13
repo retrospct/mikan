@@ -1,6 +1,6 @@
 # Nimi roadmap
 
-Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `apps/desktop/src/main` + `packages/contract`; **front** = `apps/desktop/src/renderer`.
+Shared punch list. **Baseline:** all 15 original items shipped. Lanes: **back** = `apps/desktop/src/main` + `packages/contract`; **front** = `apps/desktop/src/renderer`.
 
 ## Shipped
 
@@ -33,11 +33,20 @@ Shared punch list. **Baseline:** `main` @ #12–#15 merged. Lanes: **back** = `a
 | 7   | ~~**Worker-service tests (vitest)**~~ ✅ **done**                                                        | back         | guards pipeline/todo logic                       | M    | ✅ shipped  |
 | 8   | ~~**Connectors / ingest (email, calendar, …)**~~ ✅ **done**                                             | back         | automatic capture vs manual                      | L    | ✅ shipped  |
 | 9   | ~~Auth end-to-end (Logto **Native** app + PKCE, id_token JWKS-verified)~~ ✅ **done** (PR #35)            | back + front | real accounts                                    | M    | ✅ shipped  |
-| 10  | ~~Sync / cloud offload (Turso), multi-user~~ 🟡 base seam + encryption on main; PRs #46/#48/#49 open    | back         | multi-device                                     | L    | 🟡 in progress |
+| 10  | ~~Sync / cloud offload (Turso), multi-user~~ ✅ **done** (PRs #46, #48, #49)                            | back         | multi-device                                     | L    | ✅ shipped  |
 | 11  | ~~Vuln cleanup + CSP tighten~~ ✅                                                                        | back         | the dependabot alerts + hardening                | S    | ✅ shipped  |
-| 12  | ~~Auto-updater (electron-updater)~~ ✅                                                                   | back/dist    | testers auto-get each pushed build               | M    | ✅ shipped  |
+| 12  | ~~Auto-updater (electron-updater) + main-merge CI release + Check for Updates UI~~ ✅                   | back/dist    | testers auto-get each pushed build               | M    | ✅ shipped  |
 | 13  | ~~Package macOS (build + notarize) + Windows canary~~ ✅                                                 | back/dist    | shipping signed builds to testers                | M    | ✅ shipped  |
-| 14  | ~~Start an RN + Expo app in-repo (`apps/mobile`, mobile companion)~~ 🟡 PR #45 open                     | mobile       | the mobile surface                               | L    | 🟡 in progress |
+| 14  | ~~Start an RN + Expo app in-repo (`apps/mobile`, mobile companion)~~ ✅ **done** (PR #45)               | mobile       | the mobile surface                               | L    | ✅ shipped  |
+
+## Post-v1 punch list
+
+All 15 original items are shipped. The items below track work that emerged after the baseline.
+
+| #  | Item                                                                                     | Lane         | Notes                                                      | Size | When       |
+| -- | ---------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------- | ---- | ---------- |
+| 15 | ~~Add-task context association (server-authoritative; `pinContext` upsert, `schedule` re-surfaces, UI kept-count)~~ ✅ (PR #63) | back + front | tasks get real context on add / schedule / pin             | M    | ✅ shipped  |
+| 16 | Dependabot bump sweep (PRs #39, #41, #42, #43, #61, #62)                                | back         | keep deps current                                          | S    | pending    |
 
 ## Decisions gating work
 

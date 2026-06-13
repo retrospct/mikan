@@ -1,11 +1,19 @@
 name: Release
 
-# Triggered by a version tag: v0.x.y or v0.x.y-alpha.N
+# Every merge to main produces a signed, notarized release that is delivered to
+# already-installed clients via electron-updater. The patch component of the
+# version is the GitHub Actions run number so every build is unique and
+# monotonically increasing without requiring a version-bump commit.
+#
+# Version scheme: MAJOR.MINOR from apps/desktop/package.json + .<run_number>
+# e.g. package.json "1.2.0" on run 87 → release v1.2.87
+#
+# To cut a named milestone release: bump MAJOR.MINOR in package.json and merge
+# to main — the next run produces v<new_major>.<new_minor>.N.
 on:
   push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+    branches:
+      - main
 
 jobs:
   build-mac:
@@ -56,6 +64,35 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Compute release version
+        id: version
+        # Derive MAJOR.MINOR from package.json; use the run number as the patch
+        # so every merge to main produces a unique, monotonically increasing build
+        # with no version-bump commit needed.
+        run: |
+          BASE=$(node -p "require('./apps/desktop/package.json').version")
+          MAJOR_MINOR=$(echo "$BASE" | cut -d. -f1,2)
+          VERSION="${MAJOR_MINOR}.${{ github.run_number }}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp version into package.json
+        # npm version --no-git-tag-version updates package.json only (no commit,
+        # no tag). electron-builder reads the version from package.json at build
+        # time, so this is the canonical way to inject a computed version.
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+        working-directory: apps/desktop
+
+      - name: Create and push release tag
+        # Push a lightweight tag so electron-builder can create the GitHub Release
+        # with the correct ref. Only a tag is pushed — no commit — so this cannot
+        # re-trigger the workflow (branch push filter won't match a tag push).
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+
       - name: Decode App Store Connect API key
         # notarytool expects a file path, not inline content.
         # Decode the base64 secret to a temp file and point APPLE_API_KEY at it.
@@ -68,8 +105,8 @@ jobs:
 
       - name: Build & publish (macOS)
         # electron-builder publish reads CSC_LINK for signing and APPLE_* for notarytool.
-        # GH_TOKEN lets it upload artifacts to the GitHub Release created by the tag.
-        # notarize in electron-builder.yml must be set to true once secrets are ready.
+        # GH_TOKEN lets it upload the DMG + latest-mac.yml to the GitHub Release,
+        # which electron-updater polls on installed clients.
         run: pnpm --filter @nimi/desktop build:mac --publish always
 
   # Windows canary is deferred for the friends-and-family alpha.

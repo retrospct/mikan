@@ -45,6 +45,8 @@ export function NimiMark({
       aria-hidden="true"
     >
       <svg className="nm-svg" viewBox="0 0 24 24" width={size} height={size}>
+        {/* Frame + dots share one spinning group so the dot grid rotates with
+            the diamond instead of the frame spinning around a stationary grid. */}
         <g className="nm-spin">
           <rect
             className="nm-dia"
@@ -58,21 +60,21 @@ export function NimiMark({
             stroke="currentColor"
             strokeWidth="1.5"
           />
-        </g>
-        <g className="nm-dots">
-          {NM_DOTS.map((d, i) => (
-            <circle
-              key={i}
-              className={
-                'nm-dot' + (NM_QUINCUNX.has(i) ? ' q' : '') + (onSet && onSet.has(i) ? ' on' : '')
-              }
-              cx={d[0]}
-              cy={d[1]}
-              r="1.15"
-              fill="currentColor"
-              style={{ '--di': i } as CSSProperties}
-            />
-          ))}
+          <g className="nm-dots">
+            {NM_DOTS.map((d, i) => (
+              <circle
+                key={i}
+                className={
+                  'nm-dot' + (NM_QUINCUNX.has(i) ? ' q' : '') + (onSet && onSet.has(i) ? ' on' : '')
+                }
+                cx={d[0]}
+                cy={d[1]}
+                r="1.15"
+                fill="currentColor"
+                style={{ '--di': i } as CSSProperties}
+              />
+            ))}
+          </g>
         </g>
       </svg>
     </span>

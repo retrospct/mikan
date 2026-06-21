@@ -16,13 +16,21 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { configureClient } from '@nimi/contract/api/runtime'
+import { applyBrandTheme, BrandProvider } from '@nimi/brand/web'
 
 // t3-turbo pattern: app layer injects its env var into the shared client.
 // Desktop uses VITE_NEEME_API_URL (statically replaced by electron-vite at build).
 configureClient({ baseUrl: import.meta.env.VITE_NEEME_API_URL })
 
+// Apply the active brand's tokens to :root before the first paint so brand-mapped
+// utilities/vars resolve immediately (no flash). BrandProvider re-applies on
+// light/dark changes and exposes the brand identity via useBrand().
+applyBrandTheme()
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <BrandProvider>
+      <App />
+    </BrandProvider>
   </StrictMode>
 )

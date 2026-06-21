@@ -13,10 +13,12 @@
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  /* accent — matcha by default, overwritten by JS tweak */
-  --accent: oklch(0.8 0.13 142);
-  --accent-ink: oklch(0.9 0.09 142);
-  --accent-deep: oklch(0.62 0.13 142);
+  /* accent — driven by the active brand (@nimi/brand). applyBrandTheme writes
+     --brand-primary / --brand-primary-active per mode; the matcha oklch values
+     are a pre-mount fallback only. soft/faint/line derive from --accent. */
+  --accent: var(--brand-primary, oklch(0.8 0.13 142));
+  --accent-ink: var(--brand-primary, oklch(0.9 0.09 142));
+  --accent-deep: var(--brand-primary-active, oklch(0.62 0.13 142));
   --accent-soft: color-mix(in oklch, var(--accent) 16%, transparent);
   --accent-faint: color-mix(in oklch, var(--accent) 9%, transparent);
   --accent-line: color-mix(in oklch, var(--accent) 55%, transparent);
@@ -29,7 +31,10 @@
 }
 
 html[data-theme='dark'] {
-  --bg: #0a0a0b;
+  /* Brand drives the base ground + text (var with the original dark value as a
+     pre-mount fallback); the translucent surface/hairline/shadow craft below is
+     brand-neutral and stays. */
+  --bg: var(--brand-bg, #0a0a0b);
   --bg-2: #0e0e10;
   --surface: rgba(255, 255, 255, 0.028);
   --surface-2: #141416;
@@ -37,8 +42,8 @@ html[data-theme='dark'] {
   --raised: #161618;
   --hairline: rgba(255, 255, 255, 0.09);
   --hairline-strong: rgba(255, 255, 255, 0.16);
-  --ink: rgba(255, 255, 255, 0.92);
-  --ink-2: rgba(255, 255, 255, 0.56);
+  --ink: var(--brand-text, rgba(255, 255, 255, 0.92));
+  --ink-2: var(--brand-text-muted, rgba(255, 255, 255, 0.56));
   --ink-3: rgba(255, 255, 255, 0.34);
   --dot: rgba(255, 255, 255, 0.05);
   --scrim: rgba(0, 0, 0, 0.55);
@@ -48,7 +53,7 @@ html[data-theme='dark'] {
   color-scheme: dark;
 }
 html[data-theme='light'] {
-  --bg: #f3f2ec;
+  --bg: var(--brand-bg, #f3f2ec);
   --bg-2: #ecebe3;
   --surface: rgba(255, 255, 255, 0.7);
   --surface-2: #fffefb;
@@ -56,8 +61,8 @@ html[data-theme='light'] {
   --raised: #fffefb;
   --hairline: rgba(30, 28, 20, 0.1);
   --hairline-strong: rgba(30, 28, 20, 0.18);
-  --ink: #1b1a12;
-  --ink-2: rgba(27, 26, 18, 0.58);
+  --ink: var(--brand-text, #1b1a12);
+  --ink-2: var(--brand-text-muted, rgba(27, 26, 18, 0.58));
   --ink-3: rgba(27, 26, 18, 0.4);
   --dot: rgba(27, 26, 18, 0.06);
   --scrim: rgba(28, 26, 18, 0.3);
@@ -4702,8 +4707,7 @@ html[data-density='compact'] .mem {
   align-items: center;
   justify-content: center;
   padding: 28px;
-  background: radial-gradient(120% 40% at 50% -6%, var(--accent-faint), transparent 60%),
-    var(--bg);
+  background: radial-gradient(120% 40% at 50% -6%, var(--accent-faint), transparent 60%), var(--bg);
   /* Frameless tray window: the gate has no header, so let it be dragged from the
      backdrop. Interactive elements opt back out via the global no-drag rule. */
   -webkit-app-region: drag;

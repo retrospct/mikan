@@ -3,7 +3,8 @@
  *
  * Logto is a standard OIDC provider, so this is a textbook native-app flow —
  * Authorization Code + PKCE in the *system browser*, with a custom-scheme
- * redirect (`neeme://callback`). No Logto SDK needed; we drive the discovered
+ * redirect (`<brand-scheme>://callback`, e.g. mikan://callback). No Logto SDK
+ * needed; we drive the discovered
  * OIDC endpoints directly. Running it in main (not the renderer) means:
  *   - credentials only ever live in the user's real browser,
  *   - the refresh token is sealed in the OS keychain via `safeStorage`,
@@ -19,22 +20,23 @@
  * — see ./oidc.ts. The access token is opaque to us; our backend remains the
  * trust boundary that verifies it (still deferred — no backend yet).
  */
+import { brand } from '@nimi/brand'
 import type { AuthClaims, AuthState } from '@nimi/contract/ipc'
 import { app, safeStorage, shell } from 'electron'
 import { createRemoteJWKSet } from 'jose'
 import { readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
-    buildAuthorizeUrl,
-    claimsFromPayload,
-    pkceChallenge,
-    randomNonce,
-    randomState,
-    randomVerifier,
-    verifyIdToken
+  buildAuthorizeUrl,
+  claimsFromPayload,
+  pkceChallenge,
+  randomNonce,
+  randomState,
+  randomVerifier,
+  verifyIdToken
 } from './oidc'
 
-const REDIRECT_URI = 'neeme://callback'
+const REDIRECT_URI = `${brand.scheme}://callback`
 const SCOPE = 'openid profile email offline_access'
 
 type Listener = (state: AuthState, accessToken?: string) => void
@@ -194,7 +196,7 @@ export async function startLogin(): Promise<void> {
   await shell.openExternal(url)
 }
 
-/** Handle the `neeme://callback?code=...&state=...` deep link from the browser. */
+/** Handle the `<scheme>://callback?code=...&state=...` deep link from the browser. */
 export async function handleCallback(callbackUrl: string): Promise<void> {
   if (!pending) return
   const u = new URL(callbackUrl)

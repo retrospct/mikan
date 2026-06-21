@@ -1,4 +1,5 @@
 import { electronApp, optimizer } from '@electron-toolkit/utils'
+import { brand } from '@nimi/brand'
 import type { ConnectorId, ConnectorsState, IngestResult, UpdateStatus } from '@nimi/contract/ipc'
 import { IPC } from '@nimi/contract/ipc'
 import { app, BrowserWindow, dialog, ipcMain, session, shell } from 'electron'
@@ -17,13 +18,13 @@ import {
 import { initTrayWindow, setBadge, showWindow } from './window/tray-window'
 import { call, startWorker } from './worker/client'
 
-// Register `neeme://` as the OAuth callback scheme. In dev (electron launched
-// with a script arg) we must pass execPath + the project dir so the OS routes
-// the deep link back to this instance.
+// Register the brand's deep-link scheme (e.g. `mikan://`) as the OAuth callback
+// scheme. In dev (electron launched with a script arg) we must pass execPath +
+// the project dir so the OS routes the deep link back to this instance.
 if (process.defaultApp && process.argv.length >= 2) {
-  app.setAsDefaultProtocolClient('neeme', process.execPath, [join(__dirname, '../..')])
+  app.setAsDefaultProtocolClient(brand.scheme, process.execPath, [join(__dirname, '../..')])
 } else {
-  app.setAsDefaultProtocolClient('neeme')
+  app.setAsDefaultProtocolClient(brand.scheme)
 }
 
 // Single-instance lock so Windows/Linux deep links reach the already-running app.
@@ -31,7 +32,7 @@ if (!app.requestSingleInstanceLock()) {
   app.quit()
 }
 app.on('second-instance', (_event, argv) => {
-  const url = argv.find((a) => a.startsWith('neeme://'))
+  const url = argv.find((a) => a.startsWith(`${brand.scheme}://`))
   if (url) auth.handleCallback(url).catch((e) => console.error('auth callback failed', e))
   showWindow()
 })

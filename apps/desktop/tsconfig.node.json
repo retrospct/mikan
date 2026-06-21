@@ -4,11 +4,16 @@
   "compilerOptions": {
     "composite": true,
     "types": ["electron-vite/node"],
-    // Resolve the contract from source. main/preload import only `ipc`/`views`,
-    // so the renderer-only api client is never pulled into the node typecheck.
-    // TS 6: paths no longer requires baseUrl.
+    // The brand configs import identity.json; needed to type that import when the
+    // brand source is followed from main via the path map below.
+    "resolveJsonModule": true,
+    // Resolve the contract + brand from source. main/preload import only `ipc`/
+    // `views` from the contract, so the renderer-only api client is never pulled
+    // into the node typecheck. TS 6: paths no longer requires baseUrl.
     "paths": {
-      "@nimi/contract/*": ["../../packages/contract/src/*"]
+      "@nimi/contract/*": ["../../packages/contract/src/*"],
+      "@nimi/brand": ["../../packages/brand/src/index.ts"],
+      "@nimi/brand/*": ["../../packages/brand/src/*"]
     }
   }
 }

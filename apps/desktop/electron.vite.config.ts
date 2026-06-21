@@ -9,6 +9,14 @@ const { version: APP_VERSION } = JSON.parse(readFileSync('./package.json', 'utf-
   version: string
 }
 
+// Brand is selected at BUILD time via the BRAND env var (default: mikan). Bake it
+// into every bundle as the `__BRAND__` global so the @nimi/brand resolver reads a
+// literal — the packaged app has no BRAND in its runtime env, and the sandboxed
+// renderer has no Node `process` at all. electron-builder reads process.env.BRAND
+// separately at packaging time (see electron-builder.config.cjs); keep them in sync.
+const BRAND = process.env.BRAND ?? 'mikan'
+const brandDefine = { __BRAND__: JSON.stringify(BRAND) }
+
 // The renderer's index.html ships the strict PRODUCTION CSP. The dev server,
 // however, needs relaxations the built app does not:
 //   - script-src 'unsafe-inline' 'unsafe-eval' — @vitejs/plugin-react injects an
@@ -41,11 +49,13 @@ function devCspPlugin(): Plugin {
   }
 }
 
-// `@nimi/contract` is an internal workspace package consumed *from .ts source*.
-// externalizeDepsPlugin externalizes everything in `dependencies` (so native
-// modules like onnxruntime-node aren't bundled) — but the contract MUST be
-// bundled, or Node would try to `require()` a .ts file at runtime. Exclude it.
+// `@nimi/contract` and `@nimi/brand` are internal workspace packages consumed
+// *from .ts source*. externalizeDepsPlugin externalizes everything in
+// `dependencies` (so native modules like onnxruntime-node aren't bundled) — but
+// these MUST be bundled, or Node would try to `require()` a .ts file at runtime.
+// Exclude them.
 const CONTRACT = '@nimi/contract'
+const BRAND_PKG = '@nimi/brand'
 
 // The preload runs sandboxed (sandbox:true, a hard security invariant), so it
 // CANNOT `require()` npm modules by name at runtime — they must be bundled in.
@@ -55,7 +65,8 @@ const PRELOAD_BUNDLE = [CONTRACT, '@electron-toolkit/preload']
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin({ exclude: [CONTRACT] })],
+    plugins: [externalizeDepsPlugin({ exclude: [CONTRACT, BRAND_PKG] })],
+    define: brandDefine,
     build: {
       rollupOptions: {
         // Two entries: the main process + the data utilityProcess (forked at
@@ -75,7 +86,11 @@ export default defineConfig({
       // Baked in at build time so the renderer can display the installed version
       // without an IPC round-trip. CI stamps package.json before building, so
       // this always matches the version shown in the GitHub Release.
-      __APP_VERSION__: JSON.stringify(APP_VERSION)
+      __APP_VERSION__: JSON.stringify(APP_VERSION),
+      // The active brand, inlined so @nimi/brand resolves it in the sandboxed
+      // renderer (which has no Node process). Without this the Momo theme + name
+      // silently won't flip.
+      ...brandDefine
     },
     resolve: {
       alias: {

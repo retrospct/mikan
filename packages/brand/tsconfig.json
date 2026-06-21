@@ -1,0 +1,23 @@
+{
+  // Self-contained, typecheck-only. The brand layer is pure data + thin adapters,
+  // consumed *from source* by the apps (electron-vite excludes it from
+  // externalization and bundles the .ts; metro resolves it via package exports),
+  // so there's no emit step here. Mirrors packages/contract/tsconfig.json.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    // identity.json is imported by the brand configs + electron-builder; tsc needs
+    // this to type the import. Real bundling (esbuild/Vite/metro) handles JSON natively.
+    "resolveJsonModule": true,
+    // Brand modules import sibling .ts paths; tsc resolves them like the bundlers do.
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src/**/*"]
+}

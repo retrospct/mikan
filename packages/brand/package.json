@@ -1,0 +1,32 @@
+{
+  "name": "@nimi/brand",
+  "version": "1.2.0",
+  "description": "The nimi brand layer: build-time product identity (Mikan/Momo) + platform-agnostic design tokens. Consumed from source by the desktop app (web adapter) and a future RN/Expo app (native adapter).",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens": "./src/tokens.ts",
+    "./identity.json": "./src/identity.json",
+    "./web": "./src/web/index.ts",
+    "./native": "./src/native/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "react": "^19.2.7",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}

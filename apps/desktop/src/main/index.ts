@@ -70,6 +70,21 @@ app.on('web-contents-created', (_event, contents) => {
   })
 })
 
+// --- Security: force the sandbox on for every renderer, process-wide ---
+// The tray window already sets webPreferences.sandbox:true; this makes it a global
+// invariant so a future window can't silently regress it. Must be called before
+// the app is ready. See docs/SECURITY.md.
+app.enableSandbox()
+
+// Valid connector ids — the runtime allowlist for the connectors IPC handlers, so
+// a compromised renderer can't drive googleAuth with an arbitrary provider string.
+const CONNECTOR_IDS: readonly ConnectorId[] = ['gmail', 'gcal']
+function assertConnectorId(value: unknown): asserts value is ConnectorId {
+  if (typeof value !== 'string' || !CONNECTOR_IDS.includes(value as ConnectorId)) {
+    throw new Error(`Invalid connector id: ${String(value)}`)
+  }
+}
+
 // The window is a frameless, tray-anchored menu-bar utility — created + managed in
 // ./window/tray-window (frame, position, hotkey, hide-on-blur, badge). Navigation +
 // window-open stay locked down globally (see web-contents-created above).
@@ -102,6 +117,19 @@ app.whenReady().then(async () => {
       })
     })
   }
+
+  // --- Security: permissions — deny by default, allowlist exactly what we use ---
+  // The renderer loads only local content. The single browser-grade capability it
+  // relies on is clipboard write (the Settings recovery-key "Copy" button, via
+  // navigator.clipboard.writeText). Everything else (notifications, camera, mic,
+  // geolocation, clipboard-read, …) is denied, so a compromised renderer can't gain
+  // them. To enable one later (e.g. 'notifications' when reminders ship) add it to
+  // ALLOWED — that's the whole change. See docs/SECURITY.md "Permissions".
+  const ALLOWED = new Set<string>(['clipboard-sanitized-write'])
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) =>
+    callback(ALLOWED.has(permission))
+  )
+  session.defaultSession.setPermissionCheckHandler((_wc, permission) => ALLOWED.has(permission))
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -234,6 +262,7 @@ app.whenReady().then(async () => {
   ipcMain.handle(IPC.connectorsGetState, () => buildConnectorsState())
 
   ipcMain.handle(IPC.connectorsConnect, async (_e, provider: ConnectorId) => {
+    assertConnectorId(provider)
     await googleAuth.connect(provider)
     // Kick off an immediate first sync in the background so the feed populates.
     runSync(provider).catch((err) =>
@@ -243,11 +272,13 @@ app.whenReady().then(async () => {
   })
 
   ipcMain.handle(IPC.connectorsDisconnect, async (_e, provider: ConnectorId) => {
+    assertConnectorId(provider)
     await googleAuth.disconnect(provider)
     broadcastConnectorsState(googleAuth.getState())
   })
 
   ipcMain.handle(IPC.connectorsSyncNow, async (_e, provider: ConnectorId) => {
+    assertConnectorId(provider)
     return runSync(provider)
   })
 

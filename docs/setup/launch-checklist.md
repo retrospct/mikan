@@ -50,6 +50,16 @@ it and retire the old project
 
 **Other**
 
+- **Logto hosted sign-in branding** (Console → Sign-in experience): Mikan logo
+  (light + dark) + favicon, brand color `#F2741A`, dark mode on, product name
+  "Mikan"; add Terms/Privacy/Support URLs. Currently the shared **omni** experience
+  (one app) → brands both; when Momo gets its own Logto app, enable per-app branding.
+- **Google social connector**: keep "require missing sign-up identifier" on and
+  "auto-link same identifier" on (safe — Google verifies emails; revisit if a
+  connector without verified email is added). Ensure Google Cloud OAuth client's
+  Authorized redirect URIs include Logto's `…/callback/<connector-id>` — and **add
+  the `https://auth.getmikan.com/callback/<connector-id>` variant when the custom
+  domain goes Active**, or Google sign-in breaks there.
 - Real 1024×1024 icons at `apps/desktop/assets/{mikan,momo}/icon.png`.
 - Branch protection — require the `commitlint` check on PRs once PRs resume.
 

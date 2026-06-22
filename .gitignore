@@ -32,3 +32,6 @@ apps/desktop/resources/mac/nimi-extract
 docs/agent-sync/SYNC-BRIEF.md
 
 /apps/desktop/release/
+
+# Local signing/notarization credentials — never commit
+/apps/desktop/creds/

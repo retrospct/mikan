@@ -1,14 +1,13 @@
 import identity from '../identity.json'
 import type { BrandConfig } from '../types'
 
-// Mikan = mandarin orange. Bright citrus rind, warm paper-white ground in light,
-// a deep roasted-rind ground in dark, a single leaf-green accent. Clean, a little
-// playful.
+// Mikan — deep teal primary on a warm paper ground, with a clay accent. Calm and
+// editorial rather than loud. Light is paper/ink; dark is a warm near-black with a
+// brightened teal. The diamond mark + every --accent surface pick up `primary`.
 //
-// Colours carry an sRGB hex (cross-platform fallback / RN) + an OKLCH `p3` value
-// (web prefers it; Chromium renders wide-gamut on P3 panels, clamps on sRGB).
-// NOTE: OKLCH values are a tuned first pass — refine against an APCA/contrast +
-// gamut tool before GA. The hex and OKLCH for a token should read as the same hue.
+// Colours carry an sRGB hex (cross-platform / RN) + an OKLCH `p3` value (web prefers
+// it; Chromium renders wide-gamut on P3 panels, clamps on sRGB). OKLCH values are a
+// tuned first pass — refine against an APCA/contrast tool before GA.
 export const mikan: BrandConfig = {
   id: 'mikan',
   productName: identity.mikan.productName,
@@ -23,38 +22,38 @@ export const mikan: BrandConfig = {
   theme: {
     light: {
       color: {
-        bg: { srgb: '#FFFCF7', p3: 'oklch(0.992 0.006 80)' },
-        surface: { srgb: '#FFFFFF', p3: 'oklch(1 0 0)' },
-        surfaceMuted: { srgb: '#FBF3EA', p3: 'oklch(0.967 0.012 75)' },
-        border: { srgb: '#ECE0D2', p3: 'oklch(0.905 0.016 76)' },
-        text: { srgb: '#211A14', p3: 'oklch(0.252 0.018 60)' },
-        textMuted: { srgb: '#6B5D50', p3: 'oklch(0.503 0.021 66)' },
-        primary: { srgb: '#F2741A', p3: 'oklch(0.704 0.173 47)' },
-        primaryActive: { srgb: '#D8610E', p3: 'oklch(0.633 0.172 46)' },
-        onPrimary: { srgb: '#FFFFFF', p3: 'oklch(1 0 0)' },
-        accent: { srgb: '#3F8F5B', p3: 'oklch(0.598 0.115 153)' },
-        success: { srgb: '#3F8F5B', p3: 'oklch(0.598 0.115 153)' },
-        warning: { srgb: '#E0A100', p3: 'oklch(0.755 0.152 82)' },
-        danger: { srgb: '#DC2626', p3: 'oklch(0.580 0.216 27)' },
-        ring: { srgb: '#F2741A', p3: 'oklch(0.704 0.173 47)' }
+        bg: { srgb: '#F5F5F1', p3: 'oklch(0.965 0.004 95)' },
+        surface: { srgb: '#FCFCFA', p3: 'oklch(0.990 0.002 95)' },
+        surfaceMuted: { srgb: '#ECEAE3', p3: 'oklch(0.930 0.007 92)' },
+        border: { srgb: '#E3E1D9', p3: 'oklch(0.900 0.008 92)' },
+        text: { srgb: '#17191D', p3: 'oklch(0.225 0.008 265)' },
+        textMuted: { srgb: '#565C63', p3: 'oklch(0.460 0.013 255)' },
+        primary: { srgb: '#0F5E57', p3: 'oklch(0.430 0.082 184)' },
+        primaryActive: { srgb: '#0B4A44', p3: 'oklch(0.360 0.072 184)' },
+        onPrimary: { srgb: '#FBFBF8', p3: 'oklch(0.985 0.003 95)' },
+        accent: { srgb: '#9A5316', p3: 'oklch(0.500 0.110 56)' },
+        success: { srgb: '#2E8B6F', p3: 'oklch(0.565 0.088 165)' },
+        warning: { srgb: '#B5701A', p3: 'oklch(0.605 0.115 62)' },
+        danger: { srgb: '#C0392B', p3: 'oklch(0.515 0.165 28)' },
+        ring: { srgb: '#0F5E57', p3: 'oklch(0.430 0.082 184)' }
       }
     },
     dark: {
       color: {
-        bg: { srgb: '#1C1814', p3: 'oklch(0.205 0.011 62)' },
-        surface: { srgb: '#262019', p3: 'oklch(0.248 0.013 62)' },
-        surfaceMuted: { srgb: '#2F2820', p3: 'oklch(0.288 0.014 62)' },
-        border: { srgb: '#3D352B', p3: 'oklch(0.355 0.016 64)' },
-        text: { srgb: '#ECE6DD', p3: 'oklch(0.928 0.010 80)' },
-        textMuted: { srgb: '#B3A797', p3: 'oklch(0.723 0.018 76)' },
-        primary: { srgb: '#F98933', p3: 'oklch(0.745 0.160 50)' },
-        primaryActive: { srgb: '#E5731C', p3: 'oklch(0.680 0.168 48)' },
-        onPrimary: { srgb: '#231603', p3: 'oklch(0.220 0.045 60)' },
-        accent: { srgb: '#5BAE78', p3: 'oklch(0.703 0.118 153)' },
-        success: { srgb: '#5BAE78', p3: 'oklch(0.703 0.118 153)' },
-        warning: { srgb: '#F0B83A', p3: 'oklch(0.805 0.143 82)' },
-        danger: { srgb: '#F05151', p3: 'oklch(0.660 0.193 27)' },
-        ring: { srgb: '#F98933', p3: 'oklch(0.745 0.160 50)' }
+        bg: { srgb: '#16181C', p3: 'oklch(0.225 0.006 265)' },
+        surface: { srgb: '#1D2025', p3: 'oklch(0.270 0.007 262)' },
+        surfaceMuted: { srgb: '#262A2F', p3: 'oklch(0.320 0.008 260)' },
+        border: { srgb: '#323740', p3: 'oklch(0.380 0.010 258)' },
+        text: { srgb: '#ECEAE3', p3: 'oklch(0.925 0.006 95)' },
+        textMuted: { srgb: '#9BA1A8', p3: 'oklch(0.705 0.012 250)' },
+        primary: { srgb: '#35A697', p3: 'oklch(0.665 0.088 180)' },
+        primaryActive: { srgb: '#2B8C7F', p3: 'oklch(0.580 0.082 181)' },
+        onPrimary: { srgb: '#06211E', p3: 'oklch(0.215 0.038 184)' },
+        accent: { srgb: '#C77B33', p3: 'oklch(0.665 0.110 62)' },
+        success: { srgb: '#4FB389', p3: 'oklch(0.720 0.098 165)' },
+        warning: { srgb: '#D89A3A', p3: 'oklch(0.745 0.110 70)' },
+        danger: { srgb: '#E06A5A', p3: 'oklch(0.660 0.150 28)' },
+        ring: { srgb: '#35A697', p3: 'oklch(0.665 0.088 180)' }
       }
     }
   }

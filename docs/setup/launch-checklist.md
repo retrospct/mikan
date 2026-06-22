@@ -38,9 +38,11 @@ it and retire the old project
 
 **Resend `send.getmikan.com`** (Verified — SPF + DKIM ✅)
 
-- **DMARC monitoring via Postmark is set up** (`rua` → `…@dmarc.postmarkapp.com`,
-  `p=none`). Remaining: let ~1–2 weeks of reports confirm Resend mail passes SPF+DKIM
-  alignment, then tighten `p=none` → `quarantine` → `reject`.
+- **DMARC monitoring via Postmark is set up** (`v=DMARC1; p=none; pct=100; rua=…@dmarc.postmarkapp.com; sp=none; aspf=r`).
+  Remaining: let ~1–2 weeks of reports confirm Resend mail passes SPF+DKIM alignment,
+  then tighten `p=none` → `quarantine` → `reject`. **When tightening `p`, also raise
+  `sp` (or drop the `sp` tag so subdomains inherit `p`)** — `sp=none` leaves
+  `*.getmikan.com` spoofable even at `p=reject`.
 - Keep **TLS Opportunistic** and **tracking off** for auth/OTP mail.
 - Set the Logto Resend connector from-address to `Mikan <noreply@send.getmikan.com>`;
   only switch sign-in to passwordless **after** this (codes from the `resend.dev`

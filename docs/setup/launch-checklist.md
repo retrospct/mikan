@@ -38,11 +38,9 @@ it and retire the old project
 
 **Resend `send.getmikan.com`** (Verified — SPF + DKIM ✅)
 
-- Add the **DMARC** record. `rua` (reporting) is **optional** — `_dmarc TXT v=DMARC1; p=none;`
-  alone is valid and satisfies Gmail/Yahoo. For visibility before tightening, point `rua`
-  at a free DMARC service (dmarcian / Postmark / Valimail — they parse the XML) or any
-  inbox you actually read; don't stand up a `dmarc@getmikan.com` mailbox just for this.
-  Tighten `p=none` → `quarantine` → `reject` later once alignment is confirmed.
+- **DMARC monitoring via Postmark is set up** (`rua` → `…@dmarc.postmarkapp.com`,
+  `p=none`). Remaining: let ~1–2 weeks of reports confirm Resend mail passes SPF+DKIM
+  alignment, then tighten `p=none` → `quarantine` → `reject`.
 - Keep **TLS Opportunistic** and **tracking off** for auth/OTP mail.
 - Set the Logto Resend connector from-address to `Mikan <noreply@send.getmikan.com>`;
   only switch sign-in to passwordless **after** this (codes from the `resend.dev`

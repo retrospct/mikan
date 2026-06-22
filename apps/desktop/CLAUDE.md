@@ -2,7 +2,7 @@
 
 The Electron desktop app. Read the **root `CLAUDE.md`** first (the shared spine:
 coordination, security invariants, the contract, verify steps). This file adds the
-detail that's specific to working *inside* this package.
+detail that's specific to working _inside_ this package.
 
 ## Structure
 

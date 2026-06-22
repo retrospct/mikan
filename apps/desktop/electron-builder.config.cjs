@@ -52,6 +52,24 @@ module.exports = {
       schemes: [meta.scheme]
     }
   ],
+  // --- Security: Electron fuses (build-time hardening) ---
+  // Flip dangerous runtime toggles OFF in the packaged binary; electron-builder 26
+  // applies these declaratively and re-signs afterward (no afterPack needed). The
+  // big one is runAsNode:false — without it a signed app can be relaunched as a raw
+  // Node process (ELECTRON_RUN_AS_NODE=1 / --inspect) to bypass every renderer
+  // sandbox. See docs/SECURITY.md "Build-time hardening".
+  //
+  // Tier B (onlyLoadAppFromAsar + enableEmbeddedAsarIntegrityValidation) is
+  // intentionally deferred: this app ships unpacked native deps (asarUnpack:
+  // onnxruntime-node, ffmpeg-static, libSQL) and asar-integrity can interact badly
+  // with unpacked natives + signing. Enable only after a notarized build is
+  // confirmed to launch, then verify with `npx @electron/fuses read --app <path>`.
+  electronFuses: {
+    runAsNode: false,
+    enableNodeOptionsEnvironmentVariable: false,
+    enableNodeCliInspectArguments: false,
+    enableCookieEncryption: true
+  },
   win: {
     icon: meta.icon,
     executableName: slug

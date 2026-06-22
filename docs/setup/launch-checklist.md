@@ -80,7 +80,9 @@ it and retire the old project
   Authorized redirect URIs include Logto's `…/callback/<connector-id>` — and **add
   the `https://auth.getmikan.com/callback/<connector-id>` variant when the custom
   domain goes Active**, or Google sign-in breaks there.
-- Real 1024×1024 icons at `apps/desktop/assets/{mikan,momo}/icon.png`.
+- Real 1024×1024 icons — **Mikan done** (`apps/desktop/assets/mikan/icon.{svg,png}`,
+  derived from the NimiMark on the teal field; regenerate platform sets from the SVG).
+  **Momo still pending** (`apps/desktop/assets/momo/icon.png`).
 - Branch protection — require the `commitlint` check on PRs once PRs resume.
 
 ## Already done (for reference)

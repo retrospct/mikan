@@ -1,0 +1,41 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    Mikan app icon master. Derived from the in-app NimiMark (src/renderer/src/nimi/mark.tsx):
+    the monoline rounded-diamond frame + 3x3 dot grid, here in its "complete" (all dots filled)
+    state, white on the teal brand field (#0F5E57). 1024x1024, Apple-grid squircle (824 centered).
+    icon.png and the platform icon sets (build/icon.icns/.ico) are rasterized from this — edit
+    here, then re-run the generator to refresh them.
+  -->
+  <defs>
+    <linearGradient id="field" x1="120" y1="120" x2="904" y2="904" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A8B7F"/>
+      <stop offset="0.52" stop-color="#0F5E57"/>
+      <stop offset="1" stop-color="#0A4842"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="512" y1="100" x2="512" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle tile: 824x824 centered in 1024 (Apple icon grid), teal field + soft top sheen. -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#field)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#sheen)"/>
+
+  <!-- NimiMark, white, centered. 24-unit mark scaled x22 → ~450px diamond. -->
+  <g transform="translate(248,248) scale(22)">
+    <rect x="4.7" y="4.7" width="14.6" height="14.6" rx="4.1" transform="rotate(45 12 12)"
+          fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/>
+    <g fill="#ffffff">
+      <circle cx="7.7" cy="7.7" r="1.2"/>
+      <circle cx="12" cy="7.7" r="1.2"/>
+      <circle cx="16.3" cy="7.7" r="1.2"/>
+      <circle cx="7.7" cy="12" r="1.2"/>
+      <circle cx="12" cy="12" r="1.5"/>
+      <circle cx="16.3" cy="12" r="1.2"/>
+      <circle cx="7.7" cy="16.3" r="1.2"/>
+      <circle cx="12" cy="16.3" r="1.2"/>
+      <circle cx="16.3" cy="16.3" r="1.2"/>
+    </g>
+  </g>
+</svg>

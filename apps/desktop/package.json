@@ -32,7 +32,7 @@
     "@fontsource/hanken-grotesk": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@huggingface/transformers": "^4.2.0",
-    "@libsql/client": "^0.17.3",
+    "@libsql/client": "^0.17.4",
     "@nimi/brand": "workspace:*",
     "@nimi/contract": "workspace:*",
     "drizzle-orm": "^0.45.2",
@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^2.0.0",
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.61.0",
     "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
@@ -53,7 +53,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.10",
-    "electron": "^42.4.0",
+    "electron": "^42.4.1",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "react": "^19.2.7",
@@ -61,6 +61,6 @@
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
     "vite": "^7.3.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   }
 }

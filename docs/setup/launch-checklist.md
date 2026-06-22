@@ -44,12 +44,24 @@ it and retire the old project
   `sp` (or drop the `sp` tag so subdomains inherit `p`)** — `sp=none` leaves
   `*.getmikan.com` spoofable even at `p=reject`.
 - Keep **TLS Opportunistic** and **tracking off** for auth/OTP mail.
-- Set the Logto Resend connector from-address to `Mikan <noreply@send.getmikan.com>`;
-  only switch sign-in to passwordless **after** this (codes from the `resend.dev`
-  sender land in spam → lockouts).
+- Set the Logto Resend connector from-address to `Mikan <hello@send.getmikan.com>` —
+  **never `no-reply@`** ([Resend deliverability guidance](https://resend.com/docs/dashboard/emails/deliverability-insights)):
+  a real, branded sender protects engagement reputation and avoids hard-bounces from
+  recipients who reply. Only switch sign-in to passwordless **after** this (codes from
+  the `resend.dev` sender land in spam → lockouts).
+- **Reply-To (deferred until apex MX exists):** the `send.getmikan.com` subdomain has
+  no receiving, so a reply to `hello@send.getmikan.com` bounces. Once apex MX is live
+  (`support@getmikan.com`, see *Other* below), add `Reply-To: support@getmikan.com` to
+  the connector so replies route to a monitored inbox. Until then, the branded From
+  alone is the win — don't set a Reply-To that also bounces.
 
 **Other**
 
+- **Apex MX for `getmikan.com`** — add MX records on the apex (independent of Resend's
+  `send.` sending subdomain, which stays send-only) so addresses like
+  `support@getmikan.com` can **receive** mail. Unblocks the auth-email `Reply-To` above
+  and a real support inbox. Keep this separate from the `send.getmikan.com` sending
+  reputation.
 - **Marketing site `getmikan.com`** (separate PR, after the brand layer lands): a
   small brand-aware site — suggested `apps/web` consuming `@nimi/brand`, Astro on
   Vercel, `BRAND`-keyed (mikan → getmikan.com, momo → getmomo.now later). Serves the

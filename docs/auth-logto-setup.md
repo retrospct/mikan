@@ -56,8 +56,12 @@ one non-negotiable step is verifying a **sending domain** so codes land in the i
    `onboarding@resend.dev` sender for real users — deliverability is unreliable (spam/greylisting).
 2. **Create a Resend API key** (Resend → **API Keys**), sending-scope is enough.
 3. **Logto Console → Connectors → Email and SMS → Email connector → Resend.** Paste the API
-   key and a **from address on the verified domain** (e.g. `auth@retro.dev` or
-   `noreply@getmikan.com`). (Logto also offers a generic **SMTP** connector if you prefer.)
+   key and a **branded from address on the verified domain** — `Mikan <hello@send.getmikan.com>`.
+   **Never use `no-reply@`** ([Resend deliverability guidance](https://resend.com/docs/dashboard/emails/deliverability-insights)):
+   a real sender protects engagement/reputation and avoids hard-bounces from recipients who
+   reply. (Logto also offers a generic **SMTP** connector if you prefer.) The `send.` subdomain
+   is send-only (no MX), so a `Reply-To` is deferred until apex MX (`support@getmikan.com`)
+   exists — see `docs/setup/launch-checklist.md`.
 4. **Templates.** Fill the _Generic_, _Sign-in_, _Sign-up_, and _Forgot password_ usage types so
    the code email reads well.
 5. **Send a test email** from the connector page and confirm it arrives in a normal inbox.

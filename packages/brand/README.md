@@ -88,6 +88,13 @@ tool (items 2–4) before GA.
 cool.jlee.nimi`). When mobile graduates, convert to a dynamic `app.config.js`
   keyed off `EXPO_PUBLIC_BRAND` → per-brand name/scheme (`mikan`/`momo`) +
   bundleId (`dev.retro.mikan`/`dev.retro.momo`), mirroring the desktop wiring.
+- **Logto Account API stays off (revisit later).** nimi doesn't use Logto's Account
+  Center / Account API: sign-out is local, identity comes from the verified id_token
+  claims, and Google connector tokens are managed by the app's own OAuth
+  (`src/main/connectors/google-auth.ts`), not Logto's Secret Vault. Revisit only if
+  we build native **in-app account management** (change email/password, MFA, passkeys,
+  session revocation) instead of a Logto-hosted page, or decide to move Google token
+  storage into Logto's Secret Vault — both are deliberate, security-scoped changes.
 
 ## Adding a brand later (e.g. when Momo graduates)
 

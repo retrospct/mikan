@@ -2,3 +2,7 @@ packages:
   - 'apps/*'
   - 'packages/*'
   - 'services/*'
+
+# Hoist all deps to the root node_modules (flat, npm-style layout). pnpm-only
+# setting; lives here rather than .npmrc so npm/npx don't warn on an unknown key.
+shamefullyHoist: true

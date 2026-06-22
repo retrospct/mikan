@@ -23,8 +23,9 @@ apps/desktop/resources/mac/nimi-extract
 *.db-wal
 *.db-shm
 
-# Claude Code local worktrees/session data
-.claude/
+# Claude Code local worktrees/session data — but track shared project skills.
+.claude/*
+!.claude/skills/
 
 # Generated agent-sync brief (rewritten each routine run; local scratchpad — read it
 # to compose the paste you seed each agent with). The routine config is tracked.

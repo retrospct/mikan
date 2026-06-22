@@ -95,6 +95,12 @@ async function persist(): Promise<void> {
 
 async function discover(): Promise<OidcConfig> {
   if (discovery) return discovery
+  // OIDC carries bearer/refresh tokens — require TLS so discovery + token exchange
+  // can't be MITM'd by a plaintext endpoint. The endpoint is env-configured
+  // (trusted), so this just guards against a misconfiguration, not a live attacker.
+  if (!endpoint.startsWith('https://')) {
+    throw new Error('Logto endpoint must be https:// (refusing to use a non-TLS OIDC endpoint)')
+  }
   const res = await fetch(`${endpoint}/oidc/.well-known/openid-configuration`)
   if (!res.ok) throw new Error(`Logto OIDC discovery failed (HTTP ${res.status})`)
   discovery = (await res.json()) as OidcConfig

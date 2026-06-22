@@ -43,6 +43,7 @@ function AccountSection(): JSX.Element | null {
 
 /** The Sync toggle + status line + recovery-key controls. */
 function SyncSection(): JSX.Element {
+  const brand = useBrand()
   const { state: auth } = useAuth()
   const { status } = useSync()
   const { settings, busy, setEnabled, importKey, revealKey } = useSyncSettings()
@@ -100,7 +101,7 @@ function SyncSection(): JSX.Element {
       <div className="settings-section-h">Sync</div>
       <div className="settings-section-s">
         Keep your notes in sync across your devices. Content is end-to-end encrypted with a key that
-        lives only on your devices — Nimi&apos;s cloud never sees plaintext.
+        lives only on your devices — {brand.productName}&apos;s cloud never sees plaintext.
       </div>
 
       <div className="settings-row">
@@ -199,6 +200,7 @@ function SyncSection(): JSX.Element {
 }
 
 function UpdateSection(): JSX.Element {
+  const brand = useBrand()
   const { status, checkNow, quitAndInstall } = useUpdate()
   const { stage, version, progress, error } = status
 
@@ -222,7 +224,7 @@ function UpdateSection(): JSX.Element {
       <div className="settings-section-h">Updates</div>
       <div className="settings-row">
         <div className="settings-row-main">
-          <div className="settings-row-ttl">Nimi</div>
+          <div className="settings-row-ttl">{brand.productName}</div>
           <div className="settings-row-sub">
             {stage === 'error' ? statusLine : `v${__APP_VERSION__} — ${statusLine}`}
           </div>
@@ -264,8 +266,8 @@ export function SettingsView({ onBack }: { onBack: () => void }): JSX.Element {
         <section className="settings-section">
           <div className="settings-section-h">Connections</div>
           <div className="settings-section-s">
-            Link Gmail and Google Calendar so Nimi can quietly pull in context. Connect, disconnect,
-            or sync each whenever you like.
+            Link Gmail and Google Calendar so {brand.productName} can quietly pull in context.
+            Connect, disconnect, or sync each whenever you like.
           </div>
           <ConnectorsControl />
         </section>

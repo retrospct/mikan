@@ -1,5 +1,6 @@
 // task.tsx — task detail. Reads like a brief Nimi prepared for you:
 // a summary in its voice, the draft it took a crack at, then the sources it used.
+import { useBrand } from '@nimi/brand/web'
 import { useContext, useEffect, useRef, useState } from 'react'
 import type { JSX, ReactNode } from 'react'
 import { NIcon } from './icons'
@@ -273,6 +274,7 @@ export function TaskDetail({
   onDig: () => void
   onSearch: () => void
 }): JSX.Element {
+  const brand = useBrand()
   const mem = useContext(MemoryContext)
   const [pinned, setPinned] = useState<Set<string>>(new Set(task.pinned || []))
   const [swept, setSwept] = useState<Set<string>>(new Set())
@@ -573,8 +575,8 @@ export function TaskDetail({
         <button
           className="dt-ask"
           onClick={() => setChat(true)}
-          aria-label="Ask Nimi"
-          title="Ask Nimi"
+          aria-label={`Ask ${brand.productName}`}
+          title={`Ask ${brand.productName}`}
         >
           <NimiMark state="idle" size={26} />
         </button>
@@ -619,6 +621,7 @@ function TaskChat({
   poolCount: number
   onClose: () => void
 }): JSX.Element {
+  const brand = useBrand()
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     {
       from: 'nimi',
@@ -660,7 +663,7 @@ function TaskChat({
           <div className="sheet-hd-l">
             <NimiMark state={thinking ? 'thinking' : 'idle'} size={28} />
             <div>
-              <div className="sheet-ttl">Ask Nimi</div>
+              <div className="sheet-ttl">Ask {brand.productName}</div>
               <div className="sheet-sub">
                 About “{task.title.length > 26 ? task.title.slice(0, 25) + '…' : task.title}”
               </div>

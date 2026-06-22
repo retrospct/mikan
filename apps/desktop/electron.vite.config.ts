@@ -9,6 +9,13 @@ const { version: APP_VERSION } = JSON.parse(readFileSync('./package.json', 'utf-
   version: string
 }
 
+// Read brand identity straight from @nimi/brand's source (cwd-relative, same as
+// the package.json read above). Avoids an ESM JSON import attribute, which
+// electron-vite's config transpile drops.
+const brandIdentity = JSON.parse(
+  readFileSync(resolve('../../packages/brand/src/identity.json'), 'utf-8')
+) as Record<string, { productName: string }>
+
 // Brand is selected at BUILD time via the BRAND env var (default: mikan). Bake it
 // into every bundle as the `__BRAND__` global so the @nimi/brand resolver reads a
 // literal — the packaged app has no BRAND in its runtime env, and the sandboxed
@@ -16,6 +23,19 @@ const { version: APP_VERSION } = JSON.parse(readFileSync('./package.json', 'utf-
 // separately at packaging time (see electron-builder.config.cjs); keep them in sync.
 const BRAND = process.env.BRAND ?? 'mikan'
 const brandDefine = { __BRAND__: JSON.stringify(BRAND) }
+const PRODUCT_NAME = brandIdentity[BRAND].productName
+
+// Stamp the brand's product name into index.html's <title> at build, so the very
+// first paint (before React/BrandProvider mounts) shows the right name — not a
+// hard-coded one. BrandProvider keeps document.title in sync thereafter.
+function brandHtmlPlugin(): Plugin {
+  return {
+    name: 'nimi-brand-html',
+    transformIndexHtml(html) {
+      return html.replace(/<title>[^<]*<\/title>/, `<title>${PRODUCT_NAME}</title>`)
+    }
+  }
+}
 
 // The renderer's index.html ships the strict PRODUCTION CSP. The dev server,
 // however, needs relaxations the built app does not:
@@ -97,6 +117,6 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [react(), tailwindcss(), devCspPlugin()]
+    plugins: [react(), tailwindcss(), brandHtmlPlugin(), devCspPlugin()]
   }
 })

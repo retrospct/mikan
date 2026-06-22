@@ -70,6 +70,18 @@ production goals we're driving toward; tick them off as the renderer styling lan
 OKLCH values in `brands/*.ts` are a tuned first pass — refine against an APCA/contrast
 tool (items 2–4) before GA.
 
+## Open follow-ups (stakeholder acceptance)
+
+- **Surface bridge depth.** The desktop renderer currently bridges only the
+  _palette-level_ tokens (`--accent`/`-ink`/`-deep`, `--bg`, `--ink`/`-2`) to
+  `--brand-*`; the translucent `--surface`/`--hairline`/`--shadow` "glass" craft
+  tokens stay brand-neutral. **Decision pending:** whether brands should also drive
+  surfaces (more brand-saturated chrome) or keep the shared glass treatment. Needs
+  a visual review of Mikan vs Momo before committing either way.
+- **Assistant persona name.** User-facing copy ("Ask Mikan", "Welcome to Mikan",
+  "Add to Mikan") now uses `brand.productName` for the in-app assistant. **Decision
+  pending:** confirm the assistant should share the product name vs. carry its own.
+
 ## Adding a brand later (e.g. when Momo graduates)
 
 1. Add its entry to `identity.json`.

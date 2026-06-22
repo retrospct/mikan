@@ -78,8 +78,8 @@ describe('buildAuthorizeUrl', () => {
 
   it('omits resource when not provided and includes it when set', () => {
     expect(new URL(buildAuthorizeUrl(base)).searchParams.has('resource')).toBe(false)
-    const withRes = new URL(buildAuthorizeUrl({ ...base, resource: 'https://api.neeme.app' }))
-    expect(withRes.searchParams.get('resource')).toBe('https://api.neeme.app')
+    const withRes = new URL(buildAuthorizeUrl({ ...base, resource: 'https://api.getmikan.com' }))
+    expect(withRes.searchParams.get('resource')).toBe('https://api.getmikan.com')
   })
 })
 

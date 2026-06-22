@@ -107,6 +107,13 @@ function isMissingTableError(err: unknown, table: string): boolean {
  * rows actually inserted (rowsAffected, not the total selected).
  */
 async function copyTable(src: Client, dest: Client, table: string): Promise<number> {
+  // The table name is interpolated into SQL (identifiers can't be parameterized),
+  // so constrain it to the known migratable set — a future caller can't turn this
+  // into an injection sink. Column names below come from the row keys of these same
+  // app-owned tables, not from user input.
+  if (!(MIGRATABLE_TABLES as readonly string[]).includes(table)) {
+    throw new Error(`copyTable: refusing unknown table "${table}"`)
+  }
   let res: Awaited<ReturnType<Client['execute']>>
   try {
     res = await src.execute(`SELECT * FROM "${table}"`)

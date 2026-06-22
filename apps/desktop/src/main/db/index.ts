@@ -245,8 +245,20 @@ export async function initDb(): Promise<void> {
   )
 }
 
-/** Add a column to an existing table only if it doesn't already exist. */
+/**
+ * Add a column to an existing table only if it doesn't already exist.
+ *
+ * SQLite can't parameterize identifiers, so table/column/type are interpolated.
+ * Every caller passes hardcoded literals today; the asserts make that a guarantee
+ * rather than a convention, so this can never become an injection sink if a future
+ * caller wires in dynamic input.
+ */
+const SQL_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/
+const SQL_COL_TYPE = /^[A-Za-z0-9_ ()]+$/
 async function addColumnIfMissing(table: string, column: string, type: string): Promise<void> {
+  if (!SQL_IDENT.test(table) || !SQL_IDENT.test(column) || !SQL_COL_TYPE.test(type)) {
+    throw new Error(`addColumnIfMissing: unsafe identifier (${table}.${column} ${type})`)
+  }
   const info = await client.execute(`PRAGMA table_info(${table})`)
   const exists = info.rows.some((r) => r['name'] === column)
   if (!exists) {

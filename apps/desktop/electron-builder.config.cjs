@@ -87,15 +87,6 @@ module.exports = {
   dmg: {
     artifactName: `${slug}-\${version}.\${ext}`
   },
-  linux: {
-    icon: meta.icon,
-    target: ['AppImage', 'snap', 'deb'],
-    maintainer: 'electronjs.org',
-    category: 'Utility'
-  },
-  appImage: {
-    artifactName: `${slug}-\${version}.\${ext}`
-  },
   npmRebuild: false,
   publish: {
     provider: 'github',

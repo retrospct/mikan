@@ -144,6 +144,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@nimi/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@nimi/contract':
         specifier: workspace:*
         version: link:../../packages/contract

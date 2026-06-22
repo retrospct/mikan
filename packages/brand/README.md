@@ -81,6 +81,13 @@ tool (items 2–4) before GA.
 - **Assistant persona name.** User-facing copy ("Ask Mikan", "Welcome to Mikan",
   "Add to Mikan") now uses `brand.productName` for the in-app assistant. **Decision
   pending:** confirm the assistant should share the product name vs. carry its own.
+- **Mobile build-time brand selection.** `apps/mobile` now imports `@nimi/brand`
+  (login screen reads `brand.productName`/`brand.tagline`) and the resolver accepts
+  `EXPO_PUBLIC_BRAND`, but the Expo app identity is **not yet brand-wired**:
+  `app.json` is still static (`name: Nimi`, `scheme: nimi`, `bundleIdentifier
+cool.jlee.nimi`). When mobile graduates, convert to a dynamic `app.config.js`
+  keyed off `EXPO_PUBLIC_BRAND` → per-brand name/scheme (`mikan`/`momo`) +
+  bundleId (`dev.retro.mikan`/`dev.retro.momo`), mirroring the desktop wiring.
 
 ## Adding a brand later (e.g. when Momo graduates)
 

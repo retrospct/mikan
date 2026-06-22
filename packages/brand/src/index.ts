@@ -22,11 +22,15 @@ declare const __BRAND__: string | undefined
 
 function resolveBrandId(): BrandId {
   // Renderer: electron-vite `define` replaces __BRAND__ with a string literal at
-  // build (the only way in — the sandboxed renderer has no process). Main / Node /
-  // RN: read process.env.BRAND. Default to mikan when neither is set. The guards
+  // build (the only way in — the sandboxed renderer has no process). Main / Node:
+  // process.env.BRAND. React Native / Expo: EXPO_PUBLIC_BRAND (Expo only inlines
+  // EXPO_PUBLIC_*-prefixed vars). Default to mikan when none is set. The guards
   // must wrap the env reads so an undefined global is never dereferenced.
   const fromDefine = typeof __BRAND__ !== 'undefined' ? __BRAND__ : undefined
-  const fromProcess = typeof process !== 'undefined' ? process.env?.BRAND : undefined
+  const fromProcess =
+    typeof process !== 'undefined'
+      ? (process.env?.BRAND ?? process.env?.EXPO_PUBLIC_BRAND)
+      : undefined
   const raw = fromDefine ?? fromProcess ?? DEFAULT_BRAND
 
   if (!(raw in brands)) {

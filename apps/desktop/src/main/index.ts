@@ -36,10 +36,13 @@ app.on('second-instance', (_event, argv) => {
   if (url) auth.handleCallback(url).catch((e) => console.error('auth callback failed', e))
   showWindow()
 })
-// macOS delivers the deep link via open-url.
+// macOS delivers the deep link via open-url. Bring the window forward too — the
+// user just came back from the system browser and expects the app focused (the
+// second-instance path below does the same for Windows/Linux).
 app.on('open-url', (event, url) => {
   event.preventDefault()
   auth.handleCallback(url).catch((e) => console.error('auth callback failed', e))
+  showWindow()
 })
 
 // --- Security: lock down navigation + window creation (Electron checklist) ---

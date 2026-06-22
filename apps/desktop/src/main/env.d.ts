@@ -21,7 +21,7 @@ interface ImportMetaEnv {
   /**
    * Token-broker URL (ADR 0008), inlined at build time so packaged releases
    * (which have no shell env) can reach the broker. `process.env.NEEME_SYNC_BROKER_URL`
-   * overrides it at runtime for dev/tests. e.g. https://nimi-token-broker.vercel.app
+   * overrides it at runtime for dev/tests. e.g. https://sync.getmikan.com
    */
   readonly MAIN_VITE_NEEME_SYNC_BROKER_URL?: string
 }

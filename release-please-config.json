@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "separate-pull-requests": false,
+  "pull-request-title-pattern": "chore: release v${version}",
+  "packages": {
+    ".": {
+      "package-name": "nimi",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        { "type": "json", "path": "apps/desktop/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "apps/mobile/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/contract/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/brand/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "services/token-broker/package.json", "jsonpath": "$.version" }
+      ]
+    }
+  }
+}

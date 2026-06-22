@@ -1,33 +1,48 @@
-name: Release
+name: Release (build & publish)
 
-# Every merge to main produces a signed, notarized release that is delivered to
-# already-installed clients via electron-updater. The patch component of the
-# version is the GitHub Actions run number so every build is unique and
-# monotonically increasing without requiring a version-bump commit.
+# Reusable build + publish for ONE brand at a build-time-selected BRAND. It no
+# longer triggers on merges to main — releases are cut by merging the
+# release-please "Release PR" (see release-please.yml), which calls this workflow
+# for Mikan. Momo (or a re-run) is available via manual workflow_dispatch.
 #
-# Version scheme: MAJOR.MINOR from apps/desktop/package.json + .<run_number>
-# e.g. package.json "1.2.0" on run 87 → release v1.2.87
-#
-# To cut a named milestone release: bump MAJOR.MINOR in package.json and merge
-# to main — the next run produces v<new_major>.<new_minor>.N.
+# The version is NOT computed here: release-please bumps it in package.json before
+# tagging, so the checked-out ref already carries the right version, which
+# electron-builder reads.
 on:
-  push:
-    branches:
-      - main
-    # Docs-only changes shouldn't cut a signed/notarized release or burn a
-    # version. Anything outside these paths still triggers a build.
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.github/**/*.md'
+  workflow_call:
+    inputs:
+      brand:
+        description: Brand to build (mikan | momo)
+        type: string
+        required: true
+      ref:
+        description: Git ref (tag) to build
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      brand:
+        description: Brand to build
+        type: choice
+        options:
+          - mikan
+          - momo
+        default: mikan
+      ref:
+        description: Git ref (tag/branch) to build — defaults to the selected branch
+        type: string
+        required: false
 
 jobs:
   build-mac:
-    name: Build & publish macOS
+    name: Build & publish macOS (${{ inputs.brand }})
     runs-on: macos-latest
     permissions:
       contents: write
     env:
+      # Build-time brand selection: baked into the JS by electron-vite and read by
+      # electron-builder.config.cjs for appId/productName/scheme/publish.
+      BRAND: ${{ inputs.brand }}
       NEEME_EMBEDDER: hash
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Code-signing (Developer ID Application cert as base64-encoded .p12)
@@ -57,6 +72,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # The tag release-please created (workflow_call) or a manual ref. Empty
+          # on a bare dispatch → checks out the workflow's default branch.
+          ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
         with:
@@ -70,35 +89,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Compute release version
-        id: version
-        # Derive MAJOR.MINOR from package.json; use the run number as the patch
-        # so every merge to main produces a unique, monotonically increasing build
-        # with no version-bump commit needed.
-        run: |
-          BASE=$(node -p "require('./apps/desktop/package.json').version")
-          MAJOR_MINOR=$(echo "$BASE" | cut -d. -f1,2)
-          VERSION="${MAJOR_MINOR}.${{ github.run_number }}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
-
-      - name: Stamp version into package.json
-        # npm version --no-git-tag-version updates package.json only (no commit,
-        # no tag). electron-builder reads the version from package.json at build
-        # time, so this is the canonical way to inject a computed version.
-        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
-        working-directory: apps/desktop
-
-      - name: Create and push release tag
-        # Push a lightweight tag so electron-builder can create the GitHub Release
-        # with the correct ref. Only a tag is pushed — no commit — so this cannot
-        # re-trigger the workflow (branch push filter won't match a tag push).
-        run: |
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git tag "${{ steps.version.outputs.tag }}"
-          git push origin "${{ steps.version.outputs.tag }}"
-
       - name: Decode App Store Connect API key
         # notarytool expects a file path, not inline content.
         # Decode the base64 secret to a temp file and point APPLE_API_KEY at it.
@@ -111,25 +101,30 @@ jobs:
 
       - name: Build & publish (macOS)
         # electron-builder publish reads CSC_LINK for signing and APPLE_* for notarytool.
-        # GH_TOKEN lets it upload the DMG + latest-mac.yml to the GitHub Release,
-        # which electron-updater polls on installed clients.
+        # GH_TOKEN uploads the DMG + latest-mac.yml to the GitHub Release (the one
+        # release-please created for this tag), which electron-updater polls on
+        # installed clients. BRAND selects the brand for both electron-vite and
+        # electron-builder.config.cjs (which sets the publish owner/repo).
         run: pnpm --filter @nimi/desktop build:mac --publish always
 
   # Windows canary is deferred for the friends-and-family alpha.
   # Uncomment and add Azure Trusted Signing secrets when Windows is revisited.
   # build-win:
-  #   name: Build & publish Windows
+  #   name: Build & publish Windows (${{ inputs.brand }})
   #   runs-on: windows-latest
   #   env:
+  #     BRAND: ${{ inputs.brand }}
   #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: pnpm/action-setup@v4
+  #     - uses: actions/checkout@v6
+  #       with:
+  #         ref: ${{ inputs.ref }}
+  #     - uses: pnpm/action-setup@v6
   #       with:
   #         run_install: false
-  #     - uses: actions/setup-node@v4
+  #     - uses: actions/setup-node@v6
   #       with:
-  #         node-version: '22'
+  #         node-version: '24'
   #         cache: pnpm
   #     - run: pnpm install --frozen-lockfile
   #     - run: pnpm --filter @nimi/desktop build:win --publish always

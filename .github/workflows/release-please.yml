@@ -1,0 +1,47 @@
+name: Release Please
+
+# Deliberate, conventional-commit-driven releases — NOT one per merge to main.
+#
+# On every push to main, release-please maintains a single "Release PR" that bumps
+# the unified version (root + all workspaces via extra-files) and updates the
+# changelog from Conventional Commits. Merging that PR is the act of cutting a
+# release: release-please tags `v<version>` + creates the GitHub Release, and this
+# workflow then builds & publishes the primary brand (Mikan).
+#
+# Momo is opt-in: run the "Release (build & publish)" workflow manually
+# (workflow_dispatch) with brand=momo once its release repo + token exist.
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Maintain release PR / cut release
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # Manifest mode: reads release-please-config.json + .release-please-manifest.json.
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # When the Release PR merges (a release is cut), build + publish Mikan for the
+  # freshly created tag. Reuses the build/publish workflow. Actions can't trigger
+  # other workflows via the tag they push (GITHUB_TOKEN events don't re-trigger),
+  # so we invoke it directly here instead of relying on an `on: push: tags` filter.
+  publish-mikan:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    uses: ./.github/workflows/release.yml
+    with:
+      brand: mikan
+      ref: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit

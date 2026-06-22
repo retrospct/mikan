@@ -1,4 +1,5 @@
 // today.tsx — header, memory weather, Today list, task cards, bottom nav.
+import { useBrand } from '@nimi/brand/web'
 import type { Task } from '@nimi/contract/views'
 import type { JSX } from 'react'
 import { useContext, useEffect, useRef, useState } from 'react'
@@ -232,6 +233,7 @@ export function TodayView({
   onSettings,
   nimiState
 }: TodayViewProps): JSX.Element {
+  const brand = useBrand()
   const filled = tasks.length
   const open = Math.max(0, cap - filled)
   const left = tasks.filter((t) => !t.done).length
@@ -304,7 +306,7 @@ export function TodayView({
           ))}
           {open === 0 && (
             <div className="empty-note">
-              That&apos;s a full, honest day. Nimi will keep the rest in the backlog.
+              That&apos;s a full, honest day. {brand.productName} will keep the rest in the backlog.
             </div>
           )}
         </div>

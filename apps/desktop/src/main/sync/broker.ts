@@ -16,7 +16,7 @@
  *     cloud agents that export the var into the shell.
  *   - import.meta.env.MAIN_VITE_NEEME_SYNC_BROKER_URL — build-time value inlined
  *     by electron-vite, so packaged releases (no shell env) still find the broker.
- *   e.g. https://nimi-token-broker.vercel.app
+ *   e.g. https://sync.getmikan.com
  */
 import { app, safeStorage } from 'electron'
 import { readFile, writeFile, rm } from 'node:fs/promises'
@@ -109,9 +109,7 @@ async function fetchFromBroker(logtoAccessToken: string): Promise<BrokerTokenRes
  * Errors from the broker are logged and rethrown; callers should catch and
  * fall back to the static NEEME_SYNC_AUTH_TOKEN path if present.
  */
-export async function getSyncToken(
-  logtoAccessToken: string
-): Promise<BrokerTokenResponse | null> {
+export async function getSyncToken(logtoAccessToken: string): Promise<BrokerTokenResponse | null> {
   if (!isBrokerConfigured()) return null
 
   if (cached && isTokenFresh(cached)) {

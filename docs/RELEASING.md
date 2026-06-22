@@ -1,0 +1,76 @@
+# Releasing nimi
+
+How we cut releases. The short version: **releases are deliberate and fully
+manual** — nothing ships on a merge or rebase to `main`. A release is initiated
+only through the `/release` skill (which dispatches the release workflow).
+
+## Concepts
+
+- **Unified versioning.** Every workspace (`apps/desktop`, `apps/mobile`,
+  `packages/contract`, `packages/brand`, `services/token-broker`) and the repo root
+  share **one version**. There is no independent per-package versioning.
+- **Conventional Commits drive the version + changelog.** `feat:` → minor,
+  `fix:` → patch, `feat!:` / `BREAKING CHANGE:` → major. Other types (`chore`,
+  `docs`, `refactor`, `test`, `ci`, …) don't bump the version but still appear in
+  history. This is enforced by **commitlint** (husky `commit-msg` hook locally +
+  `.github/workflows/commitlint.yml` on PRs).
+- **Brand is chosen at build time.** Each release builds a specific brand
+  (`BRAND=mikan` by default). **Mikan** publishes to `retrospct/nimi`; **Momo** is
+  opt-in and publishes to its own repo (see `packages/brand/src/identity.json`).
+
+## Moving parts
+
+| File                                   | Role                                                                                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `release-please-config.json`           | release-please manifest config: single root release, `extra-files` bump every workspace `package.json`, clean `v<version>` tags.                  |
+| `.release-please-manifest.json`        | The current released version (source of truth release-please reads/writes).                                                                       |
+| `.github/workflows/release-please.yml` | **Dispatch-only.** Maintains the Release PR; on a dispatch after that PR merges, tags + creates the Release and triggers the Mikan build.         |
+| `.github/workflows/release.yml`        | Reusable build/publish job (`workflow_call` + `workflow_dispatch`), parameterized by `BRAND`. Signs + notarizes + publishes via electron-builder. |
+| `.github/workflows/commitlint.yml`     | Validates Conventional Commits on PRs.                                                                                                            |
+| `.claude/skills/release/SKILL.md`      | The `/release` skill that drives the flow below.                                                                                                  |
+
+## Cutting a release (Mikan) — the two-phase flow
+
+Because release-please runs **only on manual dispatch**, a release is two dispatches
+with a PR merge between them. The `/release` skill automates the orchestration; the
+manual equivalent:
+
+1. **Land your changes on `main`** with Conventional Commits, and make sure CI is
+   green.
+2. **Phase 1 — open the Release PR.** Run the **Release Please** workflow
+   (Actions → Release Please → Run workflow, on `main`). It opens/updates a PR titled
+   `chore: release v<version>` with the computed version bump + changelog. Nothing
+   ships yet.
+3. **Review** the version + changelog in that PR.
+4. **Merge the Release PR.** This lands the version bump + `CHANGELOG.md` on `main`.
+   It does **not** ship on its own (the workflow isn't push-triggered).
+5. **Phase 2 — ship.** Run the **Release Please** workflow again. It detects the
+   merged release commit, tags `v<version>`, creates the GitHub Release, and the
+   `publish-mikan` job builds, signs, notarizes, and publishes the macOS app.
+   `electron-updater` clients pick it up from the Release's `latest-mac.yml`.
+
+> Why two dispatches instead of "merge = ship"? We deliberately keep `main`
+> automation-free: a normal merge/rebase never triggers a release. Shipping is
+> always an explicit action.
+
+## Releasing Momo
+
+Momo is **not** built on a normal release. When its release repo + a cross-repo
+publish token exist, run the **Release (build & publish)** workflow manually with
+`brand=momo` and `ref=v<version>` (the tag from the Mikan release, or a tag you cut
+for Momo). Until then it's inert — the default `GITHUB_TOKEN` only reaches
+`retrospct/nimi`.
+
+## Versioning a major/minor milestone
+
+You don't bump versions by hand — the commit types since the last release decide the
+bump. To force a minor (e.g. a milestone), include a `feat:` commit; for a major,
+use `feat!:` or a `BREAKING CHANGE:` footer. Then run the flow above.
+
+## Prerequisites / secrets
+
+The build/publish job needs repo **Secrets** (not Vars): `CSC_LINK`,
+`CSC_KEY_PASSWORD`, `APPLE_TEAM_ID`, `APPLE_API_KEY`, `APPLE_API_KEY_ID`,
+`APPLE_API_ISSUER`, and the inlined public client config (`MAIN_VITE_LOGTO_*`,
+`MAIN_VITE_NEEME_SYNC_BROKER_URL`, `MAIN_VITE_GOOGLE_CLIENT_*`). See the comments in
+`release.yml` for why these are Secrets and what ships inert without them.

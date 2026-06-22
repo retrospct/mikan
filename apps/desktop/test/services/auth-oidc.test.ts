@@ -56,7 +56,7 @@ describe('buildAuthorizeUrl', () => {
   const base = {
     authorizationEndpoint: 'https://tenant.logto.app/oidc/auth',
     clientId: AUD,
-    redirectUri: 'neeme://callback',
+    redirectUri: 'mikan://callback',
     scope: 'openid profile offline_access',
     challenge: 'CHALLENGE',
     state: 'STATE',
@@ -67,7 +67,7 @@ describe('buildAuthorizeUrl', () => {
     const url = new URL(buildAuthorizeUrl(base))
     const q = url.searchParams
     expect(q.get('client_id')).toBe(AUD)
-    expect(q.get('redirect_uri')).toBe('neeme://callback')
+    expect(q.get('redirect_uri')).toBe('mikan://callback')
     expect(q.get('response_type')).toBe('code')
     expect(q.get('scope')).toBe('openid profile offline_access')
     expect(q.get('code_challenge')).toBe('CHALLENGE')
@@ -78,8 +78,8 @@ describe('buildAuthorizeUrl', () => {
 
   it('omits resource when not provided and includes it when set', () => {
     expect(new URL(buildAuthorizeUrl(base)).searchParams.has('resource')).toBe(false)
-    const withRes = new URL(buildAuthorizeUrl({ ...base, resource: 'https://api.neeme.app' }))
-    expect(withRes.searchParams.get('resource')).toBe('https://api.neeme.app')
+    const withRes = new URL(buildAuthorizeUrl({ ...base, resource: 'https://api.getmikan.com' }))
+    expect(withRes.searchParams.get('resource')).toBe('https://api.getmikan.com')
   })
 })
 

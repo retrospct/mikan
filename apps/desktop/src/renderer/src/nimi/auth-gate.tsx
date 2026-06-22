@@ -5,6 +5,7 @@
 // see src/main/auth/logto.ts). It replaces the old header lock icon as the front
 // door. In unconfigured/dev builds Logto reports `configured: false`, the gate
 // never mounts, and the app stays fully usable offline and local-first.
+import { useBrand } from '@nimi/brand/web'
 import type { JSX } from 'react'
 import { useState } from 'react'
 import { NimiMark } from './mark'
@@ -20,7 +21,8 @@ export function AuthSplash(): JSX.Element {
 }
 
 export function AuthGate({ onLogin }: { onLogin: () => void }): JSX.Element {
-  // After the browser hand-off there's a beat before the `neeme://callback` deep
+  const brand = useBrand()
+  // After the browser hand-off there's a beat before the `<scheme>://callback` deep
   // link lands and main flips us authenticated (which unmounts this gate). Reflect
   // that wait so the user isn't left staring at an idle button.
   const [awaiting, setAwaiting] = useState(false)
@@ -35,7 +37,7 @@ export function AuthGate({ onLogin }: { onLogin: () => void }): JSX.Element {
         <div className="auth-gate-brand">
           <NimiMark state={awaiting ? 'thinking' : 'idle'} size={64} />
         </div>
-        <h1 className="auth-gate-ttl">Welcome to Nimi</h1>
+        <h1 className="auth-gate-ttl">Welcome to {brand.productName}</h1>
         <p className="auth-gate-sub">
           {awaiting
             ? 'Finish signing in in your browser — this screen unlocks on its own.'
@@ -59,8 +61,8 @@ export function AuthGate({ onLogin }: { onLogin: () => void }): JSX.Element {
         )}
 
         <p className="auth-gate-foot">
-          Your notes are stored on this device. Signing in turns on secure,
-          end-to-end encrypted sync across your devices.
+          Your notes are stored on this device. Signing in turns on secure, end-to-end encrypted
+          sync across your devices.
         </p>
       </div>
     </div>

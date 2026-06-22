@@ -1,3 +1,4 @@
+import { brand } from '@nimi/brand'
 import { useState, type ReactElement } from 'react'
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
@@ -83,8 +84,8 @@ export default function LoginScreen(): ReactElement {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Nimi</Text>
-      <Text style={styles.subtitle}>Your personal memory</Text>
+      <Text style={styles.title}>{brand.productName}</Text>
+      <Text style={styles.subtitle}>{brand.tagline}</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <Pressable
         style={[styles.button, (!configured || loading) && styles.buttonDisabled]}

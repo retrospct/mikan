@@ -2,7 +2,7 @@
 
 The Electron desktop app. Read the **root `CLAUDE.md`** first (the shared spine:
 coordination, security invariants, the contract, verify steps). This file adds the
-detail that's specific to working *inside* this package.
+detail that's specific to working _inside_ this package.
 
 ## Structure
 
@@ -19,7 +19,7 @@ apps/desktop/
     preload/     ← the contextBridge surface (window.api.*)
     renderer/    ← the React UI (src/renderer/src), index.html, Tailwind
   electron.vite.config.ts   ← three builds (main+worker / preload / renderer)
-  electron-builder.yml       ← packaging (mac/win/linux), appId cool.jlee.nimi
+  electron-builder.config.cjs ← packaging (macOS now, Windows later), brand-keyed appId (dev.retro.<brand>) from @nimi/brand identity.json
   tsconfig.node.json / tsconfig.web.json
 ```
 

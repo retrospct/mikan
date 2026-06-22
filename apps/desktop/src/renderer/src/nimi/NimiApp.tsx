@@ -33,7 +33,6 @@ import { PlanRitual } from './plan'
 import { SearchOverlay } from './search'
 import { SettingsView } from './settings'
 import { TaskDetail } from './task'
-import { applyAccent, readAccent } from './theme'
 import { BottomNav, TodayView } from './today'
 import type { NimiMarkState } from './types'
 
@@ -114,8 +113,8 @@ export default function NimiApp(): JSX.Element {
     el.setAttribute('data-theme', TWEAKS.theme)
     el.setAttribute('data-density', TWEAKS.density)
     el.setAttribute('data-ambient', TWEAKS.ambient ? 'on' : 'off')
-    // Accent persists across sessions and is user-configurable in Settings.
-    applyAccent(readAccent())
+    // Colour comes from the active brand (@nimi/brand); BrandProvider applies the
+    // brand tokens and re-applies them when data-theme flips above.
   }, [])
 
   // Prevent Electron from navigating the window when a file is dropped on

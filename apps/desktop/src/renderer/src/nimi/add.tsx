@@ -1,5 +1,6 @@
 // add.tsx — the + button's sheet. Primary: feed content for indexing.
 // Secondary: jot a to-do into the backlog. Indexing uncovers candidate to-dos.
+import { useBrand } from '@nimi/brand/web'
 import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
@@ -32,6 +33,7 @@ export function AddSheet({
   onAddTodo: AddTodo
   onRecordingChange?: (v: boolean) => void
 }): JSX.Element {
+  const brand = useBrand()
   const [mode, setMode] = useState<'feed' | 'todo'>('feed')
   const [recording, setRecording] = useState(false)
   useEffect(() => {
@@ -48,7 +50,7 @@ export function AddSheet({
               <div className="sheet-hd-l">
                 <NimiMark state="idle" size={28} />
                 <div>
-                  <div className="sheet-ttl">Add to Nimi</div>
+                  <div className="sheet-ttl">Add to {brand.productName}</div>
                   <div className="sheet-sub">Feed me something — or jot a to-do</div>
                 </div>
               </div>
@@ -108,6 +110,7 @@ function FeedPane({
   recording: boolean
   setRecording: (v: boolean) => void
 }): JSX.Element {
+  const brand = useBrand()
   const [phase, setPhase] = useState<'input' | 'indexing' | 'done'>('input')
   const [mode, setMode] = useState<'note' | 'voice' | 'link'>('note')
   const [attaches, setAttaches] = useState<Attach[]>([])
@@ -334,7 +337,7 @@ function FeedPane({
         </div>
         <div className="sheet-foot">
           <button className="btn primary" onClick={feed}>
-            <NIcon name="arrowUp" size={16} stroke={2.2} /> Feed it to Nimi
+            <NIcon name="arrowUp" size={16} stroke={2.2} /> Feed it to {brand.productName}
           </button>
         </div>
       </>

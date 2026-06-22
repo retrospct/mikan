@@ -1,0 +1,39 @@
+name: Commitlint
+
+# Enforce Conventional Commits in CI (the local husky commit-msg hook can be
+# bypassed). release-please derives the version bump + changelog from these, so a
+# non-conventional commit must fail. Runs on PRs (the commits the PR introduces);
+# pair with a required status check in branch protection once PRs resume.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Need the PR's commit range to lint each commit.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint PR commits
+        run: >-
+          pnpm exec commitlint
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+          --verbose

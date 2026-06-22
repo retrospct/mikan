@@ -1,6 +1,6 @@
 {
   "name": "@nimi/mobile",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "private": true,
   "main": "index.ts",
   "scripts": {
@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@nimi/brand": "workspace:*",
     "@nimi/contract": "workspace:*",
     "expo": "^56.0.11",
     "expo-auth-session": "^56.0.14",

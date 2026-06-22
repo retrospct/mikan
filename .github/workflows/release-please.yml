@@ -1,0 +1,48 @@
+name: Release Please
+
+# Deliberate, fully manual releases — nothing here runs on a merge/rebase to main.
+# The release flow is triggered ONLY via this workflow's manual dispatch (driven by
+# the `/release` skill), in two phases on the main branch:
+#
+#   Phase 1 (no open Release PR): release-please opens/updates a "Release PR" that
+#     bumps the unified version (root + all workspaces via extra-files) and writes
+#     the changelog from Conventional Commits. Nothing ships yet.
+#   Phase 2 (after that Release PR is merged): dispatch again — release-please sees
+#     the merged release commit, tags `v<version>` + creates the GitHub Release, and
+#     this workflow builds & publishes the primary brand (Mikan).
+#
+# Momo is opt-in: run the "Release (build & publish)" workflow manually with
+# brand=momo once its release repo + token exist.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Maintain release PR / cut release
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # Manifest mode: reads release-please-config.json + .release-please-manifest.json.
+      # Targets main (the branch this dispatch runs on).
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # When a dispatch lands on a just-merged Release PR (a release is cut), build +
+  # publish Mikan for the freshly created tag. Reuses the build/publish workflow.
+  publish-mikan:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    uses: ./.github/workflows/release.yml
+    with:
+      brand: mikan
+      ref: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit
+

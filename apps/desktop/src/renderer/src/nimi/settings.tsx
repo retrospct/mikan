@@ -8,14 +8,13 @@
 //   - Sync: the cloud-replica toggle + per-device encryption / recovery key.
 //   - Connections: the Gmail + Google Calendar connectors (self-contained).
 //   - Updates: current version + check / restart-to-update.
-import { useState, type CSSProperties, type JSX } from 'react'
-import { useAccent } from '../hooks/useAccent'
+import { useBrand } from '@nimi/brand/web'
+import { useState, type JSX } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useSync, useSyncSettings } from '../hooks/useSync'
 import { useUpdate } from '../hooks/useUpdate'
 import { ConnectorsControl } from './connectors'
 import { NIcon } from './icons'
-import { ACCENT_LIST } from './theme'
 import { relativeTime } from './time'
 
 function AccountSection(): JSX.Element | null {
@@ -42,42 +41,9 @@ function AccountSection(): JSX.Element | null {
   )
 }
 
-/** Accent (primary color) picker — applies + persists immediately. */
-function AppearanceSection(): JSX.Element {
-  const { accent, setAccent } = useAccent()
-  return (
-    <section className="settings-section">
-      <div className="settings-section-h">Appearance</div>
-      <div className="settings-section-s">
-        Choose Nimi&apos;s primary color. It applies right away and is remembered on this device.
-      </div>
-      <div className="settings-swatches" role="radiogroup" aria-label="Primary color">
-        {ACCENT_LIST.map((a) => {
-          const selected = a.id === accent
-          return (
-            <button
-              key={a.id}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              aria-label={a.label}
-              title={a.label}
-              className={`settings-swatch${selected ? ' on' : ''}`}
-              style={{ '--sw': a.solid } as CSSProperties}
-              onClick={() => setAccent(a.id)}
-            >
-              <span className="settings-swatch-dot" />
-              <span className="settings-swatch-lbl">{a.label}</span>
-            </button>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
-
 /** The Sync toggle + status line + recovery-key controls. */
 function SyncSection(): JSX.Element {
+  const brand = useBrand()
   const { state: auth } = useAuth()
   const { status } = useSync()
   const { settings, busy, setEnabled, importKey, revealKey } = useSyncSettings()
@@ -135,7 +101,7 @@ function SyncSection(): JSX.Element {
       <div className="settings-section-h">Sync</div>
       <div className="settings-section-s">
         Keep your notes in sync across your devices. Content is end-to-end encrypted with a key that
-        lives only on your devices — Nimi&apos;s cloud never sees plaintext.
+        lives only on your devices — {brand.productName}&apos;s cloud never sees plaintext.
       </div>
 
       <div className="settings-row">
@@ -234,6 +200,7 @@ function SyncSection(): JSX.Element {
 }
 
 function UpdateSection(): JSX.Element {
+  const brand = useBrand()
   const { status, checkNow, quitAndInstall } = useUpdate()
   const { stage, version, progress, error } = status
 
@@ -257,7 +224,7 @@ function UpdateSection(): JSX.Element {
       <div className="settings-section-h">Updates</div>
       <div className="settings-row">
         <div className="settings-row-main">
-          <div className="settings-row-ttl">Nimi</div>
+          <div className="settings-row-ttl">{brand.productName}</div>
           <div className="settings-row-sub">
             {stage === 'error' ? statusLine : `v${__APP_VERSION__} — ${statusLine}`}
           </div>
@@ -278,6 +245,7 @@ function UpdateSection(): JSX.Element {
 }
 
 export function SettingsView({ onBack }: { onBack: () => void }): JSX.Element {
+  const brand = useBrand()
   return (
     <div className="push settings-page">
       <div className="push-hd">
@@ -285,7 +253,7 @@ export function SettingsView({ onBack }: { onBack: () => void }): JSX.Element {
           <NIcon name="back" size={18} />
         </button>
         <div className="push-hd-main">
-          <div className="push-kicker">NIMI</div>
+          <div className="push-kicker">{brand.productName.toUpperCase()}</div>
           <div className="push-ttl">Settings</div>
         </div>
       </div>
@@ -293,15 +261,13 @@ export function SettingsView({ onBack }: { onBack: () => void }): JSX.Element {
       <div className="settings-body">
         <AccountSection />
 
-        <AppearanceSection />
-
         <SyncSection />
 
         <section className="settings-section">
           <div className="settings-section-h">Connections</div>
           <div className="settings-section-s">
-            Link Gmail and Google Calendar so Nimi can quietly pull in context. Connect, disconnect,
-            or sync each whenever you like.
+            Link Gmail and Google Calendar so {brand.productName} can quietly pull in context.
+            Connect, disconnect, or sync each whenever you like.
           </div>
           <ConnectorsControl />
         </section>

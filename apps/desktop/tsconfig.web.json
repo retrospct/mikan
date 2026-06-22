@@ -14,9 +14,14 @@
     // (--noEmit); the real renderer build is esbuild/Vite, which resolves .ts natively.
     "allowImportingTsExtensions": true,
     "noEmit": true,
+    // The brand configs import identity.json; needed when the brand source is
+    // followed from the renderer (BrandProvider) via the path map below.
+    "resolveJsonModule": true,
     "paths": {
       "@renderer/*": ["./src/renderer/src/*"],
-      "@nimi/contract/*": ["../../packages/contract/src/*"]
+      "@nimi/contract/*": ["../../packages/contract/src/*"],
+      "@nimi/brand": ["../../packages/brand/src/index.ts"],
+      "@nimi/brand/*": ["../../packages/brand/src/*"]
     }
   }
 }

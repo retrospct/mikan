@@ -50,10 +50,18 @@ it and retire the old project
 
 **Other**
 
-- **Logto hosted sign-in branding** (Console → Sign-in experience): Mikan logo
-  (light + dark) + favicon, brand color `#F2741A`, dark mode on, product name
-  "Mikan"; add Terms/Privacy/Support URLs. Currently the shared **omni** experience
-  (one app) → brands both; when Momo gets its own Logto app, enable per-app branding.
+- **Marketing site `getmikan.com`** (separate PR, after the brand layer lands): a
+  small brand-aware site — suggested `apps/web` consuming `@nimi/brand`, Astro on
+  Vercel, `BRAND`-keyed (mikan → getmikan.com, momo → getmomo.now later). Serves the
+  homepage + `/terms` + `/privacy`, and is the target for Logto's **unknown-session
+  redirect URL**. Unblocks: Google consent links, Logto terms/privacy links + the
+  registration "agree to terms" checkbox. Set Logto "agree to terms" =
+  **require checkbox on registration only** once the pages are live.
+- **Logto hosted sign-in branding** (Console → Sign-in experience): Mikan diamond
+  mark (light + dark) + favicon, brand color `#0F5E57` (teal), dark mode on, product
+  name "Mikan"; add the Terms/Privacy/Support URLs above. Currently the shared
+  **omni** experience (one app) → brands both; when Momo gets its own Logto app,
+  enable per-app branding.
 - **Google social connector**: keep "require missing sign-up identifier" on and
   "auto-link same identifier" on (safe — Google verifies emails; revisit if a
   connector without verified email is added). Ensure Google Cloud OAuth client's

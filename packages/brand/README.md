@@ -95,6 +95,16 @@ cool.jlee.nimi`). When mobile graduates, convert to a dynamic `app.config.js`
   we build native **in-app account management** (change email/password, MFA, passkeys,
   session revocation) instead of a Logto-hosted page, or decide to move Google token
   storage into Logto's Secret Vault — both are deliberate, security-scoped changes.
+- **Per-product infra stacks (decided; pending Momo).** Mikan and Momo are durably
+  separate products that share **code, not infra**. Mikan owns the current Logto app
+  (both `mikan://`/`momo://` redirects today) + broker; marketing/auth/api domains are
+  Mikan's (`getmikan.com`, `auth.getmikan.com`, `api.getmikan.com`). When Momo ships it
+  gets its **own** stack — separate Logto app (own user pool + `auth.getmomo.now`), own
+  broker, own `api.getmomo.now` audience, own release repo — and Momo must **not** ride
+  Mikan's. That requires **brand-keying the auth/broker config**: per-brand
+  `MAIN_VITE_LOGTO_*`, broker URL, and audience (today they're single shared values),
+  mirroring how `identity.json` keys the rest. The audience + broker URL aren't
+  user-visible; only the `auth.*` sign-in domain is.
 
 ## Adding a brand later (e.g. when Momo graduates)
 

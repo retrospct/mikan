@@ -33,7 +33,7 @@
    MAIN_VITE_LOGTO_ENDPOINT=https://<your-tenant>.logto.app
    MAIN_VITE_LOGTO_APP_ID=<your-native-app-id>
    # Optional: scope the access token to your API resource indicator
-   # MAIN_VITE_LOGTO_RESOURCE=https://api.neeme.app
+   # MAIN_VITE_LOGTO_RESOURCE=https://api.getmikan.com
    ```
 
 4. Restart `pnpm dev`. A **Sign in** button appears once `configured` is true.
@@ -146,24 +146,32 @@ scheme or they'll capture each other's callbacks.
   unset unless you've registered a real API resource and want a scoped access token. (This also rules
   out using `<tenant>/api` as the broker audience — see ADR 0008.)
 - **API resource identifier ≠ custom domain.** The broker audience (`MAIN_VITE_LOGTO_RESOURCE` +
-  broker `LOGTO_AUDIENCE`, e.g. `https://api.getnimi.dev`) is just a **string** — the token's `aud`
+  broker `LOGTO_AUDIENCE`, e.g. `https://api.getmikan.com`) is just a **string** — the token's `aud`
   claim. It needs **no DNS, SSL, or CAA records**: register it under **API resources → Create API
   resource**, _not_ **Custom domains**. Logto's _Custom domains_ page is a separate, cosmetic feature
   (CNAME → `domains.logto.app` + SSL) that only rebrands the sign-in/OIDC URLs. Don't burn a real
-  subdomain like `api.getnimi.dev` on it — reserve that for your actual API; use e.g.
-  `auth.getnimi.dev` if you ever want branded auth URLs. The same string can be both the audience
+  subdomain like `api.getmikan.com` on it — reserve that for your actual API; use e.g.
+  `auth.getmikan.com` if you ever want branded auth URLs. The same string can be both the audience
   _and_ your real API base URL — that's the intended pattern, not a conflict.
 
-| Use                                    | Value                     | Real DNS/SSL?         | Where in Logto          |
-| -------------------------------------- | ------------------------- | --------------------- | ----------------------- |
-| Sign-in / OIDC URL branding (optional) | `auth.getnimi.dev`        | ✅ yes                | Custom domains          |
-| Broker audience (token `aud`)          | `https://api.getnimi.dev` | ❌ no — just a string | API resources           |
-| Your actual backend API (later)        | `https://api.getnimi.dev` | ✅ eventually         | (your infra, not Logto) |
+> **Per-product domains (one stack per brand).** Mikan and Momo are separate
+> products that share code, not infra. These examples use **Mikan's** domains
+> (`api.getmikan.com`, `auth.getmikan.com`) because Mikan owns the current Logto
+> app + broker. When Momo ships it gets its **own** stack — `api.getmomo.now`,
+> `auth.getmomo.now`, its own Logto app + broker — and the auth/broker env becomes
+> brand-keyed (see `packages/brand/README.md` follow-ups). The audience and broker
+> URL are not user-visible; only the `auth.*` sign-in domain is.
 
-- **A custom domain changes the issuer.** If you later enable `auth.getnimi.dev` as the Logto custom
-  domain, tokens minted through it carry `iss=https://auth.getnimi.dev/oidc`. Flip all three together
+| Use                                    | Value                      | Real DNS/SSL?         | Where in Logto          |
+| -------------------------------------- | -------------------------- | --------------------- | ----------------------- |
+| Sign-in / OIDC URL branding (optional) | `auth.getmikan.com`        | ✅ yes                | Custom domains          |
+| Broker audience (token `aud`)          | `https://api.getmikan.com` | ❌ no — just a string | API resources           |
+| Your actual backend API (later)        | `https://api.getmikan.com` | ✅ eventually         | (your infra, not Logto) |
+
+- **A custom domain changes the issuer.** If you later enable `auth.getmikan.com` as the Logto custom
+  domain, tokens minted through it carry `iss=https://auth.getmikan.com/oidc`. Flip all three together
   — `MAIN_VITE_LOGTO_ENDPOINT` (desktop), broker `LOGTO_ISSUER`, and broker `LOGTO_JWKS_URL` — to the
-  custom domain, or verification fails on issuer mismatch. The audience (`https://api.getnimi.dev`) is
+  custom domain, or verification fails on issuer mismatch. The audience (`https://api.getmikan.com`) is
   unaffected by that switch. Until then, keep everything on the default `c435za.logto.app`.
 - **One app instance at a time across worktrees.** All worktrees of the same brand share its appId
   (`dev.retro.mikan`) + `userData`, so they share a single-instance lock. A stale `pnpm dev` in another worktree keeps its

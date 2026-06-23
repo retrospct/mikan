@@ -82,3 +82,17 @@ pnpm lint        # eslint over the workspace; your changed files must be clean
 - Auth: Logto OIDC + PKCE in the system browser (ADR 0002), inert until configured.
 - Git: branch off `main`; commit/push only when asked; PRs get a smoke-test note for worker changes.
 - Decisions of record: `docs/adr/0001` (sync/processing), `0002` (auth), `0003` (all-TS on-device pipeline), `0004` (AI drafting model), `0005` (image/audio extraction), `0006` (monorepo structure).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in **Linear** (via the `productivity:linear` MCP); external PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` (not yet created) + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

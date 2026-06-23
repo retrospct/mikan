@@ -1,6 +1,4 @@
-# Runbook: Uncovered Todos — GUI Test (PR #6)
-
-Branch under test: `claude/strange-bassi-9974c1`
+# Runbook: Uncovered Todos — GUI Test
 
 This runbook covers the full end-to-end GUI verification for the **uncovered-todos** feature:
 Nimi infers candidate to-dos from the recent capture feed via the Claude API, displays them

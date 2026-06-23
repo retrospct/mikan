@@ -28,6 +28,17 @@ const server = createServer(async (req, res) => {
   res.end(JSON.stringify(body))
 })
 
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(
+      `[broker] Port ${port} is already in use — another dev/broker instance is ` +
+        `still running. Stop it (e.g. \`lsof -ti :${port} | xargs kill\`) or set PORT.`
+    )
+    process.exit(1)
+  }
+  throw err
+})
+
 server.listen(port, () => {
   console.log(`[broker] Listening on http://localhost:${port}`)
 })

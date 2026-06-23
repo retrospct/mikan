@@ -5,10 +5,12 @@ import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { NimiMark } from './mark'
 import { VoiceRecorder } from './voice'
+import { AppHeader } from './today'
 import { data } from './api'
 import { captureFiles, kindOfFile } from './capture-file'
 import type { FedItem, MemoryKind, UncoveredTodo } from '@nimi/contract/views'
 import type { IconName } from './icons'
+import type { NimiMarkState } from './types'
 
 // a new to-do accepted from the feed → routed to today (or backlog) by NimiApp
 type AddTodo = (item: {
@@ -50,12 +52,22 @@ export function FeedView({
   captureStyle,
   onCaptured,
   onAddTodo,
-  onRecordingChange
+  onRecordingChange,
+  nimiState,
+  badge,
+  onSearch,
+  onTomorrow,
+  onSettings
 }: {
   captureStyle: string
   onCaptured?: () => void
   onAddTodo?: AddTodo
   onRecordingChange?: (v: boolean) => void
+  nimiState: NimiMarkState
+  badge: number
+  onSearch: () => void
+  onTomorrow: () => void
+  onSettings: () => void
 }): JSX.Element {
   const [fed, setFed] = useState<FedItem[]>([])
   // AI-gap: to-dos Nimi infers from the recent feed. `[]` until the drafter is
@@ -163,6 +175,13 @@ export function FeedView({
   return (
     <div className="view feed">
       <div className="scroll">
+        <AppHeader
+          nimiState={nimiState}
+          badge={badge}
+          onSearch={onSearch}
+          onTomorrow={onTomorrow}
+          onSettings={onSettings}
+        />
         {captureStyle !== 'tray' && (
           <>
             <input

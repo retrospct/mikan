@@ -17,7 +17,8 @@ function greeting(): string {
   if (h < 18) return 'Afternoon'
   return 'Evening'
 }
-const FIRST_NAME = 'Jordan'
+// TODO(memory-weather): re-enable with the MemoryWeather banner below.
+// const FIRST_NAME = 'Jordan'
 function dateLabel(): string {
   return new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -26,7 +27,7 @@ function dateLabel(): string {
   })
 }
 
-function AppHeader({
+export function AppHeader({
   nimiState,
   badge,
   onSearch,
@@ -67,19 +68,21 @@ function AppHeader({
   )
 }
 
-function MemoryWeather({ count, onOpen }: { count: number; onOpen: () => void }): JSX.Element {
-  return (
-    <div className="weather" onClick={onOpen} style={{ cursor: 'pointer' }}>
-      <div className="weather-main">
-        <div className="weather-t">
-          Hey {FIRST_NAME} — overnight I lined up <b>{count} things</b> beside today&apos;s list.
-        </div>
-        <div className="weather-meta">1,284 memories · last fed 9h ago</div>
-      </div>
-      <NIcon name="chevRight" size={16} style={{ color: 'var(--ink-3)', flex: '0 0 auto' }} />
-    </div>
-  )
-}
+// TODO(memory-weather): temporarily disabled — re-enable this component, its
+// render below, the `onWeather` destructure, and the FIRST_NAME const together.
+// function MemoryWeather({ count, onOpen }: { count: number; onOpen: () => void }): JSX.Element {
+//   return (
+//     <div className="weather" onClick={onOpen} style={{ cursor: 'pointer' }}>
+//       <div className="weather-main">
+//         <div className="weather-t">
+//           Hey {FIRST_NAME} — overnight I lined up <b>{count} things</b> beside today&apos;s list.
+//         </div>
+//         <div className="weather-meta">1,284 memories · last fed 9h ago</div>
+//       </div>
+//       <NIcon name="chevRight" size={16} style={{ color: 'var(--ink-3)', flex: '0 0 auto' }} />
+//     </div>
+//   )
+// }
 
 // stacked mini-thumbnails for the ambient strip
 function CtxThumbs({ memIds }: { memIds: string[] }): JSX.Element {
@@ -229,7 +232,7 @@ export function TodayView({
   onPlan,
   onTomorrow,
   onSearch,
-  onWeather,
+  // onWeather, // TODO(memory-weather): re-enable with the MemoryWeather render
   onSettings,
   nimiState
 }: TodayViewProps): JSX.Element {
@@ -278,10 +281,12 @@ export function TodayView({
           onTomorrow={onTomorrow}
           onSettings={onSettings}
         />
+        {/* TODO(memory-weather): temporarily disabled — re-enable with the component above.
         <MemoryWeather
           count={tasks.reduce((a, t) => a + (t.ctx ? t.ctx.length : 0), 0)}
           onOpen={onWeather}
         />
+        */}
         <div className="today-top">
           <span className="today-cap">
             Today · <b>{left}</b> of {cap}

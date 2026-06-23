@@ -137,8 +137,15 @@ the documented spike fallback.
        `safeStorage` and injects into worker env at boot; refresh before expiry.
 4. [ ] Per-user DB **lifecycle**: provisioning naming (`neeme-<subhash>`) is implemented in the
        broker. **Teardown on account delete** is deferred — needs a delete-account flow first.
-5. [ ] **CSP:** allow the broker + Logto/JWKS origins in `apps/desktop/src/renderer/index.html`
-       (add when broker URL is known).
+5. [x] ~~**CSP:** allow the broker + Logto/JWKS origins in `apps/desktop/src/renderer/index.html`
+       (add when broker URL is known).~~ **Resolved — no CSP change needed.** The renderer makes
+       none of these calls: the broker exchange runs in **main** (`src/main/sync/broker.ts`,
+       Node `fetch`), the Turso replica sync runs in the **worker** utilityProcess, and Logto is
+       PKCE in the **system browser** (ADR 0002). The renderer only talks to the worker over IPC,
+       so `connect-src 'self'` stays tight (deny-by-default). A `<meta>` CSP governs the renderer
+       web context only — it does not restrict main/worker `fetch`. If a renderer-side call to the
+       broker/Logto/Turso is ever introduced, this must be revisited (and added to BOTH the meta
+       tag and the defense-in-depth response header in `src/main/index.ts`).
 
 ## Open questions (need a human)
 

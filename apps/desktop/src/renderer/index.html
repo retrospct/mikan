@@ -21,6 +21,12 @@
          - connect-src 'self'          — the renderer talks to the worker over IPC,
                                           not HTTP. The legacy FastAPI HTTP client
                                           (ApiStatus) is not mounted in the app.
+                                          Cloud-sync origins (token broker, Logto/JWKS,
+                                          Turso) are deliberately NOT listed: those calls
+                                          run in main/worker (Node) + the system browser,
+                                          never the renderer — so they need no connect-src
+                                          entry (ADR 0008 #5). Revisit only if a
+                                          renderer-side call to them is ever added.
          A defense-in-depth copy of this policy is also set as a response header in
          the main process (apps/desktop/src/main/index.ts), which a compromised
          renderer bundle cannot strip the way it could this meta tag.

@@ -87,7 +87,7 @@ the Feed tab. That is the correct graceful-degradation behavior, tested separate
 | Variable | Default | Purpose |
 |---|---|---|
 | `NEEME_EMBEDDER` | *(real model)* | Set to `hash` to skip the MiniLM model download. **Always use `hash` in cloud VMs** where the HuggingFace model isn't cached. |
-| `NEEME_DRAFTER_MODEL` | `claude-sonnet-4-5` | Override the Claude model used for inference. |
+| `NEEME_DRAFTER_MODEL` | `claude-sonnet-4-6` | Override the Claude model used for inference. |
 | `NEEME_DRAFTER` | *(unset)* | Set to `off` to force `NullDrafter` even when a key is present. |
 
 ### Do NOT set manually
@@ -277,5 +277,5 @@ pnpm lint        # expect exactly 34 errors, ALL in packages/contract/src/api/ge
 | "I spotted" section absent with key set | Key not reaching the worker process | Verify turbo passthrough: inline the var on the same command, not just in a separate `export` |
 | `[drafter] Anthropic API error 401` in DevTools | Invalid or expired key | Use a valid `sk-ant-...` key |
 | `[drafter] uncover parse error` | Model returned malformed JSON | Usually self-healing on retry; strip-fence logic in `draft.ts` handles common cases |
-| Section appears but cards are blank | `title` field empty in model response | Enable DevTools, check `[drafter]` logs; try `NEEME_DRAFTER_MODEL=claude-opus-4-5` |
+| Section appears but cards are blank | `title` field empty in model response | Enable DevTools, check `[drafter]` logs; try `NEEME_DRAFTER_MODEL=claude-opus-4-8` |
 | dbus warnings in terminal | No session bus in VM | Non-fatal — ignore |

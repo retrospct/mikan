@@ -108,7 +108,7 @@ export default defineConfig({
       // this always matches the version shown in the GitHub Release.
       __APP_VERSION__: JSON.stringify(APP_VERSION),
       // The active brand, inlined so @nimi/brand resolves it in the sandboxed
-      // renderer (which has no Node process). Without this the Momo theme + name
+      // renderer (which has no Node process). Without this the brand theme + name
       // silently won't flip.
       ...brandDefine
     },

@@ -1,10 +1,11 @@
 # @nimi/brand
 
-The build-time **brand layer**: one neutral core ships as two installable products
-— **Mikan** (primary) and **Momo** (later) — selected by the `BRAND` env var at
-build time. A brand = product identity (name, appId, deep-link scheme, icon, URLs,
-tagline) + a colour theme. Consumed **from `.ts` source** (no build step), like
-`@nimi/contract`.
+The build-time **brand layer**: a neutral core that ships as a named product —
+currently just **Mikan** — selected by the `BRAND` env var at build time. The layer
+stays brand-parameterized (a single-member `BrandId` union) so a second product can
+be reintroduced later without rearchitecting. A brand = product identity (name,
+appId, deep-link scheme, icon, URLs, tagline) + a colour theme. Consumed **from `.ts`
+source** (no build step), like `@nimi/contract`.
 
 ## Layout
 
@@ -106,10 +107,10 @@ cool.jlee.nimi`). When mobile graduates, convert to a dynamic `app.config.js`
   mirroring how `identity.json` keys the rest. The audience + broker URL aren't
   user-visible; only the `auth.*` sign-in domain is.
 
-## Adding a brand later (e.g. when Momo graduates)
+## Adding a second brand later
 
 1. Add its entry to `identity.json`.
-2. Add `src/brands/<id>.ts` (copy `momo.ts`, swap palette + URLs).
+2. Add `src/brands/<id>.ts` (copy `mikan.ts`, swap palette + URLs).
 3. Add the id to the `BrandId` union in `types.ts` and the `brands` registry in
    `index.ts`.
 4. Add the `dev:<id>` / build + release wiring in the desktop app.

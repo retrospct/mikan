@@ -5,11 +5,10 @@
 
 import type { BrandConfig, BrandId } from './types'
 import { mikan } from './brands/mikan'
-import { momo } from './brands/momo'
 
 // Every brand this codebase can build. Exported so tooling (e.g. the token
 // contract test) can iterate all brands regardless of the active BRAND.
-export const brands: Record<BrandId, BrandConfig> = { mikan, momo }
+export const brands: Record<BrandId, BrandConfig> = { mikan }
 
 export const DEFAULT_BRAND: BrandId = 'mikan'
 

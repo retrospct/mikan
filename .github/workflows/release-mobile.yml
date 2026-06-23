@@ -47,7 +47,7 @@ jobs:
         if: ${{ env.EXPO_TOKEN == '' }}
         run: echo "::notice::EXPO_TOKEN not set — skipping mobile build/submit (inert until configured)."
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: ${{ env.EXPO_TOKEN != '' }}
         with:
           ref: ${{ inputs.ref }}

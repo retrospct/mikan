@@ -57,7 +57,7 @@ jobs:
       MAIN_VITE_GOOGLE_CLIENT_SECRET: ${{ secrets.MAIN_VITE_GOOGLE_CLIENT_SECRET }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # The tag release-please created (workflow_call) or a manual ref. Empty
           # on a bare dispatch → checks out the workflow's default branch.
@@ -102,7 +102,7 @@ jobs:
   #     BRAND: ${{ inputs.brand }}
   #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   #   steps:
-  #     - uses: actions/checkout@v6
+  #     - uses: actions/checkout@v7
   #       with:
   #         ref: ${{ inputs.ref }}
   #     - uses: pnpm/action-setup@v6

@@ -8,7 +8,7 @@ import type { NoteKind } from '@nimi/contract/views'
  * Env vars:
  *   NEEME_ANTHROPIC_KEY  — Anthropic API key; absent → NullDrafter
  *   NEEME_DRAFTER=off    — force NullDrafter even when a key is present
- *   NEEME_DRAFTER_MODEL  — override the Claude model (default: claude-sonnet-4-5)
+ *   NEEME_DRAFTER_MODEL  — override the Claude model (default: claude-sonnet-4-6)
  *
  * All are in the `NEEME_*` glob already declared in `turbo.json` globalEnv.
  */
@@ -108,7 +108,7 @@ export class NullDrafter implements Drafter {
 
 // ── CloudDrafter ───────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = 'claude-sonnet-4-5'
+const DEFAULT_MODEL = 'claude-sonnet-4-6'
 
 /**
  * The system prompt establishes Nimi's voice and locks down prompt injection.

@@ -109,6 +109,25 @@ input {
 ::selection {
   background: var(--accent-soft);
 }
+/* App chrome is not a document — don't let clicks / micro-drags select text. Only
+   true edit fields stay selectable (this is also what makes buttons act like buttons
+   instead of starting a text selection). */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+select,
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+/* Never ghost-drag images or links. */
+img,
+a {
+  -webkit-user-drag: none;
+}
 *::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -4271,32 +4290,61 @@ html[data-theme='light'] .desk {
   }
 }
 
-/* frameless tray window: make ONLY the inert header zones draggable.
-   `-webkit-app-region` is a no-op in a normal (framed) or browser window.
+/* Frameless tray window: the whole frame is a drag handle; interactive surfaces
+   (buttons, cards, fields, overlays) punch no-drag holes. `-webkit-app-region` is a
+   no-op in a normal (framed) or browser window, so this is inert outside the app.
 
-   We deliberately do NOT make the whole header bar a drag region. Carving each
-   control back out with `-webkit-app-region: no-drag` is unreliable in Chromium:
-   a `no-drag` flex *item* — especially one nested inside a sub-container like
-   `.hdr-r` — frequently fails to get its click-through hole, so the back button
-   and header controls swallow clicks (badly so in the packaged frameless window).
-   Instead, only the non-interactive brand / greeting / title zones are draggable,
-   so no interactive element ever sits inside a drag region. */
-.hdr-l,
-.hdr-greet,
-.hdr-mark,
-.push-hd-main {
+   Earlier this only made the inert header zones draggable, because carving each
+   control back out with `no-drag` was unreliable in Chromium when applied to a
+   deeply-nested flex *item*. The lesson holds — so here we punch no-drag at the
+   CLUSTER/CONTAINER level (whole nav bar, whole overlay, each card) and via generic
+   element/role selectors, never per-leaf-control. Bigger, shallower click-through
+   regions register reliably and auto-cover new buttons. */
+.app-frame {
   -webkit-app-region: drag;
 }
-/* Belt-and-suspenders: an interactive element must never be draggable, even if it
-   ever lands inside a drag zone. */
+
+/* Generic interactive primitives (covers .btn / .hdr-btn / .nav-btn / .fab /
+   .tool-btn / .send-btn / .settings-btn / .feed-tool / .vrec-* … — they are real
+   <button>/<a>/field elements). */
 button,
+a,
 input,
 textarea,
 select,
-a,
+label,
+[role='button'],
+[role='switch'],
+[contenteditable] {
+  -webkit-app-region: no-drag;
+}
+
+/* Cluster containers — one solid click-through region each. */
+.nav,
+.hdr-r,
+.ov-root,
+.sheet,
+.push,
+.search-ov,
+.win,
+.auth-gate,
+.scrim,
+.win-scrim {
+  -webkit-app-region: no-drag;
+}
+
+/* Div-based clickable cards/rows/toggles (not <button>, so the element selector
+   above misses them). */
 .task,
 .slot,
-[role='button'] {
+.mem,
+.plan-card,
+.draft-strip,
+.draft-hd,
+.pool-group-hd,
+.kept-strip,
+.weather,
+.maw {
   -webkit-app-region: no-drag;
 }
 

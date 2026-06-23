@@ -361,6 +361,11 @@ export default function NimiApp(): JSX.Element {
                     onCaptured={cheer}
                     onAddTodo={addTodo}
                     onRecordingChange={setFeedRecording}
+                    nimiState={headState}
+                    badge={waiting}
+                    onSearch={openGlobalSearch}
+                    onTomorrow={beginNewDay}
+                    onSettings={() => setSettingsOpen(true)}
                   />
                 )}
 

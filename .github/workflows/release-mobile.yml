@@ -1,0 +1,86 @@
+name: Release Mobile (EAS)
+
+# Reusable mobile build + submit for the freshly cut tag, via Expo EAS. Called by
+# release-please.yml's gated publish-mobile job (and available via workflow_dispatch).
+#
+# INERT UNTIL CONFIGURED: every real step is guarded by `env.EXPO_TOKEN != ''`. With no
+# EXPO_TOKEN secret set, the job is a green no-op, so it never fails a release before
+# mobile is ready. To turn it on you need (external, one-time setup):
+#   1. An Expo account + EAS project, and `apps/mobile/eas.json` with a `production`
+#      profile (`eas init` / `eas build:configure`).
+#   2. An `EXPO_TOKEN` repo Secret (Expo access token).
+#   3. iOS/Android store credentials for `eas submit` (EAS-managed, or App Store Connect
+#      API key + Play service account). Until those exist, leave the submit step guarded.
+# Ground the exact eas.json profiles + submit config in the `expo:expo-cicd-workflows`
+# and `expo:expo-deployment` skills at setup time.
+#
+# Version is NOT computed here: release-please bumped apps/mobile/package.json before the
+# tag, so the checked-out ref already carries the right version for app.json/EAS to read.
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref (tag) to build
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref (tag/branch) to build
+        type: string
+        required: false
+      profile:
+        description: EAS build/submit profile
+        type: string
+        default: production
+
+jobs:
+  build-mobile:
+    name: Build & submit mobile (EAS)
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      PROFILE: ${{ inputs.profile || 'production' }}
+    steps:
+      - name: Check EAS is configured
+        # Secrets can't be used in a job-level `if:`, so gate at the step level via env.
+        if: ${{ env.EXPO_TOKEN == '' }}
+        run: echo "::notice::EXPO_TOKEN not set — skipping mobile build/submit (inert until configured)."
+
+      - uses: actions/checkout@v6
+        if: ${{ env.EXPO_TOKEN != '' }}
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: pnpm/action-setup@v6
+        if: ${{ env.EXPO_TOKEN != '' }}
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v6
+        if: ${{ env.EXPO_TOKEN != '' }}
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install dependencies
+        if: ${{ env.EXPO_TOKEN != '' }}
+        run: pnpm install --frozen-lockfile
+
+      - uses: expo/expo-github-action@v8
+        if: ${{ env.EXPO_TOKEN != '' }}
+        with:
+          eas-version: latest
+          token: ${{ env.EXPO_TOKEN }}
+
+      - name: EAS Build
+        if: ${{ env.EXPO_TOKEN != '' }}
+        working-directory: apps/mobile
+        run: eas build --platform all --profile "$PROFILE" --non-interactive --no-wait
+
+      # Enable once store records + credentials exist (see header). Submits the build
+      # produced above to the App Store / Play Store.
+      # - name: EAS Submit
+      #   if: ${{ env.EXPO_TOKEN != '' }}
+      #   working-directory: apps/mobile
+      #   run: eas submit --platform all --profile "$PROFILE" --non-interactive

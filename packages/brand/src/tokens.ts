@@ -3,7 +3,7 @@
 // adapter appends `px`; React Native uses the number directly). Spacing, radii,
 // and the type scale do NOT belong inside a brand config — that invites drift.
 //
-// Only colour (tokens.ColorTokens, per brand) varies between Mikan and Momo.
+// Only colour (tokens.ColorTokens, per brand) varies between brands.
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, '2xl': 32 } as const
 

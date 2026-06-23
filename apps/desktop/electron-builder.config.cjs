@@ -18,7 +18,7 @@ if (!meta) {
   )
 }
 
-// User-facing binary/artifact name per brand (mikan/momo). The internal namespace
+// User-facing binary/artifact name per brand (mikan). The internal namespace
 // (nimi/neeme) stays untouched elsewhere — brand lives only at the client edge.
 const slug = meta.scheme
 
@@ -28,7 +28,7 @@ module.exports = {
   productName: meta.productName,
   directories: {
     buildResources: 'build',
-    // Per-brand output dir so Mikan and Momo builds don't overwrite each other.
+    // Per-brand output dir so distinct brand builds don't overwrite each other.
     output: `release/${BRAND}`
   },
   files: [

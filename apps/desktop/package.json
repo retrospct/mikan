@@ -13,7 +13,6 @@
     "test:watch": "vitest",
     "start": "electron-vite preview",
     "dev": "cross-env BRAND=mikan electron-vite dev",
-    "dev:momo": "cross-env BRAND=momo electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
     "test:smoke": "tsx test/smoke/capture-file.ts",
     "test:smoke:ocr": "tsx test/smoke/ocr-live.ts",

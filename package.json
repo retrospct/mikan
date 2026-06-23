@@ -35,12 +35,15 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "better-sqlite3",
       "electron",
       "electron-winstaller",
       "esbuild",
+      "ffmpeg-static",
       "onnxruntime-node",
       "protobufjs",
-      "sharp"
+      "sharp",
+      "tesseract.js"
     ],
     "overrides": {
       "esbuild@<0.25.0": ">=0.25.0"

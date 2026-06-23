@@ -41,9 +41,16 @@ Because release-please is dispatch-only, cutting a release is a **two-phase** fl
 5. **Phase 2 — ship.** Dispatch **"Release Please"** again. release-please now sees the
    merged release commit, tags `v<version>`, creates the GitHub Release, and the
    `publish-mikan` job builds + publishes the Mikan macOS app.
-6. **Watch the build** (`mcp__github__actions_list` / `actions_get` for that run's
-   `publish-mikan` job) and report the result. On failure, diagnose from job logs and
-   fix forward.
+6. **Confirm the tag was actually cut, then watch the build.** The `publish-mikan` job
+   is gated on `release_created == 'true'` — a green Release Please run that *skipped*
+   `publish-mikan` means **no release was cut**. Verify: (a) `mcp__github__get_release_by_tag`
+   for `v<version>` returns a release; (b) `publish-mikan` ran (not skipped); (c)
+   `.release-please-manifest.json` on `main` now reads `<version>`. If instead the logs
+   show `⚠ PR component: undefined does not match configured component: nimi` /
+   `Expected 1 releases, only found 0`, the config regressed — `separate-pull-requests`
+   must be `true` and `include-component-in-tag` must be `false` (see `docs/RELEASING.md`,
+   "Why `separate-pull-requests: true`"). Then watch the `publish-mikan` build and report
+   the result; on failure, diagnose from job logs and fix forward.
 
 ## To build/publish Momo (opt-in)
 

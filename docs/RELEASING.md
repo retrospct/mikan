@@ -22,7 +22,7 @@ only through the `/release` skill (which dispatches the release workflow).
 
 | File                                   | Role                                                                                                                                              |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `release-please-config.json`           | release-please manifest config: single root release, `extra-files` bump every workspace `package.json`, clean `v<version>` tags.                  |
+| `release-please-config.json`           | release-please manifest config: single root release, `extra-files` bump every workspace `package.json`, clean `v<version>` tags. **`separate-pull-requests: true` is load-bearing — see "Why `separate-pull-requests: true`" below.** |
 | `.release-please-manifest.json`        | The current released version (source of truth release-please reads/writes).                                                                       |
 | `.github/workflows/release-please.yml` | **Dispatch-only.** Maintains the Release PR; on a dispatch after that PR merges, tags + creates the Release and triggers the Mikan build.         |
 | `.github/workflows/release.yml`        | Reusable build/publish job (`workflow_call` + `workflow_dispatch`), parameterized by `BRAND`. Signs + notarizes + publishes via electron-builder. |
@@ -52,6 +52,53 @@ manual equivalent:
 > Why two dispatches instead of "merge = ship"? We deliberately keep `main`
 > automation-free: a normal merge/rebase never triggers a release. Shipping is
 > always an explicit action.
+
+### Confirming Phase 2 actually tagged (don't trust "the PR merged")
+
+Phase 2 only ships if release-please **creates the tag + GitHub Release** — that's
+the gate (`publish-mikan` runs only when `release_created == 'true'`). After the
+second dispatch, confirm all three landed before walking away:
+
+1. **Tag exists:** `gh release view v<version>` (or `git ls-remote --tags origin`)
+   shows the new `v<version>`.
+2. **`publish-mikan` ran** (not skipped) in the Release Please run — `gh run view`.
+3. **The manifest advanced:** release-please's github-release step writes the new
+   version back to `.release-please-manifest.json` on `main`. If that file is still
+   at the *previous* version after a "successful" Phase 2, the release step silently
+   matched **zero** releases — see below.
+
+If you see this in the Release Please logs, Phase 2 found the merged PR but threw it
+away, so no tag was cut and `publish-mikan` was skipped:
+
+```
+⚠ PR component: undefined does not match configured component: nimi
+⚠ Expected 1 releases, only found 0
+```
+
+### Why `separate-pull-requests: true`
+
+This is the fix for exactly that failure (v1.3.0, 2026-06). It is **not** about
+having more than one PR — there's a single root package, so there is only ever one
+release PR either way. It controls whether release-please runs its internal **Merge
+plugin**:
+
+- With `separate-pull-requests: false`, the Merge plugin rewrites the release PR onto
+  the **component-less** branch `release-please--branches--main`. At Phase 2,
+  `buildRelease` takes the "standalone PR" path and compares the branch's component
+  (`undefined`) against the strategy's configured component. For `release-type: node`
+  that component is derived from the root `package.json` `name` (**`nimi`**) — so
+  `'' !== 'nimi'`, the release is discarded, and no tag is cut. Editing the PR title
+  or `pull-request-title-pattern` does **not** help: the discard happens on the
+  component check, before the title matters.
+- With `separate-pull-requests: true`, the Merge plugin is skipped, so the single PR
+  keeps its **component-ful** branch `release-please--branches--main--components--nimi`.
+  Now the branch component (`nimi`) matches the configured component, the release is
+  built, and `include-component-in-tag: false` still yields a clean `v<version>` tag.
+
+So: keep `separate-pull-requests: true` **and** `include-component-in-tag: false`
+together. Flipping either one back reintroduces the broken combination. Unified
+versioning is unaffected — the `extra-files` fan-out is the root package's job and has
+nothing to do with the Merge plugin.
 
 ## Releasing Momo
 

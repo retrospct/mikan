@@ -1,158 +1,129 @@
-# Handoff — Mobile RN + Turso + cloud AI pipeline (Phase 0 → Phase 1)
+# Handoff — Mobile RN + Turso + cloud AI pipeline (Phase 0 VALIDATED → Phase 1)
 
 **Branch:** `claude/desktop-beta-react-native-strategy-vg5qb9`
-**Last commit:** `b6dd920` — everything committed & pushed; working tree clean.
-**Status:** Phase 0 (de-risking spikes) **code-complete**. Validations **NOT run** (no device/runtime
-access in the cloud env). Phase 1 (real wiring) **not started**.
+**Last session:** ran the Phase 0 validation gate end-to-end on a real Mac + iOS simulator.
+**Status:** **V1–V6 PASS and committed.** The mobile app builds, launches, logs in via Logto,
+and reads/writes its per-user Turso DB. V7 (cross-device) is **plumbing-proven but blocked on
+mobile E2E parity**; V8 (offline persistence) **not yet run**.
 
-> **Why this exists:** the cloud environment can't run an iOS dev client, a Mastra playground, or an
-> Inngest dev server, so none of the validation steps could be executed here. This doc lets another
-> agent (or a human on a local Mac) pick up exactly where we stopped.
-
----
-
-## TL;DR of the strategy (read ADR 0009 for the full rationale)
-
-Mobile is **sync-first**, not on-device-first:
-- **Data:** `@tursodatabase/sync-react-native` embedded replica per user. Reads are local/offline;
-  writes call `db.sync()`. Same Turso DB the desktop uses (via the existing token broker, ADR 0008).
-- **AI pipeline:** Inngest durable serverless (`services/mastra`) — `step.ai.infer()` so we don't pay
-  for idle LLM time. Fired by a `memory/ingest` event.
-- **Agent ("ask Nimi"):** Mastra agent (`claude-sonnet-4-6`) deployed on Vercel.
-- Desktop stays **on-device-first** (ADR 0003 unchanged). On-device ONNX on RN was rejected (not
-  production-ready) — see ADR 0009 options table.
-
-The original "thin FastAPI HTTP client" plan was **abandoned** (online-only, no user scoping, no
-offline). Production screens now use Turso.
+> Previous handoff said Phase 0 was "code-complete, validations not run." Reality: the spikes
+> had enough version/wiring drift that the workspace wouldn't even install. All of that is now
+> fixed — the strategy held up; it was spike-era debt, not a design problem.
 
 ---
 
-## What's DONE (committed on this branch)
+## What we did this session (6 commits)
 
-### Phase 0 spikes (commit `197e700`)
-- `apps/mobile/src/db/{schema,client,index}.ts` — embedded-replica open + `getDb()` singleton.
-- `apps/mobile/app/(tabs)/_spike-db.tsx` — manual spike screen (write → sync → verify). Kept on
-  disk for manual testing but **removed from the tab bar**.
-- `services/mastra/src/agents/nimi-agent.ts` — Nimi agent, 2 **stub** tools.
-- `services/mastra/src/tools/{search-memories,add-todo}.ts` — return **mock data** (TODO: real libSQL).
-- `services/mastra/src/inngest/functions/ingest-pipeline.ts` — 3 steps (extract → chunk →
-  `step.ai.infer` brief). extract is **passthrough**, no embed step yet.
-
-### Reconciliation + docs (commit `b6dd920`)
-- `apps/mobile/app/(tabs)/feed.tsx` — now reads from local Turso via `getDb()`; pull-to-refresh
-  calls `db.sync()`. FastAPI import removed.
-- `apps/mobile/app/(tabs)/capture.tsx` — inserts into local DB then `db.sync()`. FastAPI removed.
-- `apps/mobile/app/_layout.tsx` — broker fetch cleaned up (throws on non-ok; degrades to "Log in").
-- `apps/mobile/app/(tabs)/_layout.tsx` — `_spike-db` tab removed.
-- `apps/mobile/CLAUDE.md` — rewritten to describe the Turso data path + Phase 1 gaps.
-- `docs/adr/0009-mobile-rn-turso-cloud-pipeline.md` — **the decision of record** (NEW).
-- `docs/plans/mobile-rn-expo.plan.md` — todos marked done/in_progress; overview updated.
-
----
-
-## What's LEFT
-
-### A. Validations (do these FIRST — they gate everything; need a Mac + iOS device)
-
-These could NOT be run in the cloud env. Full step detail is below in "How to run".
-
-| # | Validation | Env needed | Pass criteria |
-|---|---|---|---|
-| V1 | `pnpm typecheck` (contract + desktop) | any | zero errors |
-| V2 | `tsc --noEmit` for `@nimi/mobile` AND `services/mastra` | any (after `pnpm install`) | zero errors. **Highest-risk spot:** `result.rows.map(parseRow)` in `feed.tsx` — verify the Turso `rows` type matches `unknown[]` |
-| V3 | Mastra agent smoke test (`pnpm dev`, playground :4111) | `ANTHROPIC_API_KEY` | both tools fire; agent doesn't invent memories |
-| V4 | Inngest pipeline (`pnpm inngest:dev`, dash :8288) | same | 3 steps run; brief non-empty; `generate-brief` pauses; retry is per-step |
-| V5 | `npx expo run:ios` builds dev client | **Mac + Xcode** | app launches, no red screen. **This is the make-or-break unknown** for `@tursodatabase/sync-react-native` on iOS |
-| V6 | Turso offline round-trip on device | device + broker + Logto env | capture → save → appears in feed; airplane-mode write syncs on reconnect |
-| V7 | **Cross-device:** phone capture appears in desktop feed | device + `pnpm dev` desktop | proves same Turso DB both ends |
-| V8 | Kill-and-reopen persistence (offline) | device | replica survives restart |
-
-### B. Phase 1 build work (not started)
-
-| Item | File(s) | Notes |
-|---|---|---|
-| Real Logto auth | `apps/mobile/app/(auth)/login.tsx` | PKCE stub → `@logto/rn` SDK; register Native app + `nimi://` redirect in `app.json` |
-| Fire `memory/ingest` | `apps/mobile/app/(tabs)/capture.tsx` | one call after `db.sync()`; needs Inngest deployed first |
-| Real libSQL queries | `services/mastra/src/tools/{search-memories,add-todo}.ts` | replace mocks: cosine search + todos insert |
-| Per-user DB routing | `services/mastra` route handler | agent must call broker server-side to get the caller's Turso DB |
-| `embed` step | `services/mastra/src/inngest/functions/ingest-pipeline.ts` | step 4: embed chunks → `chunks` table |
-| Deploy `services/mastra` | Vercel | set `ANTHROPIC_API_KEY`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY` |
-
-### C. Tech debt (before merge to main)
-
-| Item | Risk if skipped |
+| Commit | What |
 |---|---|
-| Extract shared `packages/schema` (raw SQL) | desktop `apps/desktop/src/main/db/schema.ts` and `apps/mobile/src/db/schema.ts` drift silently |
-| Add `services/mastra` to turbo `typecheck` | it's excluded from CI now — regressions undetected |
-| At-rest encryption: broker returns `encryptionKey` → pass to `openDb` | data unencrypted on device (`openDb` already accepts the field) |
-| Background sync (expo-background-fetch / push) | mobile only syncs on explicit user action |
+| `70aeba5` | mobile: migrate Turso data layer to the **real** `@tursodatabase/sync-react-native@0.6.1` API (spike used a never-shipped API: `open/executeMultiple/execute().rows/sync` → `connect/exec/all/run/push/pull`, rows are column-keyed objects) |
+| `0194865` | mastra: migrate to `@mastra/core@1.46` + `ai@6` + `inngest@4`; wire Vercel AI Gateway (`src/model.ts`) |
+| `b36714e` | mastra: make it actually runnable — add `mastra` CLI + `tsx`, move entry to `src/mastra/index.ts`, fix pipeline model id + credential selection, add `scripts/inngest-dev-server.ts` |
+| `3c95de2` | mobile iOS: `expo install --fix` (RN 0.86→0.85.3, expo-dev-client 5→56.0.20), Metro `.js`→extensionless imports, expo-router index-redirect, `mikan` scheme |
+| `d84242d` | mobile: real Logto login → broker → Turso; resource indicator (RFC 8707); `src/db/bootstrap.ts`; auth gate in `app/index.tsx`; hide `_spike-db` tab |
+| `aeb61b4` | mobile: split multi-statement schema `exec`; only clear token on broker 401 |
+
+`pnpm typecheck` is green across all 5 packages.
 
 ---
 
-## How to run each validation (copy-paste)
+## Validation results
 
+| # | Gate | Result | Evidence |
+|---|---|---|---|
+| V1 | typecheck contract/desktop/brand/token-broker | ✅ | `pnpm typecheck` (5/5) |
+| V2 | typecheck `@nimi/mobile` + `@nimi/mastra` | ✅ | both green after migrations |
+| V3 | Mastra agent (playground :4111) | ✅ | `searchMemories` + `addTodo` fired via gateway (Sonnet 4.6); no invented memories |
+| V4 | Inngest pipeline (:8288) | ✅ | `memory/ingest` run **Completed**; non-empty brief from Haiku 4.5 |
+| V5 | iOS dev client builds + launches | ✅ | Turso native module compiles/links; app renders the Mikan login screen, no red screen |
+| V6 | Logto login → broker → Turso → feed | ✅ | logged in as `juslee.ru@gmail.com`; feed rendered a real Turso item ("Dsdssffddsaf") |
+| V7 | cross-device (phone ↔ desktop) | ⚠️ **blocked** | same broker DB confirmed, but **E2E mismatch** — see below |
+| V8 | kill-and-reopen persistence (offline) | ⛔ **not run** | quick test: force-quit, reopen with Wi-Fi off, feed should still show items from the local replica |
+
+### The V7 finding (important)
+
+Desktop and mobile **do** share the same per-user Turso DB — the broker mints `neeme-<sha256(sub)>`,
+and for this account that's **`neeme-440bae393e230a62`** (group `nimi-primary`). So the transport is right.
+
+**But the content encryption differs:**
+- **Desktop** content-encrypts fields (`apps/desktop/src/main/db/crypto.ts` → `enc:<iv>:<tag>:<ct>`, AES-256-GCM) and **refuses to sync without** a `NEEME_SYNC_ENCRYPTION_KEY` (`db/sync-config.ts`).
+- **Mobile** reads/writes **plaintext** — it has no key (the broker returns only `{syncUrl, authToken}`; `openDb` accepts `encryptionKey` but never receives one).
+
+So if you enable desktop **Cloud sync** today: desktop notes show as `enc:…` gibberish on the phone; mobile's plaintext notes sync to desktop (desktop's `decrypt()` passes non-`enc:` through) but sit unencrypted in the cloud. No corruption, but incoherent cross-device. **Decision: leave desktop Cloud sync OFF until mobile reaches E2E parity** (Phase 1 below). The desktop's *"Have a recovery key from another device?"* prompt is the intended key-sharing mechanism.
+
+---
+
+## Environment / config that's now wired (this account)
+
+- **Logto:** custom domain `auth.getmikan.com`; Native app id `nzldfj1wbm48hhhb121mq`; redirect URIs `mikan://callback` (+ `nimi://`); **API resource `https://api.getmikan.com`** (must exist — desktop uses it too).
+- **Broker:** `https://sync.getmikan.com` — `/health` returns `{ok:true}` (all env set: `LOGTO_ISSUER`/`AUDIENCE`/`JWKS_URL` on the `auth.getmikan.com` domain + Turso creds). Endpoint is `POST /token`.
+- **Mobile `.env`:** `EXPO_PUBLIC_LOGTO_ENDPOINT`, `_APP_ID`, `_BROKER_URL`, **`EXPO_PUBLIC_LOGTO_RESOURCE=https://api.getmikan.com`** (added this session), legacy `_NEEME_API_URL` (unused since ADR 0009).
+- **Bundle id:** `cool.jlee.nimi` (use this when registering the App Store / EAS bundle identifier).
+- **Mastra `.env.local`:** `AI_GATEWAY_API_KEY` (Vercel gateway, `vck_…`) + `ANTHROPIC_API_KEY`. Models: agent `anthropic/claude-sonnet-4.6` (via gateway), pipeline `claude-haiku-4-5-20251001` (Inngest `@inngest/ai` adapter → Anthropic-native, not the gateway). Inngest keys can stay blank for local dev (`INNGEST_DEV=1`).
+
+---
+
+## Local dev runbook (so tomorrow-you isn't rediscovering this)
+
+**Toolchain prereqs (one-time, were broken/missing this session):**
+- `brew reinstall cocoapods` — the vendored `ffi` broke after a Homebrew Ruby bump.
+- iOS **26.5 simulator runtime** installed (Xcode 26.5 shipped only the SDK). Xcode won't build against the old 26.1 sims.
+- **`watchman` is not installed** → Metro doesn't see file changes. After editing mobile files, restart Metro with `--clear` (`npx expo start --dev-client --clear`), or the bundle is stale.
+
+**Mobile:**
 ```bash
-# V1 — workspace typecheck (mobile is excluded by the default filter)
-pnpm typecheck
-
-# V2 — typecheck the excluded packages explicitly
-pnpm --filter @nimi/mobile exec tsc --noEmit
-cd services/mastra && pnpm typecheck && cd -
-
-# V3 — Mastra agent playground
-cd services/mastra
-cp .env.example .env.local          # set ANTHROPIC_API_KEY
-pnpm install && pnpm dev            # http://localhost:4111
-#   In playground → nimi agent:
-#   "What did I note about the project last week?"  → search-memories fires (mock ok)
-#   "Add a task to follow up tomorrow"              → add-todo fires with title+day
-
-# V4 — Inngest (second terminal, pnpm dev still running)
-pnpm inngest:dev                    # http://localhost:8288
-#   Send Event: name "memory/ingest"
-#   data: { "text": "Meeting with Sarah: agreed Q3 priorities", "itemId": "t1", "contentType": "text" }
-#   Verify: extract-text → chunk-text → generate-brief; brief non-empty; generate-brief pauses
-#   Retry test: send with "text": "" and confirm earlier steps don't re-run
-
-# V5–V8 — mobile (Mac + iOS device/simulator)
 cd apps/mobile
-cp .env.example .env.local
-#   set EXPO_PUBLIC_BROKER_URL, EXPO_PUBLIC_LOGTO_ENDPOINT, EXPO_PUBLIC_LOGTO_APP_ID
-#   (Logto dashboard: a Native app with nimi:// redirect URI must exist)
-npx expo run:ios                    # MUST be dev client — NOT `expo start`/Expo Go
-#   V6: log in → Capture "test note" → Save → pull-to-refresh Feed → appears
-#   V6: airplane mode → capture → save still ok → reconnect → pull-to-refresh → syncs
-#   V7: desktop `pnpm dev` (or NEEME_EMBEDDER=hash pnpm dev) → phone capture appears in feed
-#   V8: force-quit app, reopen offline → feed still shows items
+LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx expo run:ios   # build + launch (pod install needs UTF-8 LANG)
+# Then reloads: npx expo start --dev-client --clear ; relaunch via the dev-client URL.
+```
+**Mastra (V3/V4):**
+```bash
+cd services/mastra
+set -a; . ./.env.local; set +a
+pnpm dev                    # agent playground :4111
+INNGEST_DEV=1 pnpm inngest:endpoint   # local /api/inngest on :3939 (new this session)
+INNGEST_DEV=1 pnpm inngest:dev        # Inngest dev server :8288 → POST event to :8288/e/dev
 ```
 
+> ⚠️ Background dev servers (Metro, mastra dev, inngest) may still be running from the last session.
+> `lsof -ti:8081,4111,8288,3939 | xargs kill` to reset.
+
 ---
 
-## Key file map
+## Phase 1 — what's next for mobile (in rough priority)
 
+1. **Mobile E2E parity (unblocks V7).** Port `apps/desktop/src/main/db/crypto.ts` (the `enc:` codec) to mobile, and share `NEEME_SYNC_ENCRYPTION_KEY` via the desktop's recovery-key flow. Encrypt/decrypt the `text` (content) fields on mobile read/write. Until then, keep desktop Cloud sync OFF.
+2. **Fire `memory/ingest` from mobile capture** (`app/(tabs)/capture.tsx`) after `db.push()` — needs `services/mastra` deployed.
+3. **Real libSQL queries in mastra tools** (`search-memories`, `add-todo`) — replace mocks; add per-user DB routing (agent calls the broker server-side).
+4. **`embed` step** in `ingest-pipeline.ts` (chunks → `chunks` table).
+5. **Deploy `services/mastra`** to Vercel (set `AI_GATEWAY_API_KEY`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`); verify the gateway model slugs + the Inngest adapter baseURL (`TODO(verify)` in `model.ts` / `ingest-pipeline.ts`).
+6. **Run V8** (offline kill-and-reopen) — quick.
+7. **Tech debt:** extract shared `packages/schema` (desktop `db/schema.ts` vs mobile `src/db/schema.ts` drift); add `services/mastra` to CI typecheck; tab-bar icons are `▼` placeholders (no `tabBarIcon`).
+
+---
+
+## Next CYCLE (per product owner): desktop UI
+
+After this mobile cycle, the focus shifts to **fleshing out the desktop (Electron renderer) UI**, with agent help. Suggested approach:
+1. **`superpowers:brainstorming`** first — pin down what "fleshed out" means (which screens, flows, gaps) before building.
+2. **`frontend-design`** — for building distinctive, production-grade React components/pages (avoids generic AI aesthetics). Best fit for net-new UI in `apps/desktop/src/renderer`.
+3. **`ui-ux-pro-max`** — for design-system thinking, review/critique, and systematic polish across the existing renderer.
+   (`design:design-critique` / `design:design-system` are also available for review-style passes.)
+
+Desktop UI lives in `apps/desktop/src/renderer/src` (React + Tailwind); it only ever touches
+`window.api.*` (see `docs/SECURITY.md`). Read `apps/desktop/CLAUDE.md` first.
+
+## Key file map (mobile)
 ```
 apps/mobile/
-  app/_layout.tsx              ← startup: initApiClient + restoreToken + broker→openDb
-  app/(auth)/login.tsx         ← Logto PKCE STUB (Phase 1: real auth)
-  app/(tabs)/feed.tsx          ← reads local Turso, sync on refresh  [DONE]
-  app/(tabs)/capture.tsx       ← local insert + db.sync()            [DONE]
-  app/(tabs)/_spike-db.tsx     ← manual spike screen (off tab bar)
-  src/db/{schema,client,index}.ts ← embedded replica + getDb()
+  app/index.tsx               ← auth gate: restore token → bootstrap → feed | login (clears token on 401)
+  app/_layout.tsx             ← thin <Stack> mount
+  app/(auth)/login.tsx        ← Logto PKCE + resource indicator (real, working)
+  app/(tabs)/{feed,capture}.tsx ← Turso read (all/pull) / write (run/push)
+  src/db/{client,schema,bootstrap,index}.ts ← connect/exec/pull, broker→openDb bootstrap
 services/mastra/
-  src/agents/nimi-agent.ts     ← agent (real instructions, stub tools)
-  src/tools/*.ts               ← MOCK — Phase 1 wires real libSQL
-  src/inngest/functions/ingest-pipeline.ts ← extract(passthrough)→chunk→brief
-docs/adr/0009-*.md             ← the decision of record (read this)
-docs/plans/mobile-rn-expo.plan.md ← todo checklist (updated)
-services/token-broker/         ← already mints per-user {syncUrl, authToken} (ADR 0008) — reused as-is
+  src/model.ts                ← AI Gateway model resolution
+  src/agents/nimi-agent.ts · src/tools/*  ← agent + (mock) tools
+  src/inngest/functions/ingest-pipeline.ts · scripts/inngest-dev-server.ts
+docs/adr/0008 (broker) · 0009 (mobile RN+Turso)
 ```
-
-## Open decisions for a human
-- EAS Build vs local-only for the dev client + store builds?
-- Reuse the existing Logto Native app or register a separate mobile client?
-- Promote the (now unused) FastAPI projector into `@nimi/contract`, or delete it from the mobile path?
-
-## Environment note
-No rogue process was running at handoff (`ps` showed only the Claude runner + watchdog). Nothing
-was left listening. The container is ephemeral and reclaimed on archive — this branch on the remote
-holds all state.

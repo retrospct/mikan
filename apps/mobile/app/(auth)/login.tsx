@@ -16,14 +16,14 @@ const LOGTO_APP_ID = process.env.EXPO_PUBLIC_LOGTO_APP_ID ?? ''
  * Logto PKCE login via system browser (RFC 8252 + RFC 7636).
  * expo-auth-session generates the verifier/challenge and state for us.
  * System browser via expo-web-browser: credentials never touch the in-app WebView.
- * Same Logto app as desktop (scheme: nimi://).
+ * Redirect scheme is the Mikan brand: mikan://callback (registered in Logto).
  */
 export default function LoginScreen(): ReactElement {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const redirectUri = makeRedirectUri({ scheme: 'nimi', path: 'callback' })
+  const redirectUri = makeRedirectUri({ scheme: 'mikan', path: 'callback' })
 
   async function handleLogin(): Promise<void> {
     if (!LOGTO_ENDPOINT || !LOGTO_APP_ID) {

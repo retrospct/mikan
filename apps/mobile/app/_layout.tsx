@@ -12,12 +12,10 @@ const BROKER_URL = process.env.EXPO_PUBLIC_BROKER_URL ?? 'https://token-broker.v
 
 export default function RootLayout(): ReactElement | null {
   const [ready, setReady] = useState(false)
-  const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
     restoreToken()
       .then(async (accessToken) => {
-        setToken(accessToken)
         // Exchange the Logto access token with the token broker for a per-user
         // Turso DB credential, then open the local embedded-replica. This mirrors
         // what the desktop worker does at startup (ADR 0008 + 0009).
@@ -28,7 +26,7 @@ export default function RootLayout(): ReactElement | null {
               headers: { Authorization: `Bearer ${accessToken}` },
             })
             if (!res.ok) throw new Error(`Broker ${res.status}`)
-            const { syncUrl, authToken } = await res.json() as {
+            const { syncUrl, authToken } = (await res.json()) as {
               syncUrl: string
               authToken: string
               expiresAt: number
@@ -46,13 +44,13 @@ export default function RootLayout(): ReactElement | null {
 
   if (!ready) return null
 
+  // Routing is file-based: app/index.tsx redirects to (auth) or (tabs) based on
+  // the persisted token. (A dynamic `initialRouteName` on a group route is not
+  // supported by expo-router and crashed the app — use an index redirect instead.)
   return (
     <>
       <StatusBar style="auto" />
-      <Stack initialRouteName={token ? '(tabs)' : '(auth)'}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false }} />
     </>
   )
 }

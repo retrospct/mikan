@@ -9,7 +9,7 @@
 //   4. Verify the record appears on the desktop (same Turso DB)
 
 import { connect } from '@tursodatabase/sync-react-native'
-import { CREATE_TABLES } from './schema.js'
+import { CREATE_TABLES } from './schema'
 
 export type DbClient = Awaited<ReturnType<typeof openDb>>
 

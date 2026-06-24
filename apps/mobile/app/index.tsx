@@ -27,10 +27,16 @@ export default function Index(): ReactElement | null {
         await bootstrapDb(token)
         if (!cancelled) setTarget('/(tabs)/feed')
       } catch (e) {
-        // Token rejected (broker 401) or sync unreachable — drop it, re-auth.
-        console.warn('[nimi/db] startup bootstrap failed, clearing token:', e)
-        await clearStoredToken()
-        if (!cancelled) setTarget('/(auth)/login')
+        console.warn('[nimi/db] startup bootstrap failed:', e)
+        // Only a broker auth rejection (401) means the token is bad — drop it and
+        // re-auth. Other failures (local DB, offline) keep the session: route to
+        // the feed, which degrades gracefully until the next pull.
+        if (String(e).includes('Broker 401')) {
+          await clearStoredToken()
+          if (!cancelled) setTarget('/(auth)/login')
+        } else if (!cancelled) {
+          setTarget('/(tabs)/feed')
+        }
       }
     })()
     return () => {

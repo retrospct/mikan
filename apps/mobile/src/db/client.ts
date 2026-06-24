@@ -31,8 +31,12 @@ export async function openDb(opts: {
       : undefined,
   })
 
-  // Create tables on first open (idempotent). exec() runs multi-statement SQL.
-  await db.exec(CREATE_TABLES)
+  // Create tables on first open (idempotent). The RN binding's exec() runs a
+  // SINGLE statement, so split the multi-statement schema and run each.
+  for (const statement of CREATE_TABLES.split(';')) {
+    const sql = statement.trim()
+    if (sql) await db.exec(sql)
+  }
 
   // Pull latest from Turso before returning.
   await db.pull()

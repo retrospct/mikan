@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState, type ReactElement } from 'react'
 import { FlatList, View, Text, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native'
+import type { Row } from '@tursodatabase/sync-react-native'
 import { getDb } from '../../src/db'
 
 /**
  * Feed screen — reads recent captures from the local Turso embedded-replica.
  *
  * Data path: @tursodatabase/sync-react-native (offline-first) → Turso cloud DB.
- * Reads from the local replica instantly; db.sync() pulls cloud writes on refresh.
+ * Reads from the local replica instantly; db.pull() fetches cloud writes on refresh.
  * Same items table as the desktop libSQL DB — no shape impedance, no projection needed.
  */
 
@@ -18,13 +19,14 @@ type FeedRow = {
   created_at: number
 }
 
-function parseRow(row: unknown[]): FeedRow {
+// db.all() returns column-keyed rows (Row = Record<string, SQLiteValue>).
+function parseRow(row: Row): FeedRow {
   return {
-    id: String(row[0]),
-    source_name: String(row[1]),
-    content_type: String(row[2]),
-    text: row[3] != null ? String(row[3]) : null,
-    created_at: Number(row[4]),
+    id: String(row.id),
+    source_name: String(row.source_name),
+    content_type: String(row.content_type),
+    text: row.text != null ? String(row.text) : null,
+    created_at: Number(row.created_at),
   }
 }
 
@@ -40,11 +42,11 @@ export default function FeedScreen(): ReactElement {
     setError(null)
     try {
       const db = getDb()
-      if (isRefresh) await db.sync()
-      const result = await db.execute(
+      if (isRefresh) await db.pull()
+      const rows = await db.all(
         'SELECT id, source_name, content_type, text, created_at FROM items ORDER BY created_at DESC LIMIT 50'
       )
-      setItems(result.rows.map(parseRow))
+      setItems(rows.map(parseRow))
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       setError(msg.includes('not open') ? 'Log in to see your captures.' : msg)

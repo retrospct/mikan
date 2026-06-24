@@ -8,7 +8,7 @@
 //   3. Open the DB Spike tab, write a record, go offline, come back online
 //   4. Verify the record appears on the desktop (same Turso DB)
 
-import { open } from '@tursodatabase/sync-react-native'
+import { connect } from '@tursodatabase/sync-react-native'
 import { CREATE_TABLES } from './schema.js'
 
 export type DbClient = Awaited<ReturnType<typeof openDb>>
@@ -20,18 +20,22 @@ export async function openDb(opts: {
   authToken: string
   encryptionKey?: string
 }) {
-  const db = await open({
-    dbPath: 'nimi.db',
-    syncUrl: opts.syncUrl,
+  const db = await connect({
+    path: 'nimi.db',
+    url: opts.syncUrl,
     authToken: opts.authToken,
-    encryptionKey: opts.encryptionKey,
+    // 0.6.1 takes at-rest encryption as { key, cipher }; the broker doesn't
+    // return a key yet (Phase 1 — see CLAUDE.md "Phase 1 gaps").
+    remoteEncryption: opts.encryptionKey
+      ? { key: opts.encryptionKey, cipher: 'aes256gcm' }
+      : undefined,
   })
 
-  // Create tables on first open (idempotent)
-  await db.executeMultiple(CREATE_TABLES)
+  // Create tables on first open (idempotent). exec() runs multi-statement SQL.
+  await db.exec(CREATE_TABLES)
 
-  // Pull latest from Turso before returning
-  await db.sync()
+  // Pull latest from Turso before returning.
+  await db.pull()
 
   _db = db
   return db
@@ -42,9 +46,9 @@ export function getDb(): DbClient {
   return _db
 }
 
-export async function closeDb() {
+export function closeDb() {
   if (_db) {
-    await _db.close()
+    _db.close()
     _db = null
   }
 }

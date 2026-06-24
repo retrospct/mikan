@@ -32,23 +32,23 @@ export default function DbSpike() {
 
       // Write a test item
       const id = `spike-${Date.now()}`
-      await db.execute(
+      await db.run(
         'INSERT INTO items (id, source_name, content_type, text) VALUES (?, ?, ?, ?)',
-        [id, 'spike-screen', 'text', `hello from mobile @ ${new Date().toLocaleTimeString()}`]
+        id, 'spike-screen', 'text', `hello from mobile @ ${new Date().toLocaleTimeString()}`
       )
       append(`✓ inserted item ${id}`)
 
-      // Read it back (local, offline-capable)
-      const { rows } = await db.execute('SELECT id, text FROM items ORDER BY created_at DESC LIMIT 5')
+      // Read it back (local, offline-capable). Rows are column-keyed objects.
+      const rows = await db.all('SELECT id, text FROM items ORDER BY created_at DESC LIMIT 5')
       append(`✓ local read — ${rows.length} row(s) returned`)
       for (const row of rows) {
-        append(`  › ${String(row[0]).slice(0, 20)}… | ${String(row[1]).slice(0, 40)}`)
+        append(`  › ${String(row.id).slice(0, 20)}… | ${String(row.text).slice(0, 40)}`)
       }
 
-      // Sync to Turso cloud
-      append('syncing to Turso…')
-      await db.sync()
-      append('✓ sync complete — check desktop feed for this item')
+      // Push local writes to Turso cloud
+      append('pushing to Turso…')
+      await db.push()
+      append('✓ push complete — check desktop feed for this item')
     } catch (e) {
       append(`✗ ${e instanceof Error ? e.message : String(e)}`, false)
     } finally {

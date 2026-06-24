@@ -12,9 +12,9 @@ import {
 import { getDb } from '../../src/db'
 
 /**
- * Capture screen — quick text note → local Turso embedded-replica → db.sync().
+ * Capture screen — quick text note → local Turso embedded-replica → db.push().
  *
- * Writes to the local DB first (works offline), then syncs so the desktop picks
+ * Writes to the local DB first (works offline), then pushes so the desktop picks
  * it up. Same items table as the desktop schema; no shape impedance.
  */
 export default function CaptureScreen(): ReactElement {
@@ -28,11 +28,11 @@ export default function CaptureScreen(): ReactElement {
     try {
       const db = getDb()
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-      await db.execute(
+      await db.run(
         'INSERT INTO items (id, source_name, content_type, text, status) VALUES (?, ?, ?, ?, ?)',
-        [id, 'mobile', 'text', trimmed, 'captured']
+        id, 'mobile', 'text', trimmed, 'captured'
       )
-      await db.sync()
+      await db.push()
       setText('')
       Alert.alert('Saved', 'Note captured and synced.')
     } catch (e) {

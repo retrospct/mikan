@@ -7,7 +7,7 @@
 ## What's implemented
 
 - **Main process** (`apps/desktop/src/main/auth/logto.ts`): OIDC Authorization Code + PKCE in the
-  **system browser**, brand-scheme redirect (`mikan://callback` / `momo://callback`, from `@nimi/brand`), token exchange + refresh,
+  **system browser**, deep-link redirect (`mikan://callback`, from `@nimi/brand`), token exchange + refresh,
   refresh token sealed via Electron `safeStorage`. Inert when unconfigured.
 - **IPC** (`packages/contract/src/ipc.ts`, `apps/desktop/src/preload`): `window.api.auth.{login,logout,getAccessToken,getState,onChanged}`.
 - **Renderer** (`apps/desktop/src/renderer/src/hooks/useAuth.ts` + `nimi/auth.tsx`): hydrates the API
@@ -17,14 +17,12 @@
 
 ## To turn it on
 
-> **Deep-link scheme is brand-specific** (the brand layer, `@nimi/brand`): the
-> redirect is `<brand-scheme>://callback` — `mikan://callback` for Mikan,
-> `momo://callback` for Momo (it replaced the old internal `neeme://`). Register
-> both on the shared Logto app. The scheme lives in `packages/brand/src/identity.json`.
+> **Deep-link scheme** (from the brand layer, `@nimi/brand`): the redirect is
+> `mikan://callback` (it replaced the old internal `neeme://`). The scheme lives in
+> `packages/brand/src/identity.json`.
 
 1. **Logto Cloud** → create a project → **Create application → "Native app"** (public client, PKCE).
-2. Set the **Redirect URIs** to the brand scheme(s) — register **both** so either build works
-   against this app: `mikan://callback` and `momo://callback` (add a Post sign-out redirect if
+2. Set the **Redirect URI** to `mikan://callback` (add a Post sign-out redirect if
    you want; it's currently unused — sign-out is local). The scheme comes from
    `packages/brand/src/identity.json`.
 3. Copy the tenant **endpoint** and **App ID** into `.env` (main-process, `MAIN_VITE_` prefix):
@@ -69,9 +67,8 @@ one non-negotiable step is verifying a **sending domain** so codes land in the i
 **Gate:** verify the domain (steps 1–3) **before** switching sign-in to passwordless
 (email-code-only). On the `resend.dev` sender, codes landing in spam = users locked out.
 
-Note: with the current **single shared Logto app** for both brands, the from-address is the
-same for Mikan and Momo. Per-brand senders only become possible if we split into per-brand Logto
-apps later (see `packages/brand/README.md` follow-ups).
+Note: there's a **single Logto app** (single brand, Mikan), so the from-address is the
+one Mikan sender.
 
 ## What you do NOT need
 
@@ -92,8 +89,7 @@ apps later (see `packages/brand/README.md` follow-ups).
 ## Test plan (the #9 acceptance)
 
 Shared: fill `apps/desktop/.env` (above), and confirm the **Logto Native app**'s Redirect URIs
-include `mikan://callback` (the default `pnpm dev` / Mikan build; no trailing slash) — and
-`momo://callback` for Momo. Sign-in flow: header **Sign in** → system browser →
+include `mikan://callback` (no trailing slash). Sign-in flow: header **Sign in** → system browser →
 authenticate → redirect to `mikan://callback` → app exchanges the code (PKCE), **verifies the
 id_token against JWKS**, header shows your name/email.
 
@@ -112,11 +108,11 @@ to the app (the known dev limitation).
 
 1. Fill `apps/desktop/.env` **before** building (`MAIN_VITE_*` are baked in at build time).
 2. `pnpm --filter @nimi/desktop build:unpack` → `open apps/desktop/release/mikan/mac*/Mikan.app`
-   (per-brand output dir + `productName`; a `BRAND=momo` build lands at `release/momo/mac*/Momo.app`).
+   (output dir + `productName` come from `identity.mikan`).
 3. Same checks as A2–A5; `mikan://` is OS-registered so the callback always routes home.
 
 **Reset to a clean slate:** `rm "$HOME/Library/Application Support/Mikan/neeme-auth.bin"`, relaunch
-(the userData dir follows the brand `productName` — `Momo` for a Momo build; the `neeme-auth.bin`
+(the userData dir follows the brand `productName` — `Mikan`; the `neeme-auth.bin`
 filename is internal and unchanged).
 
 ## Two OAuth flows (login vs connectors) — don't conflate them
@@ -127,7 +123,7 @@ The app runs **two independent OAuth flows**; keep them separate:
 | ------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | Provider           | Logto (broker; can federate Google)                                  | Google directly                                                         |
 | Purpose            | who you are (id_token → claims)                                      | data access (access token → Gmail/Cal APIs)                             |
-| Redirect transport | `<brand>://callback` custom scheme (e.g. `mikan://`)                 | **loopback** `http://127.0.0.1:<port>/callback`                         |
+| Redirect transport | `mikan://callback` custom scheme                                     | **loopback** `http://127.0.0.1:<port>/callback`                         |
 | Callback handler   | `main/index.ts` `open-url`/`second-instance` → `auth.handleCallback` | a transient local HTTP listener (connectors own it)                     |
 | Client             | public, PKCE, no secret                                              | own Google client (PKCE + secret)                                       |
 | Env                | `MAIN_VITE_LOGTO_*`                                                  | Google creds (need a `MAIN_VITE_`/`NEEME_` prefix to reach main/worker) |
@@ -158,12 +154,8 @@ scheme or they'll capture each other's callbacks.
   `auth.getmikan.com` if you ever want branded auth URLs. The same string can be both the audience
   _and_ your real API base URL — that's the intended pattern, not a conflict.
 
-> **Per-product domains (one stack per brand).** Mikan and Momo are separate
-> products that share code, not infra. These examples use **Mikan's** domains
-> (`api.getmikan.com`, `auth.getmikan.com`) because Mikan owns the current Logto
-> app + broker. When Momo ships it gets its **own** stack — `api.getmomo.now`,
-> `auth.getmomo.now`, its own Logto app + broker — and the auth/broker env becomes
-> brand-keyed (see `packages/brand/README.md` follow-ups). The audience and broker
+> **Product domains.** These examples use Mikan's domains (`api.getmikan.com`,
+> `auth.getmikan.com`) — Mikan owns the Logto app + broker. The audience and broker
 > URL are not user-visible; only the `auth.*` sign-in domain is.
 
 | Use                                    | Value                      | Real DNS/SSL?         | Where in Logto          |
@@ -177,17 +169,17 @@ scheme or they'll capture each other's callbacks.
   — `MAIN_VITE_LOGTO_ENDPOINT` (desktop), broker `LOGTO_ISSUER`, and broker `LOGTO_JWKS_URL` — to the
   custom domain, or verification fails on issuer mismatch. The audience (`https://api.getmikan.com`) is
   unaffected by that switch. Until then, keep everything on the default `c435za.logto.app`.
-- **One app instance at a time across worktrees.** All worktrees of the same brand share its appId
+- **One app instance at a time across worktrees.** All worktrees share the appId
   (`dev.retro.mikan`) + `userData`, so they share a single-instance lock. A stale `pnpm dev` in another worktree keeps its
   (wrong) window up and blocks yours — `window.api` reads `undefined` and the UI silently falls back
   to the browser mock (no lock). Kill the other dev first.
 
 ## Caveats
 
-- **Custom-scheme deep link (`mikan://` / `momo://`)** registers reliably in a **packaged** build. In `pnpm dev`
+- **Custom-scheme deep link (`mikan://`)** registers reliably in a **packaged** build. In `pnpm dev`
   on macOS the `open-url` event usually still fires; on Windows/Linux deep links rely on the
   single-instance lock + argv parsing (already wired). If dev redirects don't return, use Option B
-  (packaged build). The redirect is built from the active brand — `${brand.scheme}://callback`
+  (packaged build). The redirect is `${brand.scheme}://callback`
   (`auth/logto.ts`, scheme from `@nimi/brand`); a loopback redirect would mean code changes (a local
   HTTP listener) — not wired today.
 - The `id_token` **is** signature-verified client-side now (`auth/oidc.ts` `verifyIdToken`: JWKS

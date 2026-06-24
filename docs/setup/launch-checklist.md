@@ -2,8 +2,7 @@
 
 A single home for the **deferred environment switches** — the "set X to Y once Z is
 live" items that are easy to forget. Env-var _names_ keep the internal `NEEME`
-namespace; only their _values_ change. (Momo gets its own stack later — see
-`packages/brand/README.md` follow-ups.)
+namespace; only their _values_ change.
 
 ## Pending — flip when the trigger is met
 
@@ -63,17 +62,14 @@ it and retire the old project
   and a real support inbox. Keep this separate from the `send.getmikan.com` sending
   reputation.
 - **Marketing site `getmikan.com`** (separate PR, after the brand layer lands): a
-  small brand-aware site — suggested `apps/web` consuming `@nimi/brand`, Astro on
-  Vercel, `BRAND`-keyed (mikan → getmikan.com, momo → getmomo.now later). Serves the
-  homepage + `/terms` + `/privacy`, and is the target for Logto's **unknown-session
-  redirect URL**. Unblocks: Google consent links, Logto terms/privacy links + the
+  small site — suggested `apps/web` consuming `@nimi/brand`, Astro on
+  Vercel. Serves the homepage + `/terms` + `/privacy`, and is the target for Logto's
+  **unknown-session redirect URL**. Unblocks: Google consent links, Logto terms/privacy links + the
   registration "agree to terms" checkbox. Set Logto "agree to terms" =
   **require checkbox on registration only** once the pages are live.
 - **Logto hosted sign-in branding** (Console → Sign-in experience): Mikan diamond
   mark (light + dark) + favicon, brand color `#0F5E57` (teal), dark mode on, product
-  name "Mikan"; add the Terms/Privacy/Support URLs above. Currently the shared
-  **omni** experience (one app) → brands both; when Momo gets its own Logto app,
-  enable per-app branding.
+  name "Mikan"; add the Terms/Privacy/Support URLs above.
 - **Google social connector**: keep "require missing sign-up identifier" on and
   "auto-link same identifier" on (safe — Google verifies emails; revisit if a
   connector without verified email is added). Ensure Google Cloud OAuth client's
@@ -82,12 +78,11 @@ it and retire the old project
   domain goes Active**, or Google sign-in breaks there.
 - Real 1024×1024 icons — **Mikan done** (`apps/desktop/assets/mikan/icon.{svg,png}`,
   derived from the NimiMark on the teal field; regenerate platform sets from the SVG).
-  **Momo still pending** (`apps/desktop/assets/momo/icon.png`).
 - Branch protection — require the `commitlint` check on PRs once PRs resume.
 
 ## Already done (for reference)
 
-- Logto **Native** app; redirect URIs `mikan://callback` + `momo://callback` registered.
+- Logto **Native** app; redirect URI `mikan://callback` registered.
 - appId `dev.retro.mikan`; deep-link scheme `mikan://` (replaced internal `neeme://`).
 - Refresh tokens on (offline_access requested by the app; rotation ON, 14-day TTL).
 - Resend `send.getmikan.com` domain verified (DKIM + SPF).

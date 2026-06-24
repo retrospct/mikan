@@ -1,10 +1,10 @@
 # @nimi/brand
 
-The build-time **brand layer**: a neutral core that ships as a named product —
-currently just **Mikan** — selected by the `BRAND` env var at build time. The layer
-stays brand-parameterized (a single-member `BrandId` union) so a second product can
-be reintroduced later without rearchitecting. A brand = product identity (name,
-appId, deep-link scheme, icon, URLs, tagline) + a colour theme. Consumed **from `.ts`
+The **brand layer**: a single brand, **Mikan**, resolved statically by `@nimi/brand`.
+A brand = product identity (name, appId, deep-link scheme, icon, URLs, tagline) + a
+colour theme. The architecture (a `BrandConfig` type + platform adapters) stays
+brand-agnostic, so a second product could be reintroduced later from git history
+without rearchitecting — but today nothing selects a brand. Consumed **from `.ts`
 source** (no build step), like `@nimi/contract`.
 
 ## Layout
@@ -14,8 +14,8 @@ src/
   identity.json     SSOT for build identity (productName, appId, scheme, icon, publish)
   types.ts          BrandConfig + colour/token type contract (platform-agnostic)
   tokens.ts         brand-agnostic system tokens (space/radius/fontSize, unitless)
-  brands/*.ts       per-brand identity + mode-aware { light, dark } colour palettes
-  index.ts          resolver: BRAND_ID, brand, brands registry (NO DOM/Tailwind)
+  brands/*.ts       brand identity + mode-aware { light, dark } colour palettes (mikan.ts)
+  index.ts          exports the Mikan `brand` + tokens (NO DOM/Tailwind)
   web/              DOM adapter: applyBrandTheme (CSS vars) + BrandProvider/useBrand
   native/           RN seam: token -> JS object (srgb only, NO DOM)
   tokens.test.ts    contract test: srgb must be literal hex/rgba (fails on var()/oklch leak)
@@ -25,7 +25,7 @@ src/
 
 | Entry                       | Use from                      | Contains                                     |
 | --------------------------- | ----------------------------- | -------------------------------------------- |
-| `@nimi/brand`               | anywhere (main, renderer, RN) | resolver, tokens, types — no DOM             |
+| `@nimi/brand`               | anywhere (main, renderer, RN) | the `brand`, tokens, types — no DOM          |
 | `@nimi/brand/tokens`        | anywhere                      | system tokens + colour token types           |
 | `@nimi/brand/identity.json` | TS configs + electron-builder | build identity SSOT                          |
 | `@nimi/brand/web`           | Electron renderer only        | CSS-var adapter, `BrandProvider`, `useBrand` |
@@ -48,7 +48,7 @@ shape — no refactor.
 
 ## Path to GA — accessibility & colour checklist
 
-The current layer establishes the **token seam and brand selection**. These are the
+The current layer establishes the **token seam**. These are the
 production goals we're driving toward; tick them off as the renderer styling lands
 (mostly in the desktop Tailwind/CSS wiring) before GA:
 
@@ -76,19 +76,17 @@ tool (items 2–4) before GA.
 - **Surface bridge depth.** The desktop renderer currently bridges only the
   _palette-level_ tokens (`--accent`/`-ink`/`-deep`, `--bg`, `--ink`/`-2`) to
   `--brand-*`; the translucent `--surface`/`--hairline`/`--shadow` "glass" craft
-  tokens stay brand-neutral. **Decision pending:** whether brands should also drive
-  surfaces (more brand-saturated chrome) or keep the shared glass treatment. Needs
-  a visual review of Mikan vs Momo before committing either way.
+  tokens stay brand-neutral. **Decision pending:** whether the brand should also drive
+  surfaces (more brand-saturated chrome) or keep the shared glass treatment.
 - **Assistant persona name.** User-facing copy ("Ask Mikan", "Welcome to Mikan",
   "Add to Mikan") now uses `brand.productName` for the in-app assistant. **Decision
   pending:** confirm the assistant should share the product name vs. carry its own.
-- **Mobile build-time brand selection.** `apps/mobile` now imports `@nimi/brand`
-  (login screen reads `brand.productName`/`brand.tagline`) and the resolver accepts
-  `EXPO_PUBLIC_BRAND`, but the Expo app identity is **not yet brand-wired**:
-  `app.json` is still static (`name: Nimi`, `scheme: nimi`, `bundleIdentifier
-cool.jlee.nimi`). When mobile graduates, convert to a dynamic `app.config.js`
-  keyed off `EXPO_PUBLIC_BRAND` → per-brand name/scheme (`mikan`/`momo`) +
-  bundleId (`dev.retro.mikan`/`dev.retro.momo`), mirroring the desktop wiring.
+- **Mobile app identity wiring.** `apps/mobile` imports `@nimi/brand` (login screen
+  reads `brand.productName`/`brand.tagline`), but the Expo app identity is **not yet
+  wired to it**: `app.json` is still static (`name: Nimi`, `scheme: nimi`,
+  `bundleIdentifier cool.jlee.nimi`). When mobile graduates, align `app.json` (or a
+  dynamic `app.config.js`) with `identity.mikan` — name/scheme `mikan`, bundleId
+  `dev.retro.mikan` — mirroring the desktop wiring.
 - **Logto Account API stays off (revisit later).** nimi doesn't use Logto's Account
   Center / Account API: sign-out is local, identity comes from the verified id_token
   claims, and Google connector tokens are managed by the app's own OAuth
@@ -96,24 +94,13 @@ cool.jlee.nimi`). When mobile graduates, convert to a dynamic `app.config.js`
   we build native **in-app account management** (change email/password, MFA, passkeys,
   session revocation) instead of a Logto-hosted page, or decide to move Google token
   storage into Logto's Secret Vault — both are deliberate, security-scoped changes.
-- **Per-product infra stacks (decided; pending Momo).** Mikan and Momo are durably
-  separate products that share **code, not infra**. Mikan owns the current Logto app
-  (both `mikan://`/`momo://` redirects today) + broker; marketing/auth/api domains are
-  Mikan's (`getmikan.com`, `auth.getmikan.com`, `api.getmikan.com`). When Momo ships it
-  gets its **own** stack — separate Logto app (own user pool + `auth.getmomo.now`), own
-  broker, own `api.getmomo.now` audience, own release repo — and Momo must **not** ride
-  Mikan's. That requires **brand-keying the auth/broker config**: per-brand
-  `MAIN_VITE_LOGTO_*`, broker URL, and audience (today they're single shared values),
-  mirroring how `identity.json` keys the rest. The audience + broker URL aren't
-  user-visible; only the `auth.*` sign-in domain is.
 
-## Adding a second brand later
+## Reintroducing a brand later
 
-1. Add its entry to `identity.json`.
-2. Add `src/brands/<id>.ts` (copy `mikan.ts`, swap palette + URLs).
-3. Add the id to the `BrandId` union in `types.ts` and the `brands` registry in
-   `index.ts`.
-4. Add the `dev:<id>` / build + release wiring in the desktop app.
-5. Drop `assets/<id>/icon.png` in the desktop app.
-
-Default brand is **mikan**: a build with no `BRAND` set builds Mikan.
+The layer ships a single brand (Mikan), resolved statically — there's no brand
+selection. The shape that made it brand-agnostic still holds, though: identity lives
+in `identity.json`, palettes in `brands/*.ts`, and the platform adapters
+(`./web`, `./native`) consume tokens without caring how many brands exist. If a second
+product is ever needed, the prior multi-brand wiring (a `BrandId` union, a `brands`
+registry, and a build-time selector) is recoverable from git history rather than
+something to design from scratch.

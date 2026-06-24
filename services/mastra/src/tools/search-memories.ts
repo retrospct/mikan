@@ -23,17 +23,17 @@ export const searchMemoriesTool = createTool({
       })
     ),
   }),
-  execute: async ({ context }) => {
+  execute: async ({ query }) => {
     // TODO(phase-1): replace with real libSQL cosine-distance search
     // import { createClient } from '@libsql/client'
     // const db = createClient({ url: process.env.TURSO_DB_URL!, authToken: process.env.TURSO_DB_TOKEN! })
-    // const embedding = await embed(context.query)
-    // const rows = await db.execute(`SELECT ... ORDER BY vector_distance_cos(...) LIMIT ?`, [context.limit])
+    // const embedding = await embed(query)
+    // const rows = await db.execute(`SELECT ... ORDER BY vector_distance_cos(...) LIMIT ?`, [limit])
     return {
       results: [
         {
           id: 'mock-1',
-          text: `[spike] relevant memory for: "${context.query}"`,
+          text: `[spike] relevant memory for: "${query}"`,
           score: 0.91,
           sourceName: 'mock-capture.txt',
           contentType: 'text' as const,

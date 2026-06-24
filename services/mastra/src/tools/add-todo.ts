@@ -21,13 +21,13 @@ export const addTodoTool = createTool({
     title: z.string(),
     scheduled: z.boolean(),
   }),
-  execute: async ({ context }) => {
+  execute: async (inputData) => {
     // TODO(phase-1): replace with real Turso insert
-    console.log('[spike] add-todo:', context)
+    console.log('[spike] add-todo:', inputData)
     return {
       id: `mock-todo-${Date.now()}`,
-      title: context.title,
-      scheduled: !!context.day,
+      title: inputData.title,
+      scheduled: !!inputData.day,
     }
   },
 })

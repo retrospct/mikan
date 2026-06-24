@@ -1,5 +1,5 @@
-import { anthropic } from '@ai-sdk/anthropic'
 import { Agent } from '@mastra/core/agent'
+import { agentModel } from '../model.js'
 import { addTodoTool } from '../tools/add-todo.js'
 import { searchMemoriesTool } from '../tools/search-memories.js'
 
@@ -22,9 +22,10 @@ Guiding principles:
 `.trim()
 
 export const nimiAgent = new Agent({
+  id: 'nimi',
   name: 'nimi',
   instructions: INSTRUCTIONS,
-  model: anthropic('claude-sonnet-4-6'),
+  model: agentModel,
   tools: {
     searchMemories: searchMemoriesTool,
     addTodo: addTodoTool,

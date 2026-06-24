@@ -1,5 +1,15 @@
-import { anthropic } from '@ai-sdk/anthropic'
+import { anthropic } from '@inngest/ai/models'
+import { z } from 'zod'
 import { inngest } from '../client.js'
+import { PIPELINE_MODEL_SLUG } from '../../model.js'
+
+// Event payload schema. In Inngest v4 the payload is typed per-trigger via a
+// Standard Schema, replacing the old client-level EventSchemas.
+const ingestEventSchema = z.object({
+  text: z.string(),
+  itemId: z.string(),
+  contentType: z.string(),
+})
 
 // Spike: validates that step.ai.infer() works on serverless (Vercel) without
 // paying for idle time during LLM inference. Each step is independently
@@ -13,14 +23,13 @@ export const ingestPipeline = inngest.createFunction(
     // Keep serverless function alive for up to 5 minutes across all steps
     // (Inngest pauses the function between steps, so you only pay for
     // active compute, not LLM inference wait time).
+    triggers: [{ event: 'memory/ingest', schema: ingestEventSchema }],
   },
-  { event: 'memory/ingest' },
   async ({ event, step }) => {
-    const { text, itemId, contentType } = event.data as {
-      text: string
-      itemId: string
-      contentType: string
-    }
+    // contentType is consumed in Phase 1 (OCR/ASR routing); referenced here to
+    // keep the typed event shape intact.
+    const { text, itemId, contentType } = event.data
+    void contentType
 
     // Step 1: extract clean text (spike: passthrough; Phase 1: OCR/ASR)
     const extractedText = await step.run('extract-text', async () => {
@@ -45,8 +54,24 @@ export const ingestPipeline = inngest.createFunction(
     // Step 3: generate a draft brief via LLM
     // step.ai.infer() offloads the LLM call to Inngest's infrastructure,
     // pausing this function so we don't pay for idle serverless time.
+    // step.ai.infer uses Inngest's OWN AI adapter infra (@inngest/ai), which
+    // speaks the provider's native API — it does NOT go through the AI SDK
+    // gateway provider the way the Mastra agent does. To still route through
+    // the Vercel AI Gateway we point the adapter's baseUrl at the gateway's
+    // Anthropic-compatible endpoint and reuse the same token; if that token
+    // is unset it falls back to ANTHROPIC_API_KEY (the adapter default).
     const brief = await step.ai.infer('generate-brief', {
-      model: anthropic('claude-haiku-4-5-20251001'),
+      model: anthropic({
+        // The Inngest adapter expects an Anthropic-native model id, not the
+        // gateway's provider-prefixed slug; strip the `anthropic/` prefix.
+        // TODO(verify slug): confirm the gateway accepts this Anthropic model id.
+        model: PIPELINE_MODEL_SLUG.replace(/^anthropic\//, ''),
+        apiKey: process.env.AI_GATEWAY_API_KEY ?? process.env.ANTHROPIC_API_KEY,
+        // TODO(verify baseUrl): point at the Vercel AI Gateway's Anthropic
+        // endpoint when AI_GATEWAY_API_KEY is set; default Anthropic API otherwise.
+        baseUrl: process.env.AI_GATEWAY_BASE_URL,
+        defaultParameters: { max_tokens: 200 },
+      }),
       body: {
         max_tokens: 200,
         messages: [

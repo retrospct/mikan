@@ -6,7 +6,7 @@ Phase 0 spike: Mastra agent + Inngest durable pipeline on Vercel. Read the root 
 
 Two spikes in one service:
 
-1. **Mastra agent** (`src/agents/nimi-agent.ts`) — the Nimi AI agent with tool calls (search memories, add todo). Uses Anthropic via the Vercel AI SDK. Runs locally with `pnpm dev` (`mastra dev`).
+1. **Mastra agent** (`src/agents/nimi-agent.ts`) — the Nimi AI agent with tool calls (search memories, add todo). Uses Anthropic via the **Vercel AI Gateway** (AI SDK v6 `gateway` provider; model resolution centralized in `src/model.ts`). Runs locally with `pnpm dev` (`mastra dev`).
 
 2. **Inngest pipeline** (`src/inngest/functions/ingest-pipeline.ts`) — durable multi-step ingestion (extract → chunk → brief via `step.ai.infer()`). Runs locally with `pnpm inngest:dev` alongside `pnpm dev`.
 
@@ -14,7 +14,7 @@ Two spikes in one service:
 
 ```bash
 cp .env.example .env.local
-# fill in ANTHROPIC_API_KEY
+# fill in AI_GATEWAY_API_KEY (Vercel AI Gateway token)
 
 pnpm dev            # starts Mastra dev server + playground at http://localhost:4111
 pnpm inngest:dev    # in a second terminal — Inngest dev server at http://localhost:8288
@@ -31,7 +31,7 @@ vercel deploy       # uploads .vercel/output/ as serverless functions
 ```
 
 Set these env vars in the Vercel project:
-- `ANTHROPIC_API_KEY`
+- `AI_GATEWAY_API_KEY` (agent + pipeline LLM calls route through the AI Gateway)
 - `INNGEST_EVENT_KEY`
 - `INNGEST_SIGNING_KEY`
 
@@ -40,6 +40,7 @@ Set these env vars in the Vercel project:
 ```
 src/
   mastra.ts                          ← Mastra instance (entry point for mastra build)
+  model.ts                           ← AI Gateway model resolution (shared by agent + pipeline)
   agents/nimi-agent.ts               ← Nimi agent: instructions + model + tools
   tools/search-memories.ts           ← mock tool (Phase 1: real libSQL cosine search)
   tools/add-todo.ts                  ← mock tool (Phase 1: real Turso insert)

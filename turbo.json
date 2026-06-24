@@ -6,12 +6,7 @@
   // Turbo's strict env mode. NEEME_USER_DATA is set by main when it forks the
   // worker (runtime, in-process) — not via the shell — so it doesn't need
   // declaring here. EXPO_PUBLIC_* covers the mobile app's env vars.
-  //
-  // BRAND selects the product (mikan/momo) at build time and changes the build
-  // output (baked into the JS via electron-vite `define` + read by
-  // electron-builder). It MUST be declared so Turbo keys its cache on it —
-  // otherwise a `BRAND=momo` build can be served a cached Mikan artifact.
-  "globalEnv": ["BRAND", "NEEME_*", "VITE_*", "EXPO_PUBLIC_*"],
+  "globalEnv": ["NEEME_*", "VITE_*", "EXPO_PUBLIC_*"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

@@ -1,25 +1,14 @@
-// electron-builder configuration, parameterized by the active brand.
+// electron-builder configuration for the single brand, Mikan.
 //
 // Replaces the former electron-builder.yml: YAML can't read identity.json, but
 // build identity (productName, appId, deep-link scheme, icon, publish target) is
-// owned by @nimi/brand so the TS app and the packager can't drift. Run via the
-// build:* scripts, which set BRAND (default: mikan). Keep in sync with the
-// electron-vite `define` that bakes BRAND into the JS bundles.
+// owned by @nimi/brand so the TS app and the packager can't drift.
 const identity = require('@nimi/brand/identity.json')
 
-const BRAND = process.env.BRAND || 'mikan'
-const meta = identity[BRAND]
+const meta = identity.mikan
 
-if (!meta) {
-  throw new Error(
-    `[electron-builder] Unknown BRAND="${BRAND}". Expected one of: ${Object.keys(identity).join(
-      ', '
-    )}.`
-  )
-}
-
-// User-facing binary/artifact name per brand (mikan). The internal namespace
-// (nimi/neeme) stays untouched elsewhere — brand lives only at the client edge.
+// User-facing binary/artifact name. The internal namespace (nimi/neeme) stays
+// untouched elsewhere — brand lives only at the client edge.
 const slug = meta.scheme
 
 /** @type {import('electron-builder').Configuration} */
@@ -28,8 +17,7 @@ module.exports = {
   productName: meta.productName,
   directories: {
     buildResources: 'build',
-    // Per-brand output dir so distinct brand builds don't overwrite each other.
-    output: `release/${BRAND}`
+    output: 'release/mikan'
   },
   files: [
     '!**/.vscode/*',

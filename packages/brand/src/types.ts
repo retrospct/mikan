@@ -2,9 +2,8 @@
 // must never reference React, React Native, the DOM, or Tailwind. Each platform
 // writes its own adapter (src/web, src/native) that consumes these values.
 
-// The brand this codebase builds. Modeled as a (currently single-member) union so a
-// second brand can be reintroduced by adding an id here, a config under brands/,
-// registering it in index.ts, and adding its entry to identity.json.
+// The brand this codebase builds. A single-member union: the product ships as
+// Mikan only. (Kept as a named type so `BrandConfig.id` stays self-documenting.)
 export type BrandId = 'mikan'
 
 // A single colour, carried in BOTH representations so one token works everywhere:

@@ -19,7 +19,7 @@ apps/desktop/
     preload/     ← the contextBridge surface (window.api.*)
     renderer/    ← the React UI (src/renderer/src), index.html, Tailwind
   electron.vite.config.ts   ← three builds (main+worker / preload / renderer)
-  electron-builder.config.cjs ← packaging (macOS now, Windows later), brand-keyed appId (dev.retro.<brand>) from @nimi/brand identity.json
+  electron-builder.config.cjs ← packaging (macOS now, Windows later), appId dev.retro.mikan from @nimi/brand identity.json
   tsconfig.node.json / tsconfig.web.json
 ```
 

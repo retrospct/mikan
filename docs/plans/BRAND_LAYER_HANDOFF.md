@@ -5,10 +5,11 @@ outside this repo). Adapt them to our actual structure — **do not copy
 verbatim**. Read our existing layout and conventions first, then match them.
 
 ## What this is
-A build-time brand layer so one core can ship as two installable apps —
-**Mikan** (primary) and **Momo** (later) — selected by a `BRAND` env var.
+A brand layer that ships a single product — **Mikan** — resolved statically.
 Brand = product identity (name, appId, icon, urls, tagline) + a `theme`
-(color tokens). `theme` is nested **inside** brand, not a peer of it.
+(color tokens). `theme` is nested **inside** brand, not a peer of it. (The shape
+stays brand-agnostic so a second product could be reintroduced later, but nothing
+selects a brand today.)
 
 ## Our setup
 - **Monorepo:** Turborepo + pnpm workspaces. Shared code lives in `packages/`.
@@ -36,9 +37,9 @@ Rules that make the seam real:
 - **Scales = unitless numbers** (`space.md = 12`, not `"12px"`). Web adapter
   appends the unit; RN uses the number directly.
 - **Split brand from system.** Only *color* (and optionally a display/body font)
-  differs between Mikan and Momo. Spacing, radii, type scale, z-index are the
-  shared design system — keep them in **brand-agnostic** system tokens, NOT
-  duplicated inside each brand config (that invites drift).
+  is brand-specific. Spacing, radii, type scale, z-index are the shared design
+  system — keep them in **brand-agnostic** system tokens, NOT duplicated inside the
+  brand config (that invites drift, and keeps the door open for a second brand).
 - **Neutral naming.** Rename the scaffold's `primaryHover` → `primaryActive`
   ("hover" is web-only; web maps it to hover, RN to pressed).
 - **Mode-aware shape.** Wrap a brand's tokens in `{ light, dark? }` so dark mode
@@ -114,25 +115,20 @@ them.**
      ```
 
      `@theme inline` makes utilities like `bg-brand` reference the runtime
-     variable, so switching `BRAND` (or, later, dark mode) re-points every
-     utility with no recompile — the same indirection shadcn uses.
+     variable, so a theme change (e.g. dark mode) re-points every utility with no
+     recompile — the same indirection shadcn uses.
 - **`packages/brand` must NOT depend on Tailwind** or any framework. It stays
   pure values; the Tailwind mapping lives in the Electron app only.
 - **RN styling stays unchosen.** Do not add NativeWind/Tamagui now.
 
 ## Turborepo specifics — don't miss these
-- `BRAND` changes build output, so it **must** be declared in `turbo.json` for
-  the relevant build task (task-level `env`, or `globalEnv`). If it isn't,
-  Turbo's cache can return a cached **Mikan** build for a **Momo** task. This is
-  the #1 silent bug here — verify it.
 - Confirm the app build depends on the brand package (`dependsOn: ["^build"]` or
   our equivalent) so changes propagate.
-- Add `dev:momo` / `build:momo` task variants consistent with our Turbo naming.
 
 ## Non-negotiable rules
 1. Nothing user-facing hardcodes the product name or a hex color. Identity from
    the brand config; color from tokens/utilities that resolve to brand vars.
-2. Brand is selected at **build time**, not a runtime flag.
+2. The brand is resolved **statically** — `@nimi/brand` exports Mikan directly.
 3. `identity.json` is the single source of truth for build-identity fields
    (productName, appId, icon) — both the TS config and electron-builder read it.
 4. Internal namespace (mneme/nimi/neeme) stays untouched. Brand lives only at
@@ -140,26 +136,21 @@ them.**
 
 ## Electron app wiring (do this fully)
 - `BrandProvider` wraps the renderer root; brand vars applied to `:root`.
-- Vite `define` exposes `BRAND` to the renderer (it's in the main process env,
-  not the renderer's) — without this the Momo theme silently won't flip.
 - Tailwind v4 set up and wired to the brand vars as above.
-- Build-time selection via `cross-env BRAND=…` in the app's scripts.
-- electron-builder reads brand identity from the shared `identity.json`.
-- Placeholder icons at `assets/<brand>/icon.png` (1024×1024) so packaging works.
+- `electron.vite.config.ts` and electron-builder read identity from the shared
+  `identity.json` (`identity.mikan`).
+- Icons at `assets/mikan/icon.png` (1024×1024) so packaging works.
 
 ## Process — propose before building
 Before writing everything, **propose**: (a) the shared package's name/location
-and its export map (neutral default vs `./web` entry), (b) how the Electron app
-selects `BRAND` end-to-end including the `turbo.json` env change, and (c) the
-Tailwind v4 setup plan (since it may not exist yet). Let me confirm it fits our
-conventions, THEN implement. Don't guess the structure and write it all at once.
+and its export map (neutral default vs `./web` entry), and (b) the Tailwind v4
+setup plan (since it may not exist yet). Let me confirm it fits our conventions,
+THEN implement. Don't guess the structure and write it all at once.
 
 ## Definition of done
-- `pnpm --filter <electron-app> dev` boots as Mikan; the Momo variant flips theme
-  - app name.
-- Electron app uses Tailwind v4, utilities resolve through `--brand-*` vars, and
-  switching brand re-points colors with no hardcoded hex in components.
+- `pnpm --filter <electron-app> dev` boots as Mikan.
+- Electron app uses Tailwind v4 and utilities resolve through `--brand-*` vars,
+  with no hardcoded hex in components.
 - RN app still builds and imports the shared package without pulling in any DOM
   or Tailwind code.
-- `turbo.json` declares `BRAND`; switching brands doesn't serve a stale cache.
 - The color-token format test/lint rule passes and would fail on a `var()` value.

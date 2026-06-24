@@ -6,6 +6,8 @@ export default function TabsLayout(): ReactElement {
     <Tabs screenOptions={{ tabBarActiveTintColor: '#18181b' }}>
       <Tabs.Screen name="feed" options={{ title: 'Feed' }} />
       <Tabs.Screen name="capture" options={{ title: 'Capture' }} />
+      {/* Dev-only spike screen — keep off the tab bar. */}
+      <Tabs.Screen name="_spike-db" options={{ href: null }} />
     </Tabs>
   )
 }

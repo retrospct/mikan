@@ -18,26 +18,26 @@ export default function RootLayout(): ReactElement | null {
     restoreToken()
       .then(async (accessToken) => {
         setToken(accessToken)
-        // Spike: if we have an access token, exchange it with the broker for
-        // a per-user Turso DB token and open the local embedded-replica DB.
-        // This mirrors exactly what the desktop worker does at startup.
+        // Exchange the Logto access token with the token broker for a per-user
+        // Turso DB credential, then open the local embedded-replica. This mirrors
+        // what the desktop worker does at startup (ADR 0008 + 0009).
         if (accessToken) {
           try {
             const res = await fetch(`${BROKER_URL}/token`, {
               method: 'POST',
               headers: { Authorization: `Bearer ${accessToken}` },
             })
-            if (res.ok) {
-              const { syncUrl, authToken } = await res.json() as {
-                syncUrl: string
-                authToken: string
-                expiresAt: number
-              }
-              await openDb({ syncUrl, authToken })
+            if (!res.ok) throw new Error(`Broker ${res.status}`)
+            const { syncUrl, authToken } = await res.json() as {
+              syncUrl: string
+              authToken: string
+              expiresAt: number
             }
+            await openDb({ syncUrl, authToken })
           } catch (e) {
-            // Non-fatal for spike: app still works with API-only fallback
-            console.warn('[db-spike] broker error:', e)
+            // Non-fatal: screens degrade to "Log in" empty state.
+            // Covers: broker env unset, network offline at launch, first-ever login.
+            console.warn('[nimi/db] broker or openDb failed:', e)
           }
         }
       })

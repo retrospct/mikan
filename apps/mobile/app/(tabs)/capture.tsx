@@ -9,11 +9,13 @@ import {
   Platform,
   Alert
 } from 'react-native'
-import { addNote, unwrap } from '@nimi/contract/api'
+import { getDb } from '../../src/db'
 
 /**
- * Capture screen — quick text note → POST /notes (neeme FastAPI).
- * Companion scope: text only; file capture requires IPC to the desktop worker.
+ * Capture screen — quick text note → local Turso embedded-replica → db.sync().
+ *
+ * Writes to the local DB first (works offline), then syncs so the desktop picks
+ * it up. Same items table as the desktop schema; no shape impedance.
  */
 export default function CaptureScreen(): ReactElement {
   const [text, setText] = useState('')
@@ -24,11 +26,18 @@ export default function CaptureScreen(): ReactElement {
     if (!trimmed) return
     setSaving(true)
     try {
-      await unwrap(addNote({ body: { text: trimmed } }))
+      const db = getDb()
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      await db.execute(
+        'INSERT INTO items (id, source_name, content_type, text, status) VALUES (?, ?, ?, ?, ?)',
+        [id, 'mobile', 'text', trimmed, 'captured']
+      )
+      await db.sync()
       setText('')
-      Alert.alert('Saved', 'Note captured.')
+      Alert.alert('Saved', 'Note captured and synced.')
     } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'Failed to save')
+      const msg = e instanceof Error ? e.message : String(e)
+      Alert.alert('Error', msg.includes('not open') ? 'Log in first to capture notes.' : msg)
     } finally {
       setSaving(false)
     }

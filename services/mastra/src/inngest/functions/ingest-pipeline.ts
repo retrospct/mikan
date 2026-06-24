@@ -1,7 +1,7 @@
 import { anthropic } from '@inngest/ai/models'
 import { z } from 'zod'
 import { inngest } from '../client.js'
-import { PIPELINE_MODEL_SLUG } from '../../model.js'
+import { PIPELINE_ANTHROPIC_MODEL } from '../../model.js'
 
 // Event payload schema. In Inngest v4 the payload is typed per-trigger via a
 // Standard Schema, replacing the old client-level EventSchemas.
@@ -55,20 +55,21 @@ export const ingestPipeline = inngest.createFunction(
     // step.ai.infer() offloads the LLM call to Inngest's infrastructure,
     // pausing this function so we don't pay for idle serverless time.
     // step.ai.infer uses Inngest's OWN AI adapter infra (@inngest/ai), which
-    // speaks the provider's native API — it does NOT go through the AI SDK
-    // gateway provider the way the Mastra agent does. To still route through
-    // the Vercel AI Gateway we point the adapter's baseUrl at the gateway's
-    // Anthropic-compatible endpoint and reuse the same token; if that token
-    // is unset it falls back to ANTHROPIC_API_KEY (the adapter default).
+    // speaks the provider's native (Anthropic Messages) API — it does NOT go
+    // through the AI SDK gateway provider the way the Mastra agent does.
+    //
+    // Credential selection: if AI_GATEWAY_BASE_URL is set we route the adapter
+    // at the gateway's Anthropic-compatible endpoint with the gateway key;
+    // otherwise we hit api.anthropic.com directly with ANTHROPIC_API_KEY. (We
+    // must NOT send the vck_ gateway key to api.anthropic.com — it would 401.)
+    const usingGateway = !!process.env.AI_GATEWAY_BASE_URL
     const brief = await step.ai.infer('generate-brief', {
       model: anthropic({
-        // The Inngest adapter expects an Anthropic-native model id, not the
-        // gateway's provider-prefixed slug; strip the `anthropic/` prefix.
-        // TODO(verify slug): confirm the gateway accepts this Anthropic model id.
-        model: PIPELINE_MODEL_SLUG.replace(/^anthropic\//, ''),
-        apiKey: process.env.AI_GATEWAY_API_KEY ?? process.env.ANTHROPIC_API_KEY,
-        // TODO(verify baseUrl): point at the Vercel AI Gateway's Anthropic
-        // endpoint when AI_GATEWAY_API_KEY is set; default Anthropic API otherwise.
+        // Anthropic-native model id (the adapter calls api.anthropic.com).
+        model: PIPELINE_ANTHROPIC_MODEL,
+        apiKey: usingGateway
+          ? process.env.AI_GATEWAY_API_KEY
+          : process.env.ANTHROPIC_API_KEY,
         baseUrl: process.env.AI_GATEWAY_BASE_URL,
         defaultParameters: { max_tokens: 200 },
       }),

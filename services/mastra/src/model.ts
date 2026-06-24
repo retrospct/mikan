@@ -11,10 +11,16 @@ const gateway = createGateway({
   apiKey: process.env.AI_GATEWAY_API_KEY,
 })
 
-// Gateway model slugs are provider-prefixed (`creator/model-name`).
-// TODO(verify slug): confirm exact current Anthropic slugs on the gateway.
-export const AGENT_MODEL_SLUG = 'anthropic/claude-sonnet-4.5'
-export const PIPELINE_MODEL_SLUG = 'anthropic/claude-haiku-4.5'
+// Gateway model slugs are provider-prefixed and dotted (`creator/model-name`).
+// Verified against the Vercel AI Gateway model catalog (ai-gateway.vercel.sh).
+// Used by the agent, which goes through the AI SDK gateway provider.
+export const AGENT_MODEL_SLUG = 'anthropic/claude-sonnet-4.6'
+
+// The Inngest pipeline's LLM step uses @inngest/ai's Anthropic adapter, which
+// calls the Anthropic Messages API directly — that API needs the *native*
+// model id (hyphen + date), NOT the gateway's dotted slug. Mirrors the desktop
+// pipeline's Haiku 4.5.
+export const PIPELINE_ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001'
 
 // The Nimi agent's LanguageModel, routed through the gateway.
 export const agentModel = gateway(AGENT_MODEL_SLUG)

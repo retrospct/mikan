@@ -12,12 +12,16 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@expo-google-fonts/hanken-grotesk": "^0.4.3",
+    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@expo/metro-runtime": "~56.0.15",
+    "@expo/vector-icons": "^15.1.1",
     "@nimi/brand": "workspace:*",
     "@nimi/contract": "workspace:*",
     "expo": "^56.0.12",
     "expo-auth-session": "^56.0.14",
     "expo-constants": "^56.0.18",
+    "expo-font": "~56.0.7",
     "expo-linking": "^56.0.14",
     "expo-router": "^56.2.11",
     "expo-secure-store": "^56.0.4",

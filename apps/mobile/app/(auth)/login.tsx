@@ -1,11 +1,13 @@
 import { brand } from '@nimi/brand'
 import { useState, type ReactElement } from 'react'
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
 import { AuthRequest, makeRedirectUri, ResponseType } from 'expo-auth-session'
 import Constants from 'expo-constants'
 import { persistToken } from '../../src/utils/auth'
+import { useTheme } from '../../src/theme/useTheme'
+import { Button, Label } from '../../src/components'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -20,6 +22,7 @@ const LOGTO_APP_ID = process.env.EXPO_PUBLIC_LOGTO_APP_ID ?? ''
  */
 export default function LoginScreen(): ReactElement {
   const router = useRouter()
+  const t = useTheme()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -83,23 +86,27 @@ export default function LoginScreen(): ReactElement {
   const configured = !!(LOGTO_ENDPOINT && LOGTO_APP_ID)
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{brand.productName}</Text>
-      <Text style={styles.subtitle}>{brand.tagline}</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Pressable
-        style={[styles.button, (!configured || loading) && styles.buttonDisabled]}
+    <View style={[styles.container, { backgroundColor: t.color.bg }]}>
+      <Text style={[styles.title, { fontFamily: t.fonts.sans.bold, color: t.color.text }]}>
+        {brand.productName}
+      </Text>
+      <Text style={[styles.subtitle, { fontFamily: t.fonts.sans.regular, color: t.color.textMuted }]}>
+        {brand.tagline}
+      </Text>
+      {error ? (
+        <Text style={[styles.error, { fontFamily: t.fonts.sans.regular, color: t.color.danger }]}>
+          {error}
+        </Text>
+      ) : null}
+      <Button
+        label={configured ? 'Sign in' : 'Auth not configured'}
         onPress={handleLogin}
-        disabled={!configured || loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>{configured ? 'Sign in' : 'Auth not configured'}</Text>
-        )}
-      </Pressable>
+        loading={loading}
+        disabled={!configured}
+        style={styles.button}
+      />
       {Constants.expoConfig?.version ? (
-        <Text style={styles.version}>v{Constants.expoConfig.version}</Text>
+        <Label style={styles.version}>v{Constants.expoConfig.version}</Label>
       ) : null}
     </View>
   )
@@ -107,18 +114,9 @@ export default function LoginScreen(): ReactElement {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
-  title: { fontSize: 36, fontWeight: '700', letterSpacing: -0.5 },
-  subtitle: { fontSize: 16, color: '#666', marginBottom: 8 },
-  error: { color: '#c0392b', fontSize: 14, textAlign: 'center' },
-  button: {
-    backgroundColor: '#18181b',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 10,
-    minWidth: 200,
-    alignItems: 'center'
-  },
-  buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  version: { position: 'absolute', bottom: 24, color: '#aaa', fontSize: 12 }
+  title: { fontSize: 36, letterSpacing: -0.5 },
+  subtitle: { fontSize: 16, marginBottom: 8 },
+  error: { fontSize: 14, textAlign: 'center' },
+  button: { minWidth: 200 },
+  version: { position: 'absolute', bottom: 24 }
 })

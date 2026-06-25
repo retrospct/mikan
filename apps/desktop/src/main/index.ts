@@ -307,6 +307,13 @@ app.whenReady().then(async () => {
   // the renderer receives status pushes and can show a "restart to update" affordance.
   if (app.isPackaged) {
     setupAutoUpdater()
+  } else {
+    // Dev-mode stubs so the renderer's update IPC calls don't throw
+    // "No handler registered" errors at startup.
+    const devStatus: UpdateStatus = { stage: 'idle', version: null, progress: null, error: null }
+    ipcMain.handle(IPC.updateGetStatus, () => devStatus)
+    ipcMain.handle(IPC.updateQuitAndInstall, () => {})
+    ipcMain.handle(IPC.updateCheckNow, () => {})
   }
 
   // Native app-menu "Check for Updates…" (macOS-standard, like Cursor/Slack).

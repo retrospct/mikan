@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/retrospct/nimi/compare/v1.3.0...v1.4.0) (2026-06-25)
+
+
+### Features
+
+* **mobile:** validate Phase 0 mobile RN + Turso + cloud-AI pipeline (V1–V6) ([#86](https://github.com/retrospct/nimi/issues/86)) ([00b72eb](https://github.com/retrospct/nimi/commit/00b72ebaec99c8680b9302e2bb66a60701532dc3))
+
 ## [1.3.0](https://github.com/retrospct/nimi/compare/v1.2.0...v1.3.0) (2026-06-23)
 
 

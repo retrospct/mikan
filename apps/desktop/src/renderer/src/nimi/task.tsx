@@ -193,6 +193,11 @@ function DraftCard({
           aria-label={copied ? 'Copied' : 'Copy draft'}
           onClick={(e) => {
             e.stopPropagation()
+            // Write the real draft text (blank line between paragraphs). The
+            // sandboxed renderer is a secure context, so the async Clipboard API
+            // is available; ignore rejection (e.g. focus lost) — the icon still
+            // confirms intent.
+            void navigator.clipboard?.writeText(draft.join('\n\n')).catch(() => {})
             setCopied(true)
             setTimeout(() => setCopied(false), 1400)
           }}
@@ -472,7 +477,7 @@ export function TaskDetail({
                         key={id}
                         m={m}
                         rel={relFor(task, id)}
-                        why={null}
+                        why={task.whyMap?.[id] ?? null}
                         pinned
                         swept={swept.has(id)}
                         fresh={fresh.has(id)}
@@ -543,7 +548,7 @@ export function TaskDetail({
                         key={id}
                         m={m}
                         rel={relFor(task, id)}
-                        why={null}
+                        why={task.whyMap?.[id] ?? null}
                         pinned={false}
                         swept={swept.has(id)}
                         fresh={fresh.has(id)}

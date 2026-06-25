@@ -52,6 +52,7 @@ export function FeedView({
   captureStyle,
   onCaptured,
   onAddTodo,
+  onAdd,
   onRecordingChange,
   nimiState,
   badge,
@@ -62,6 +63,8 @@ export function FeedView({
   captureStyle: string
   onCaptured?: () => void
   onAddTodo?: AddTodo
+  /** Open the real Add composer (the FAB sheet) — used by the Note/Link quick-tools. */
+  onAdd: () => void
   onRecordingChange?: (v: boolean) => void
   nimiState: NimiMarkState
   badge: number
@@ -251,7 +254,10 @@ export function FeedView({
             <button
               key={k.kind}
               className="feed-tool"
-              onClick={() => (k.kind === 'voice' ? setRecording(true) : feedOne(k.kind))}
+              // Note/Link have no inline input to capture — open the real Add
+              // composer (which calls captureText/captureFile). Voice opens the
+              // recorder (real mic → ASR wiring is still pending — see ROADMAP W4).
+              onClick={() => (k.kind === 'voice' ? setRecording(true) : onAdd())}
             >
               <NIcon name={k.ico} size={16} /> {k.label}
             </button>

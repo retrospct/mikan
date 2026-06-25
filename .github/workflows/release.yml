@@ -1,33 +1,22 @@
 name: Release (build & publish)
 
-# Reusable build + publish for ONE brand at a build-time-selected BRAND. It no
-# longer triggers on merges to main — releases are cut by merging the
-# release-please "Release PR" (see release-please.yml), which calls this workflow
-# for Mikan. Momo (or a re-run) is available via manual workflow_dispatch.
+# Reusable build + publish for the desktop app (single brand: Mikan). It does NOT
+# trigger on merges to main — it's called by release-please.yml for the freshly cut
+# tag (and is available via manual workflow_dispatch for a re-run).
 #
 # The version is NOT computed here: release-please bumps it in package.json before
 # tagging, so the checked-out ref already carries the right version, which
-# electron-builder reads.
+# electron-builder reads. Brand is fixed to Mikan: electron-vite and
+# electron-builder.config.cjs both default BRAND to `mikan`, so no env is needed.
 on:
   workflow_call:
     inputs:
-      brand:
-        description: Brand to build (mikan | momo)
-        type: string
-        required: true
       ref:
         description: Git ref (tag) to build
         type: string
         required: true
   workflow_dispatch:
     inputs:
-      brand:
-        description: Brand to build
-        type: choice
-        options:
-          - mikan
-          - momo
-        default: mikan
       ref:
         description: Git ref (tag/branch) to build — defaults to the selected branch
         type: string
@@ -35,14 +24,11 @@ on:
 
 jobs:
   build-mac:
-    name: Build & publish macOS (${{ inputs.brand }})
+    name: Build & publish macOS (Mikan)
     runs-on: macos-latest
     permissions:
       contents: write
     env:
-      # Build-time brand selection: baked into the JS by electron-vite and read by
-      # electron-builder.config.cjs for appId/productName/scheme/publish.
-      BRAND: ${{ inputs.brand }}
       NEEME_EMBEDDER: hash
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Code-signing (Developer ID Application cert as base64-encoded .p12)
@@ -71,7 +57,7 @@ jobs:
       MAIN_VITE_GOOGLE_CLIENT_SECRET: ${{ secrets.MAIN_VITE_GOOGLE_CLIENT_SECRET }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # The tag release-please created (workflow_call) or a manual ref. Empty
           # on a bare dispatch → checks out the workflow's default branch.
@@ -116,7 +102,7 @@ jobs:
   #     BRAND: ${{ inputs.brand }}
   #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   #   steps:
-  #     - uses: actions/checkout@v6
+  #     - uses: actions/checkout@v7
   #       with:
   #         ref: ${{ inputs.ref }}
   #     - uses: pnpm/action-setup@v6

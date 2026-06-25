@@ -5,12 +5,5 @@
     "scheme": "mikan",
     "icon": "assets/mikan/icon.png",
     "publish": { "owner": "retrospct", "repo": "nimi" }
-  },
-  "momo": {
-    "productName": "Momo",
-    "appId": "dev.retro.momo",
-    "scheme": "momo",
-    "icon": "assets/momo/icon.png",
-    "publish": { "owner": "retrospct", "repo": "momo" }
   }
 }

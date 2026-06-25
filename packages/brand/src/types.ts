@@ -2,9 +2,10 @@
 // must never reference React, React Native, the DOM, or Tailwind. Each platform
 // writes its own adapter (src/web, src/native) that consumes these values.
 
-// The set of brands this codebase can build. Add an id here, add a config under
-// brands/, register it in index.ts, and add its entry to identity.json.
-export type BrandId = 'mikan' | 'momo'
+// The brand this codebase builds. Modeled as a (currently single-member) union so a
+// second brand can be reintroduced by adding an id here, a config under brands/,
+// registering it in index.ts, and adding its entry to identity.json.
+export type BrandId = 'mikan'
 
 // A single colour, carried in BOTH representations so one token works everywhere:
 //   - `srgb`  literal #hex or rgba() — the cross-platform fallback. React Native

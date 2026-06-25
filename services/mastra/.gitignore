@@ -1,0 +1,4 @@
+node_modules
+.env.local
+.mastra/
+dist/

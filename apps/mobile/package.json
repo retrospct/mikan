@@ -6,25 +6,29 @@
   "scripts": {
     "start": "expo start",
     "dev": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "build": "expo export",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@nimi/brand": "workspace:*",
     "@nimi/contract": "workspace:*",
-    "expo": "^56.0.11",
+    "@noble/ciphers": "^2.2.0",
+    "@tursodatabase/sync-react-native": "^0.6.1",
+    "expo": "^56.0.12",
     "expo-auth-session": "^56.0.14",
     "expo-constants": "^56.0.18",
+    "expo-crypto": "~56.0.4",
+    "expo-dev-client": "^56.0.20",
     "expo-linking": "^56.0.14",
-    "expo-router": "^56.2.10",
+    "expo-router": "^56.2.11",
     "expo-secure-store": "^56.0.4",
     "expo-status-bar": "^56.0.4",
     "expo-web-browser": "^56.0.5",
-    "react": "^19.2.7",
-    "react-native": "^0.86.0",
-    "react-native-safe-area-context": "^5.4.0",
+    "react": "^19.2.3",
+    "react-native": "^0.85.3",
+    "react-native-safe-area-context": "^5.7.0",
     "react-native-screens": "^4.25.2",
     "react-native-web": "^0.21.2"
   },
@@ -32,6 +36,6 @@
     "@babel/core": "^7.24.0",
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
-    "typescript": "^5.8.3"
+    "typescript": "^6.0.3"
   }
 }

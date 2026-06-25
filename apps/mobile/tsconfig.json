@@ -3,13 +3,30 @@
   "compilerOptions": {
     "strict": true,
     "allowImportingTsExtensions": true,
-    "moduleSuffixes": [".native", ""],
-    "types": ["node"],
+    "moduleSuffixes": [
+      ".native",
+      ""
+    ],
+    "types": [
+      "node"
+    ],
     "paths": {
-      "@nimi/contract/*": ["../../packages/contract/src/*"],
-      "@nimi/brand": ["../../packages/brand/src/index.ts"],
-      "@nimi/brand/*": ["../../packages/brand/src/*"]
+      "@nimi/contract/*": [
+        "../../packages/contract/src/*"
+      ],
+      "@nimi/brand": [
+        "../../packages/brand/src/index.ts"
+      ],
+      "@nimi/brand/*": [
+        "../../packages/brand/src/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.d.ts",
+    "expo-env.d.ts",
+    ".expo/types/**/*.ts"
+  ]
 }

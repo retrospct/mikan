@@ -1,34 +1,37 @@
 ---
 todos:
   - id: scaffold
-    status: pending
+    status: done
     content: 'Scaffold apps/mobile as an Expo (managed, TypeScript) app; register it in pnpm-workspace.yaml (apps/* already globs it) and add the @nimi/contract workspace dep + base scripts to apps/mobile/package.json — named @nimi/mobile, following the @acme/expo convention in t3-turbo'
   - id: turbo-wire
-    status: pending
+    status: done
     content: 'Wire apps/mobile into turbo.json tasks (typecheck, lint, plus a non-cached persistent start/dev task); add EXPO_PUBLIC_* to globalEnv; add Metro cache output (node_modules/.cache/metro) to the build task outputs so Turborepo can cache and restore the Metro bundle cache — following t3-turbo''s turbo.json task structure'
   - id: metro-contract
-    status: pending
+    status: done
     content: 'Add apps/mobile/metro.config.js starting from getDefaultConfig(__dirname) — Expo SDK 52+ auto-detects the pnpm workspace root and sets watchFolders/nodeModulesPaths; add unstable_enablePackageExports: true explicitly (needed for @nimi/contract''s subpath exports map) and a FileStore cache at node_modules/.cache/metro (t3-turbo pattern). Verify a value import from @nimi/contract/api bundles cleanly.'
   - id: tsconfig-wire
-    status: pending
+    status: done
     content: 'Add apps/mobile/tsconfig.json extending expo/tsconfig.base (or a shared tooling/typescript base when that lands) with jsx: react-native, moduleSuffixes: [".native", ""], paths: { "@nimi/contract/*": ["../../packages/contract/src/*"] }, and allowImportingTsExtensions — following t3-turbo''s apps/expo/tsconfig.json pattern'
   - id: runtime-config
-    status: pending
+    status: done
     content: 'Resolve the import.meta.env coupling in packages/contract/src/api/runtime.ts by following t3-turbo''s app-layer config injection pattern: strip env var reads from runtime.ts, export a configureClient(opts) factory, and have apps/mobile/src/utils/api.ts call it with process.env.EXPO_PUBLIC_NEEME_API_URL (+ getBaseUrl() fallback for Expo Go LAN dev); apps/desktop continues to call it with import.meta.env.VITE_NEEME_API_URL'
   - id: data-seam
-    status: pending
-    content: 'Build the mobile data seam on @nimi/contract/api (neeme FastAPI) and a small projection mapping FastAPI shapes (ItemSummary/SearchHitView) to view-models (Memory/FedItem); document the hard dependency on a reachable remote surface (#10 sync / deployed FastAPI + user scoping)'
+    status: done
+    content: 'Data seam changed from FastAPI HTTP client to Turso embedded-replica (ADR 0009). apps/mobile/src/db/ opens a per-user embedded replica via the existing token broker (ADR 0008). feed.tsx reads from local DB; capture.tsx inserts locally then calls db.sync(). No FastAPI dependency, no projection layer needed — same items/todos schema as desktop.'
   - id: auth
-    status: pending
-    content: 'Add Logto Expo SDK PKCE login (system browser via expo-web-browser/expo-auth-session, expo-secure-store for tokens), feed the bearer into @nimi/contract/api/token-store, and register the mobile redirect scheme (nimi://) in app.json + Logto'
+    status: in_progress
+    content: 'SecureStore token persistence (src/utils/auth.ts) and broker integration done. login.tsx is a PKCE stub — needs real EXPO_PUBLIC_LOGTO_* env, a registered Logto Native app, and the nimi:// redirect scheme in app.json.'
   - id: screens
-    status: pending
-    content: 'Build the first-cut companion screens with expo-router (file-based routing, t3-turbo default): auth gate, Feed (read recent captures), and capture-a-note (text → POST /notes) — companion scope, not full parity'
+    status: done
+    content: 'Auth gate, Feed (Turso local read + pull-to-refresh sync), and Capture (local insert + sync) screens implemented with expo-router. Spike DB tab removed from the tab bar; spike file kept at app/(tabs)/_spike-db.tsx for manual testing.'
   - id: verify-docs
+    status: in_progress
+    content: 'CLAUDE.md updated. Needs: npx expo run:ios smoke test on a real device with broker + Logto env configured, pnpm typecheck green. (human) mark ROADMAP #14 as the mobile scaffold landed on this branch.'
+  - id: phase1-pipeline
     status: pending
-    content: 'Verify (pnpm -w typecheck/lint, expo start boots in Expo Go / dev client, login + feed + capture against a local neeme FastAPI), add apps/mobile/README.md + per-app CLAUDE.md/AGENTS.md, and (human) mark ROADMAP #14 in-progress'
+    content: 'Phase 1 (not yet started): fire memory/ingest Inngest event from capture.tsx; wire real libSQL queries in Mastra tools; per-user DB routing in Mastra route handler; add embed step to Inngest pipeline; deploy services/mastra to Vercel. See ADR 0009 Phase 1 checklist.'
 name: mobile RN + Expo companion
-overview: 'Start the mobile surface (#14) by scaffolding an Expo (managed, TypeScript) app at apps/mobile inside the existing pnpm-workspace + turborepo, modelled after the t3-turbo monorepo pattern (https://github.com/t3-oss/create-t3-turbo). Reuses @nimi/contract for view-model types and the plain-fetch neeme FastAPI HTTP client while leaving the Electron-only window.api IPC behind. The scaffold follows t3-turbo conventions: expo/metro-config getDefaultConfig auto-detects the pnpm workspace; the Metro cache is stored at node_modules/.cache/metro for Turborepo caching; the tsconfig extends expo/tsconfig.base with moduleSuffixes; the API base URL is injected at the app layer (apps/mobile/src/utils/api.ts) not in the shared package. The import.meta.env coupling in runtime.ts is fixed by exporting a configureClient() factory each app calls with its own env var. Auth is Logto PKCE via expo-web-browser. Navigation is expo-router. The data story has no local libSQL worker, so it depends on a reachable remote API/sync surface — explicitly tying mobile to ROADMAP #10 (sync / cloud offload) or a deployed neeme FastAPI — and the doc records the human decisions (managed vs dev-client, EAS, shared-package strategy, #10-vs-FastAPI).'
+overview: 'Mobile scaffold (Phase 0 complete) takes the Turso embedded-replica path chosen in ADR 0009, not the original FastAPI HTTP client plan. apps/mobile uses @tursodatabase/sync-react-native: the root layout exchanges the Logto access token with the existing token broker (ADR 0008) to get syncUrl + authToken, then opens a per-user local replica. feed.tsx reads from the local DB (offline-capable); capture.tsx inserts locally then calls db.sync() to push to the cloud. The desktop picks up mobile captures on its next sync. AI pipeline for mobile captures is Inngest (services/mastra) with step.ai.infer() — validated in Phase 0 spikes. Conversational AI is Mastra (claude-sonnet-4-6, two stub tools). The FastAPI HTTP client path in @nimi/contract/api is still wired but not used as the primary data path. Phase 1 wires the Inngest event, real Mastra tools, and Logto auth.'
 isProject: false
 ---
 # Mobile RN + Expo companion — ROADMAP #14

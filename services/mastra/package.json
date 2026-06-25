@@ -1,0 +1,28 @@
+{
+  "name": "@nimi/mastra",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "inngest:endpoint": "tsx scripts/inngest-dev-server.ts",
+    "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3939/api/inngest --no-discovery",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.86",
+    "@inngest/ai": "^0.1.7",
+    "@mastra/core": "^1.46.0",
+    "@mastra/deployer-vercel": "^1.2.1",
+    "ai": "^6.0.209",
+    "inngest": "^4.11.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "mastra": "^1.15.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.0"
+  }
+}

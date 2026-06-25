@@ -3,6 +3,9 @@ dist
 out
 .turbo
 
+# pnpm content-addressable store (local package cache; never commit)
+.pnpm-store/
+
 # Playwright E2E run artifacts (screenshots / error-context on failure)
 test-results/
 playwright-report/

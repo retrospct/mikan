@@ -1,11 +1,11 @@
-import { existsSync, readdirSync, renameSync, rmSync } from 'node:fs'
-import { join } from 'path'
 import { createClient, type Client } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
-import * as schema from './schema'
+import { existsSync, readdirSync, renameSync, rmSync } from 'node:fs'
+import { join } from 'path'
 import { userDataDir } from '../runtime/paths'
-import { getSyncConfig } from './sync-config'
 import { buildReplicaWithRecovery, migrateUserData } from './migrate'
+import * as schema from './schema'
+import { getSyncConfig } from './sync-config'
 
 /**
  * Local-first data layer on libSQL (a SQLite fork). For now this is a plain
@@ -110,6 +110,22 @@ export const client = buildClient()
 
 export const db = drizzle(client, { schema })
 
+/**
+ * Local-only SQLite client for the vector index (chunks table).
+ *
+ * Kept in a separate file (neeme-vec.db) and never given a syncUrl so it is
+ * completely invisible to the Turso primary and to mobile. This is required
+ * because @tursodatabase/sync-react-native's embedded SQLite cannot parse the
+ * `libsql_vector_idx(embedding)` syntax used by the desktop's vector index —
+ * if chunks were in the synced DB, every mobile db.pull() would crash.
+ *
+ * The vector index is a rebuildable, local-only artifact derived from items.text;
+ * it has no value on another device (mobile has no embedder) and can be
+ * regenerated from scratch by reindexAll() at any time.
+ */
+const vecPath = join(userDataDir(), 'neeme-vec.db')
+export const vecClient = createClient({ url: `file:${vecPath}` })
+
 /** Embedding dimension for the chunk vector column (matches the embedder seam). */
 export const EMBED_DIM = 384
 
@@ -174,14 +190,6 @@ export async function initDb(): Promise<void> {
       status TEXT NOT NULL,
       created_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
-    CREATE TABLE IF NOT EXISTS chunks (
-      item_id TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
-      chunk_idx INTEGER NOT NULL,
-      text TEXT NOT NULL,
-      embedding F32_BLOB(${EMBED_DIM}),
-      PRIMARY KEY (item_id, chunk_idx)
-    );
-    CREATE INDEX IF NOT EXISTS chunks_vec_idx ON chunks (libsql_vector_idx(embedding));
     CREATE TABLE IF NOT EXISTS todos (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -192,7 +200,6 @@ export async function initDb(): Promise<void> {
       created_at INTEGER NOT NULL DEFAULT (unixepoch()),
       completed_at INTEGER
     );
-    CREATE INDEX IF NOT EXISTS todos_day_idx ON todos (day, position);
     CREATE TABLE IF NOT EXISTS todo_context (
       todo_id TEXT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
       item_id TEXT NOT NULL,
@@ -231,18 +238,75 @@ export async function initDb(): Promise<void> {
     )
   `)
 
-  // Additive migrations: add columns that may not exist on older DBs.
-  // Each is guarded so it's a no-op if the column already exists.
+  // Additive migrations: add columns that may not exist on older DBs — or that the
+  // mobile bootstrap created the shared Turso primary's tables without. Each is
+  // guarded by PRAGMA table_info, so it's a no-op when the column already exists;
+  // when it's missing, the ALTER is proxied to the primary by the embedded replica.
   await addColumnIfMissing('todo_context', 'why', 'TEXT')
   // Connector provenance on items (additive, null for manual captures).
   await addColumnIfMissing('items', 'connector', 'TEXT')
   await addColumnIfMissing('items', 'external_id', 'TEXT')
   await addColumnIfMissing('items', 'uri', 'TEXT')
+  // stored_path + position: the mobile bootstrap schema omits these (mobile only
+  // captures text), so when mobile creates items/todos on the shared Turso primary
+  // first, desktop's CREATE TABLE IF NOT EXISTS is a no-op and the columns are
+  // missing. Backfill them before any query references them.
+  await addColumnIfMissing('items', 'stored_path', 'TEXT')
+  await addColumnIfMissing('todos', 'position', 'INTEGER NOT NULL DEFAULT 0')
+  // todos_day_idx references position, so it's created HERE (after the backfill
+  // guarantees the column exists) rather than in the executeMultiple block above —
+  // otherwise the primary rejects it with "no such column: position" when mobile
+  // bootstrapped todos without that column.
+  await client.execute(`CREATE INDEX IF NOT EXISTS todos_day_idx ON todos (day, position)`)
   // Unique index on external_id — SQLite allows multiple NULLs in a unique index
   // so existing manual items are unaffected.
   await client.execute(
     `CREATE UNIQUE INDEX IF NOT EXISTS items_external_id_idx ON items (external_id) WHERE external_id IS NOT NULL`
   )
+
+  // Evict chunks from the synced primary. Chunks are a local-only vector artifact
+  // that must never be on the primary: @tursodatabase/sync-react-native's SQLite
+  // cannot parse `libsql_vector_idx(embedding)`, so any mobile db.pull() that sees
+  // this schema crashes with "invalid expression in CREATE INDEX". Drop them here
+  // (goes to the Turso primary via the embedded replica client) so future pulls are
+  // clean. The vector data lives in neeme-vec.db via vecClient instead.
+  await client.execute(`DROP INDEX IF EXISTS chunks_vec_idx`).catch(() => {})
+  await client.execute(`DROP TABLE IF EXISTS chunks`).catch(() => {})
+
+  // The chunks table uses libSQL's F32_BLOB type and a vector index — both are
+  // local-only, rebuildable artifacts. They are NOT part of the synced schema:
+  //   - Turso remote primaries reject libsql_vector_idx on a non-F32_BLOB column
+  //     (the mobile bootstrap may have created chunks with plain BLOB type).
+  //   - We intentionally keep vector data off the cloud primary (local performance
+  //     artifact, never needed on another device).
+  // Execute separately so a failure here never blocks the core schema or sync init.
+  await createChunksLocal()
+}
+
+/**
+ * Create the chunks table and its vector index in the local-only neeme-vec.db.
+ *
+ * Uses vecClient (no syncUrl) so the schema never reaches the Turso primary or
+ * mobile. Non-fatal: a failure here degrades semantic search to full-scan but
+ * never blocks sync or the rest of startup.
+ */
+async function createChunksLocal(): Promise<void> {
+  try {
+    await vecClient.execute(`
+      CREATE TABLE IF NOT EXISTS chunks (
+        item_id TEXT NOT NULL,
+        chunk_idx INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        embedding F32_BLOB(${EMBED_DIM}),
+        PRIMARY KEY (item_id, chunk_idx)
+      )
+    `)
+    await vecClient.execute(
+      `CREATE INDEX IF NOT EXISTS chunks_vec_idx ON chunks (libsql_vector_idx(embedding))`
+    )
+  } catch (err) {
+    console.warn('[db] chunks vector schema unavailable (degraded search):', err)
+  }
 }
 
 /**

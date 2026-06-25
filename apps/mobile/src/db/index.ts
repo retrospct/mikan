@@ -1,0 +1,6 @@
+export { openDb, getDb, closeDb, getCurrentKey, setCurrentKey } from './client'
+export { CREATE_TABLES } from './schema'
+export type { DbClient } from './client'
+export { encrypt, decrypt, hasValidKey } from './crypto'
+export { getSyncKey, setSyncKey, clearSyncKey, getSyncCredentials, saveSyncCredentials, clearSyncCredentials } from './key-store'
+export { bootstrapDb, reopenDbIfNeeded } from './bootstrap'

@@ -321,9 +321,15 @@ export function TaskDetail({
     setPinned((s) => {
       const n = new Set(s)
       willPin ? n.add(id) : n.delete(id)
-      onUpdate && onUpdate(task.id, { pinned: [...n] })
       return n
     })
+    // Call onUpdate outside the state updater — updaters must be pure; side effects
+    // (including prop callbacks that setState on a parent) must not run inside them.
+    if (onUpdate) {
+      const next = new Set(pinned)
+      willPin ? next.add(id) : next.delete(id)
+      onUpdate(task.id, { pinned: [...next] })
+    }
     // Persist pins (the contract has no "un-pin", so unpinning stays local-only).
     if (willPin) {
       markFresh([id])

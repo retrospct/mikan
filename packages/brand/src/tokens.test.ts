@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { brands } from './index'
+import { brand } from './index'
 import type { BrandThemeSet, ColorToken, ColorTokens } from './types'
 
 // Enforce the platform seam: the shared brand layer must hold colour as primitive,
@@ -21,25 +21,21 @@ function colorEntries(set: BrandThemeSet, mode: (typeof MODES)[number]): [string
 }
 
 describe('brand colour tokens are platform-agnostic', () => {
-  for (const [brandId, config] of Object.entries(brands)) {
-    for (const mode of MODES) {
-      for (const [name, token] of colorEntries(config.theme, mode)) {
-        it(`${brandId}.${mode}.${name}.srgb is a literal hex/rgba value`, () => {
-          expect(token.srgb, `${brandId}/${mode}/${name}`).toMatch(SRGB)
-        })
+  for (const mode of MODES) {
+    for (const [name, token] of colorEntries(brand.theme, mode)) {
+      it(`${brand.id}.${mode}.${name}.srgb is a literal hex/rgba value`, () => {
+        expect(token.srgb, `${brand.id}/${mode}/${name}`).toMatch(SRGB)
+      })
 
-        if (token.p3 !== undefined) {
-          it(`${brandId}.${mode}.${name}.p3 is oklch()/color(display-p3)`, () => {
-            expect(token.p3, `${brandId}/${mode}/${name}`).toMatch(P3)
-          })
-        }
+      if (token.p3 !== undefined) {
+        it(`${brand.id}.${mode}.${name}.p3 is oklch()/color(display-p3)`, () => {
+          expect(token.p3, `${brand.id}/${mode}/${name}`).toMatch(P3)
+        })
       }
     }
   }
 
-  it('light mode defines every colour token for every brand', () => {
-    for (const config of Object.values(brands)) {
-      expect(Object.keys(config.theme.light.color).length).toBeGreaterThan(0)
-    }
+  it('light mode defines every colour token', () => {
+    expect(Object.keys(brand.theme.light.color).length).toBeGreaterThan(0)
   })
 })

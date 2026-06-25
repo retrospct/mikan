@@ -16,14 +16,9 @@ const brandIdentity = JSON.parse(
   readFileSync(resolve('../../packages/brand/src/identity.json'), 'utf-8')
 ) as Record<string, { productName: string }>
 
-// Brand is selected at BUILD time via the BRAND env var (default: mikan). Bake it
-// into every bundle as the `__BRAND__` global so the @nimi/brand resolver reads a
-// literal — the packaged app has no BRAND in its runtime env, and the sandboxed
-// renderer has no Node `process` at all. electron-builder reads process.env.BRAND
-// separately at packaging time (see electron-builder.config.cjs); keep them in sync.
-const BRAND = process.env.BRAND ?? 'mikan'
-const brandDefine = { __BRAND__: JSON.stringify(BRAND) }
-const PRODUCT_NAME = brandIdentity[BRAND].productName
+// Single brand: Mikan. (@nimi/brand resolves the active brand statically now, so
+// there's no `__BRAND__` define to inject.)
+const PRODUCT_NAME = brandIdentity.mikan.productName
 
 // Stamp the brand's product name into index.html's <title> at build, so the very
 // first paint (before React/BrandProvider mounts) shows the right name — not a
@@ -86,7 +81,6 @@ const PRELOAD_BUNDLE = [CONTRACT, '@electron-toolkit/preload']
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin({ exclude: [CONTRACT, BRAND_PKG] })],
-    define: brandDefine,
     build: {
       rollupOptions: {
         // Two entries: the main process + the data utilityProcess (forked at
@@ -106,11 +100,7 @@ export default defineConfig({
       // Baked in at build time so the renderer can display the installed version
       // without an IPC round-trip. CI stamps package.json before building, so
       // this always matches the version shown in the GitHub Release.
-      __APP_VERSION__: JSON.stringify(APP_VERSION),
-      // The active brand, inlined so @nimi/brand resolves it in the sandboxed
-      // renderer (which has no Node process). Without this the brand theme + name
-      // silently won't flip.
-      ...brandDefine
+      __APP_VERSION__: JSON.stringify(APP_VERSION)
     },
     resolve: {
       alias: {

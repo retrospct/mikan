@@ -7,6 +7,7 @@ import { join } from 'path'
 import * as auth from './auth/logto'
 import * as googleAuth from './connectors/google-auth'
 import { installApplicationMenu } from './menu'
+import * as secrets from './secrets/store'
 import { clearSyncToken, restoreCachedToken } from './sync/broker'
 import {
   getRecoveryKey,
@@ -95,6 +96,11 @@ function assertConnectorId(value: unknown): asserts value is ConnectorId {
 app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+
+  // Load all at-rest secrets from the single sealed vault FIRST, in one Keychain
+  // decrypt. Every downstream init (auth, broker, sync key, connectors) then reads
+  // its slice from memory — no further Keychain touches at boot. See secrets/store.ts.
+  await secrets.loadAll()
 
   // --- Security: Content-Security-Policy as a response header (defense-in-depth) ---
   // The renderer's index.html carries the same policy in a <meta> tag, but a

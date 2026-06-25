@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, type ReactElement } from 'react'
+import { useState, useCallback, useEffect, useRef, type ReactElement } from 'react'
 import {
   View,
   Text,
@@ -7,8 +7,10 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal
 } from 'react-native'
+import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera'
 import { getSyncKey, setSyncKey, clearSyncKey } from '../../src/db/key-store'
 import { setCurrentKey } from '../../src/db/client'
 
@@ -26,6 +28,11 @@ export default function SettingsScreen(): ReactElement {
   const [storedKey, setStoredKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(true)
+  const [scanning, setScanning] = useState(false)
+  const [permission, requestPermission] = useCameraPermissions()
+  // CameraView fires onBarcodeScanned continuously; this latch makes the first
+  // valid frame win and ignores the rest until the scanner is reopened.
+  const scanHandled = useRef(false)
 
   const refresh = useCallback(async () => {
     setRefreshing(true)
@@ -39,9 +46,11 @@ export default function SettingsScreen(): ReactElement {
     void refresh()
   }, [refresh])
 
-  async function handleSave(): Promise<void> {
-    const trimmed = keyInput.trim()
-    if (!trimmed) return
+  // Persist + inject a key. Shared by the paste flow and the QR scanner.
+  // Returns true on success so the scanner can decide whether to close.
+  async function saveKey(value: string): Promise<boolean> {
+    const trimmed = value.trim()
+    if (!trimmed) return false
     setLoading(true)
     try {
       await setSyncKey(trimmed)
@@ -49,11 +58,39 @@ export default function SettingsScreen(): ReactElement {
       setKeyInput('')
       await refresh()
       Alert.alert('Saved', 'Recovery key saved. Captures will now be encrypted.')
+      return true
     } catch (e) {
       Alert.alert('Invalid key', e instanceof Error ? e.message : String(e))
+      return false
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleSave(): Promise<void> {
+    await saveKey(keyInput)
+  }
+
+  async function openScanner(): Promise<void> {
+    if (!permission?.granted) {
+      const res = await requestPermission()
+      if (!res.granted) {
+        Alert.alert(
+          'Camera access needed',
+          'Allow camera access to scan the recovery key QR from your desktop. You can still paste the key manually.'
+        )
+        return
+      }
+    }
+    scanHandled.current = false
+    setScanning(true)
+  }
+
+  function handleBarcode(result: BarcodeScanningResult): void {
+    if (scanHandled.current) return
+    scanHandled.current = true
+    setScanning(false)
+    void saveKey(result.data)
   }
 
   async function handleClear(): Promise<void> {
@@ -81,10 +118,10 @@ export default function SettingsScreen(): ReactElement {
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <Text style={styles.heading}>Cloud sync key</Text>
       <Text style={styles.body}>
-        To sync securely across devices, both desktop and mobile must share the
-        same AES-256-GCM content encryption key. Reveal it on desktop via{' '}
-        <Text style={styles.mono}>Settings → Cloud sync → Show recovery key</Text>,
-        then paste the 64-character hex string below.
+        To sync securely across devices, both desktop and mobile must share the same AES-256-GCM
+        content encryption key. On desktop, open{' '}
+        <Text style={styles.mono}>Settings → Cloud sync → Reveal recovery key</Text>. Scan the QR
+        with the camera below, or paste the 64-character hex string manually.
       </Text>
 
       <View style={styles.statusRow}>
@@ -100,6 +137,20 @@ export default function SettingsScreen(): ReactElement {
         </Text>
       )}
 
+      <Pressable
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={openScanner}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>Scan QR from desktop</Text>
+      </Pressable>
+
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>or paste manually</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
       <Text style={styles.inputLabel}>Paste recovery key (64 hex chars)</Text>
       <TextInput
         style={styles.input}
@@ -114,14 +165,19 @@ export default function SettingsScreen(): ReactElement {
       />
 
       <Pressable
-        style={[styles.button, (!keyInput.trim() || loading) && styles.buttonDisabled]}
+        style={[
+          styles.button,
+          styles.buttonSecondary,
+          (!keyInput.trim() || loading) && styles.buttonDisabled
+        ]}
         onPress={handleSave}
         disabled={!keyInput.trim() || loading}
       >
-        {loading
-          ? <ActivityIndicator color="#fff" />
-          : <Text style={styles.buttonText}>Save key</Text>
-        }
+        {loading ? (
+          <ActivityIndicator color="#18181b" />
+        ) : (
+          <Text style={styles.buttonSecondaryText}>Save key</Text>
+        )}
       </Pressable>
 
       {isKeySet && (
@@ -129,6 +185,24 @@ export default function SettingsScreen(): ReactElement {
           <Text style={styles.clearButtonText}>Remove key</Text>
         </Pressable>
       )}
+
+      <Modal visible={scanning} animationType="slide" onRequestClose={() => setScanning(false)}>
+        <View style={styles.scannerRoot}>
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+            onBarcodeScanned={handleBarcode}
+          />
+          <View style={styles.scannerOverlay} pointerEvents="box-none">
+            <View style={styles.scannerFrame} />
+            <Text style={styles.scannerHint}>Point the camera at the QR code on your desktop</Text>
+            <Pressable style={styles.scannerCancel} onPress={() => setScanning(false)}>
+              <Text style={styles.scannerCancelText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   )
 }
@@ -174,6 +248,43 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.4 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  buttonSecondary: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d1d5db'
+  },
+  buttonSecondaryText: { color: '#18181b', fontSize: 16, fontWeight: '600' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#e5e5e5' },
+  dividerText: { fontSize: 12, color: '#999' },
+  scannerRoot: { flex: 1, backgroundColor: '#000' },
+  scannerOverlay: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24
+  },
+  scannerFrame: {
+    width: 240,
+    height: 240,
+    borderWidth: 3,
+    borderColor: '#fff',
+    borderRadius: 16,
+    backgroundColor: 'transparent'
+  },
+  scannerHint: {
+    color: '#fff',
+    fontSize: 15,
+    textAlign: 'center',
+    paddingHorizontal: 40
+  },
+  scannerCancel: {
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.15)'
+  },
+  scannerCancelText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   clearButton: {
     paddingVertical: 12,
     alignItems: 'center',

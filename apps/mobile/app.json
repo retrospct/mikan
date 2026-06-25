@@ -17,7 +17,16 @@
       },
       "package": "cool.jlee.nimi"
     },
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Nimi uses the camera to scan the sync recovery key QR shown on your desktop."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }

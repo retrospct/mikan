@@ -10,6 +10,7 @@ export function PlanRitual({
   cap,
   fresh,
   backlog,
+  userName,
   onClose,
   onApply
 }: {
@@ -17,6 +18,8 @@ export function PlanRitual({
   cap: number
   fresh: boolean
   backlog: BacklogItem[]
+  /** Signed-in display name, or null in a local/unconfigured build. */
+  userName: string | null
   onClose: () => void
   // hand up the kept task ids + chosen backlog ids; NimiApp drives plan()+schedule()
   onApply: (keep: string[], add: string[]) => void
@@ -54,7 +57,11 @@ export function PlanRitual({
         <div className="plan-intro">
           <NimiMark state="idle" size={56} />
           <div className="plan-intro-h">
-            {fresh ? 'Good morning, Jordan' : 'A clean slate for today'}
+            {fresh
+              ? userName
+                ? `Good morning, ${userName}`
+                : 'Good morning'
+              : 'A clean slate for today'}
           </div>
           <div className="plan-intro-s">
             {fresh

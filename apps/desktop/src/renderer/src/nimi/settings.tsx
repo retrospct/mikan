@@ -9,6 +9,7 @@
 //   - Connections: the Gmail + Google Calendar connectors (self-contained).
 //   - Updates: current version + check / restart-to-update.
 import { useBrand } from '@nimi/brand/web'
+import { QRCodeSVG } from 'qrcode.react'
 import { useState, type JSX } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useSync, useSyncSettings } from '../hooks/useSync'
@@ -49,6 +50,7 @@ function SyncSection(): JSX.Element {
   const { settings, busy, setEnabled, importKey, revealKey } = useSyncSettings()
 
   const [revealed, setRevealed] = useState<string | null>(null)
+  const [showQr, setShowQr] = useState(false)
   const [copied, setCopied] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [importVal, setImportVal] = useState('')
@@ -73,6 +75,7 @@ function SyncSection(): JSX.Element {
   const onReveal = async (): Promise<void> => {
     if (revealed) {
       setRevealed(null)
+      setShowQr(false)
       return
     }
     setRevealed(await revealKey())
@@ -137,13 +140,29 @@ function SyncSection(): JSX.Element {
             notes — keep it safe, and never share it.
           </div>
           {revealed ? (
-            <div className="settings-key-reveal">
-              <code className="settings-key-code">{revealed}</code>
-              <button className="settings-btn" onClick={() => void onCopy()}>
-                <NIcon name={copied ? 'check' : 'copy'} size={13} />
-                {copied ? 'Copied' : 'Copy'}
+            <>
+              <div className="settings-key-reveal">
+                <code className="settings-key-code">{revealed}</code>
+                <button className="settings-btn" onClick={() => void onCopy()}>
+                  <NIcon name={copied ? 'check' : 'copy'} size={13} />
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              <button
+                className="settings-btn settings-btn-quiet"
+                onClick={() => setShowQr((v) => !v)}
+              >
+                {showQr ? 'Hide QR code' : 'Show QR code'}
               </button>
-            </div>
+              {showQr && (
+                <div className="settings-key-qr">
+                  <QRCodeSVG value={revealed} size={180} marginSize={2} />
+                  <div className="settings-key-s">
+                    On mobile, open Settings and scan this with “Scan QR from desktop”.
+                  </div>
+                </div>
+              )}
+            </>
           ) : null}
           <button className="settings-btn settings-btn-quiet" onClick={() => void onReveal()}>
             {revealed ? 'Hide recovery key' : 'Reveal recovery key'}

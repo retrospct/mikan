@@ -78,6 +78,6 @@ in `app/_layout.tsx`. This is the t3-turbo app-layer config injection pattern.
 
 - Real Logto auth: `login.tsx` is a PKCE stub; needs `EXPO_PUBLIC_LOGTO_*` env + registered app
 - Background sync: no push / periodic pull; user must pull-to-refresh
-- At-rest encryption: broker doesn't return `encryptionKey` yet; `openDb` accepts it but won't receive it
+- At-rest encryption: broker doesn't return `encryptionKey` yet; `openDb` accepts it but won't receive it. The shared content key is moved from desktop manually — paste the 64-hex in Settings, or tap **Scan QR from desktop** (`expo-camera` `CameraView`) to scan the QR desktop renders under Settings → Cloud sync → Reveal recovery key. Both feed `setSyncKey`/`setCurrentKey`. `expo-camera` is a native module → needs a dev-client rebuild (`expo run:ios/android`), not Expo Go.
 - Schema drift guard: `src/db/schema.ts` is hand-maintained — see ADR 0009 for the plan to share it
 - Mastra/Inngest cloud pipeline: capture → `memory/ingest` event not fired yet from mobile

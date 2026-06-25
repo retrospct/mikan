@@ -4696,6 +4696,26 @@ html[data-density='compact'] .mem {
   font-size: 11px;
   word-break: break-all;
 }
+.settings-key-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+  padding: 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface-3);
+}
+.settings-key-qr svg {
+  /* QR modules read on any theme only against a solid light field. */
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+}
+.settings-key-qr .settings-key-s {
+  text-align: center;
+}
 .settings-input {
   width: 100%;
   padding: 9px 11px;

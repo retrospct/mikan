@@ -120,9 +120,12 @@ downgrading it.
   sealed in the OS keychain (`safeStorage`) at `neeme-sync-key.bin`
   (`sync-prefs.getOrCreateKey`).
 - **Reveal recovery key** (Settings) shows the hex + copy button so you can move
-  it to another device.
+  it to another device. A **Show QR code** toggle renders the same hex as a QR
+  (offline, `qrcode.react` SVG — CSP-safe) for the mobile camera to scan.
 - **Import recovery key** (Settings) accepts a 64-hex key from another device,
-  stores it, and restarts the worker (`importRecoveryKey`).
+  stores it, and restarts the worker (`importRecoveryKey`). On mobile, the same
+  key can be transferred by scanning the desktop QR (**Scan QR from desktop**,
+  `expo-camera`) instead of pasting — both paths converge on `setSyncKey`.
 - Encryption-at-rest is **sticky**: once a device has a key it's always injected
   into the worker, even when sync is OFF. See the footgun below for why.
 

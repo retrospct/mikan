@@ -22,10 +22,9 @@
  */
 import { brand } from '@nimi/brand'
 import type { AuthClaims, AuthState } from '@nimi/contract/ipc'
-import { app, safeStorage, shell } from 'electron'
+import { shell } from 'electron'
 import { createRemoteJWKSet } from 'jose'
-import { readFile, rm, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import * as secrets from '../secrets/store'
 import {
   buildAuthorizeUrl,
   claimsFromPayload,
@@ -71,36 +70,20 @@ let jwks: JwksResolver | null = null
 let session: Session | null = null
 let pending: { verifier: string; state: string; nonce: string } | null = null
 let listener: Listener | null = null
-// Last plaintext written to (or read from) the session file. Lets persist() skip a
-// redundant re-seal — a macOS Keychain touch — when nothing actually changed.
-let lastPersisted: string | null = null
 
 export function isConfigured(): boolean {
   return Boolean(endpoint && appId)
 }
 
-function sessionFile(): string {
-  return join(app.getPath('userData'), 'neeme-auth.bin')
-}
-
 async function persist(): Promise<void> {
   if (!session?.refreshToken) {
-    lastPersisted = null
-    await rm(sessionFile(), { force: true }).catch(() => {})
+    await secrets.set('auth', undefined)
     return
   }
   // Only the refresh token + display claims are persisted; access tokens stay in memory.
-  const plain = JSON.stringify({ refreshToken: session.refreshToken, claims: session.claims })
-  // Skip the re-seal when nothing changed — e.g. a boot refresh that returns the
-  // SAME refresh token. encryptString is a Keychain access; an unsigned dev build
-  // re-prompts for each one, so eliding the no-op write halves the boot prompts.
-  // In a signed release it just avoids a pointless disk write.
-  if (plain === lastPersisted) return
-  const blob = safeStorage.isEncryptionAvailable()
-    ? safeStorage.encryptString(plain)
-    : Buffer.from(plain, 'utf8') // fallback (e.g. Linux w/o keyring); still inside userData
-  await writeFile(sessionFile(), blob)
-  lastPersisted = plain
+  // The vault elides the re-seal (a Keychain touch) when nothing changed — e.g. a boot
+  // refresh that returns the SAME refresh token. See secrets/store.ts.
+  await secrets.set('auth', { refreshToken: session.refreshToken, claims: session.claims })
 }
 
 async function discover(): Promise<OidcConfig> {
@@ -281,30 +264,20 @@ function emit(): void {
 /** Restore a persisted session on startup (silent refresh). Safe when unconfigured. */
 export async function init(): Promise<void> {
   if (!isConfigured()) return
-  try {
-    const blob = await readFile(sessionFile())
-    const plain = safeStorage.isEncryptionAvailable()
-      ? safeStorage.decryptString(blob)
-      : blob.toString('utf8')
-    // Remember what's already sealed on disk so a boot refresh that returns the
-    // same refresh token + claims won't trigger a redundant re-seal (Keychain touch).
-    lastPersisted = plain
-    const parsed = JSON.parse(plain) as { refreshToken?: string; claims?: AuthClaims | null }
-    if (parsed.refreshToken) {
-      session = {
-        accessToken: '',
-        refreshToken: parsed.refreshToken,
-        expiresAt: 0,
-        claims: parsed.claims ?? null
-      }
-      // Silent refresh on boot. If it fails only because we're offline (or the
-      // server is briefly down), keep the restored session so the login gate
-      // still opens to the user's local data; only a real auth rejection drops it.
-      await refresh().catch((err) => {
-        if (isAuthRejection(err)) session = null
-      })
+  // Read from the in-memory vault (loaded once at startup — no Keychain touch here).
+  const stored = secrets.get('auth')
+  if (stored?.refreshToken) {
+    session = {
+      accessToken: '',
+      refreshToken: stored.refreshToken,
+      expiresAt: 0,
+      claims: stored.claims ?? null
     }
-  } catch {
-    /* no stored session */
+    // Silent refresh on boot. If it fails only because we're offline (or the
+    // server is briefly down), keep the restored session so the login gate
+    // still opens to the user's local data; only a real auth rejection drops it.
+    await refresh().catch((err) => {
+      if (isAuthRejection(err)) session = null
+    })
   }
 }

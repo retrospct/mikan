@@ -9,8 +9,8 @@
  *   - Redirect: Google Desktop-app OAuth clients reject custom schemes, so we use a
  *     **loopback redirect** (`http://127.0.0.1:<port>`). An ephemeral `http.createServer`
  *     runs only during the flow (listening for the `?code` callback), then closes.
- *   - Tokens: refresh token sealed in OS keychain via `safeStorage` (`neeme-connectors.bin`).
- *     Access tokens (short-lived) stay in memory only.
+ *   - Tokens: refresh token sealed in OS keychain via `safeStorage`, held in the shared
+ *     secrets vault (`../secrets/store`). Access tokens (short-lived) stay in memory only.
  *   - PKCE helpers reused from `../auth/oidc.ts` (provider-agnostic; see PR #35 notes).
  *
  * Env knobs (MAIN_VITE_* are baked by electron-vite; NEEME_* are runtime process.env):
@@ -22,10 +22,9 @@
  * Combined with `prompt=consent`, this reliably re-issues the refresh token even for
  * previously-authorized clients, which matters for developer iteration.
  */
-import { app, safeStorage, shell } from 'electron'
+import { shell } from 'electron'
 import { createServer } from 'node:http'
-import { readFile, writeFile, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import * as secrets from '../secrets/store'
 import { randomVerifier, pkceChallenge, randomState } from '../auth/oidc'
 import type { ConnectorId, ConnectorsState, ProviderState } from '@nimi/contract/ipc'
 
@@ -76,25 +75,14 @@ function scopes(): string {
 
 // ── Persistence (refresh tokens only) ──────────────────────────────────────
 
-function sessionsFile(): string {
-  return join(app.getPath('userData'), 'neeme-connectors.bin')
-}
-
 interface PersistedData {
   gmail?: { refreshToken: string }
   gcal?: { refreshToken: string }
 }
 
 async function loadPersisted(): Promise<PersistedData> {
-  try {
-    const blob = await readFile(sessionsFile())
-    const plain = safeStorage.isEncryptionAvailable()
-      ? safeStorage.decryptString(blob)
-      : blob.toString('utf8')
-    return JSON.parse(plain) as PersistedData
-  } catch {
-    return {}
-  }
+  // From the in-memory vault (loaded once at startup — no Keychain touch here).
+  return secrets.get('connectors') ?? {}
 }
 
 async function savePersisted(): Promise<void> {
@@ -103,15 +91,7 @@ async function savePersisted(): Promise<void> {
   const gcalSession = sessions.get('gcal')
   if (gmailSession) data.gmail = { refreshToken: gmailSession.refreshToken }
   if (gcalSession) data.gcal = { refreshToken: gcalSession.refreshToken }
-  if (!data.gmail && !data.gcal) {
-    await rm(sessionsFile(), { force: true }).catch(() => {})
-    return
-  }
-  const plain = JSON.stringify(data)
-  const blob = safeStorage.isEncryptionAvailable()
-    ? safeStorage.encryptString(plain)
-    : Buffer.from(plain, 'utf8')
-  await writeFile(sessionsFile(), blob)
+  await secrets.set('connectors', data.gmail || data.gcal ? data : undefined)
 }
 
 // ── Token exchange + refresh ────────────────────────────────────────────────
@@ -212,7 +192,10 @@ export async function getAccessToken(provider: ConnectorId): Promise<string | un
  * Resolves once tokens are stored (or rejects on error/timeout).
  */
 export async function connect(provider: ConnectorId): Promise<void> {
-  if (!isConfigured()) throw new Error('Google OAuth is not configured (set MAIN_VITE_GOOGLE_CLIENT_ID + _SECRET in .env)')
+  if (!isConfigured())
+    throw new Error(
+      'Google OAuth is not configured (set MAIN_VITE_GOOGLE_CLIENT_ID + _SECRET in .env)'
+    )
 
   return new Promise<void>((resolve, reject) => {
     // Spin up an ephemeral loopback server on a random OS-assigned port.
@@ -253,7 +236,9 @@ export async function connect(provider: ConnectorId): Promise<void> {
       exchangeCode(code, redirectUri, verifier)
         .then((t) => {
           if (!t.refresh_token) {
-            throw new Error('Google did not return a refresh_token — ensure access_type=offline and prompt=consent')
+            throw new Error(
+              'Google did not return a refresh_token — ensure access_type=offline and prompt=consent'
+            )
           }
           sessions.set(provider, {
             accessToken: t.access_token,
@@ -296,13 +281,16 @@ export async function connect(provider: ConnectorId): Promise<void> {
     })
 
     // Timeout after 5 minutes if the user doesn't complete the flow.
-    setTimeout(() => {
-      if (pending?.provider === provider) {
-        pending = null
-        server.close()
-        reject(new Error('Google OAuth flow timed out (5 min)'))
-      }
-    }, 5 * 60 * 1000)
+    setTimeout(
+      () => {
+        if (pending?.provider === provider) {
+          pending = null
+          server.close()
+          reject(new Error('Google OAuth flow timed out (5 min)'))
+        }
+      },
+      5 * 60 * 1000
+    )
   })
 }
 

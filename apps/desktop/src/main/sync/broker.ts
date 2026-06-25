@@ -18,18 +18,12 @@
  *     by electron-vite, so packaged releases (no shell env) still find the broker.
  *   e.g. https://sync.getmikan.com
  */
-import { app, safeStorage } from 'electron'
-import { readFile, writeFile, rm } from 'node:fs/promises'
-import { join } from 'node:path'
 import type { BrokerTokenResponse } from '@nimi/contract/ipc'
+import * as secrets from '../secrets/store'
 
 const REFRESH_BUFFER_MS = 60_000 // refresh when < 60 s from expiry
 
 let cached: BrokerTokenResponse | null = null
-
-function cacheFile(): string {
-  return join(app.getPath('userData'), 'neeme-sync-token.bin')
-}
 
 function brokerUrl(): string | undefined {
   // Runtime override (dev/tests/cloud agents) takes priority over the build-time
@@ -48,36 +42,24 @@ function isTokenFresh(token: BrokerTokenResponse): boolean {
   return token.expiresAt - Date.now() > REFRESH_BUFFER_MS
 }
 
-/** Persist the token to the OS keychain via safeStorage. */
+/** Persist the token to the secrets vault (OS keychain via safeStorage). */
 async function persist(token: BrokerTokenResponse): Promise<void> {
-  const plain = JSON.stringify(token)
-  const blob = safeStorage.isEncryptionAvailable()
-    ? safeStorage.encryptString(plain)
-    : Buffer.from(plain, 'utf8')
-  await writeFile(cacheFile(), blob)
+  await secrets.set('broker', token)
 }
 
-/** Remove the cached token from disk. */
+/** Remove the cached token from the vault. */
 async function clearPersisted(): Promise<void> {
-  await rm(cacheFile(), { force: true }).catch(() => {})
+  await secrets.set('broker', undefined)
   cached = null
 }
 
-/** Restore a persisted token from disk (called at startup). */
+/** Restore a persisted token from the vault (called at startup; no Keychain touch). */
 export async function restoreCachedToken(): Promise<void> {
   if (!isBrokerConfigured()) return
-  try {
-    const blob = await readFile(cacheFile())
-    const plain = safeStorage.isEncryptionAvailable()
-      ? safeStorage.decryptString(blob)
-      : blob.toString('utf8')
-    const token = JSON.parse(plain) as BrokerTokenResponse
-    if (isTokenFresh(token)) {
-      cached = token
-    }
-    // Expired tokens are discarded; a fresh fetch will happen at first use.
-  } catch {
-    /* no stored token */
+  const token = secrets.get('broker')
+  // Expired tokens are ignored; a fresh fetch will happen at first use.
+  if (token && isTokenFresh(token)) {
+    cached = token
   }
 }
 

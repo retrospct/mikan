@@ -1,12 +1,12 @@
 /**
  * Persisted sync preferences + the per-device at-rest encryption key.
  *
- * Two artifacts under Electron `userData`:
- *   - neeme-sync-prefs.json — plain JSON `{ enabled }`. The Settings toggle's
- *     *intent*; not a secret.
- *   - neeme-sync-key.bin — the 64-hex AES-256-GCM key (see db/crypto.ts), sealed
- *     in the OS keychain via `safeStorage` (same approach as the Logto refresh
- *     token and the broker token).
+ * Two artifacts:
+ *   - neeme-sync-prefs.json (plain JSON `{ enabled }` under `userData`) — the
+ *     Settings toggle's *intent*; not a secret.
+ *   - the 64-hex AES-256-GCM key (see db/crypto.ts), held in the shared secrets
+ *     vault (secrets/store.ts) under `syncKey` — sealed in the OS keychain via
+ *     `safeStorage`, alongside the Logto refresh token and the broker token.
  *
  * The key is generated once on this device the first time sync is enabled, and is
  * "sticky": once it exists it's always injected into the worker env so any rows
@@ -14,19 +14,17 @@
  * second device, the user reveals the key here and imports it there
  * (setRecoveryKey) — this is the recovery/export path in ADR 0008.
  */
-import { app, safeStorage } from 'electron'
+import { app } from 'electron'
 import { randomBytes } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import * as secrets from '../secrets/store'
 
 /** A 32-byte key encoded as exactly 64 hex characters (matches db/crypto.ts). */
 const KEY_HEX = /^[0-9a-f]{64}$/i
 
 function prefsFile(): string {
   return join(app.getPath('userData'), 'neeme-sync-prefs.json')
-}
-function keyFile(): string {
-  return join(app.getPath('userData'), 'neeme-sync-key.bin')
 }
 
 /** Whether the user has turned the cloud replica on (persisted intent). */
@@ -45,22 +43,13 @@ export async function setSyncEnabledPref(enabled: boolean): Promise<void> {
 
 /** The device key if one exists, normalized to lowercase hex; null otherwise. */
 export async function getExistingKey(): Promise<string | null> {
-  try {
-    const blob = await readFile(keyFile())
-    const hex = safeStorage.isEncryptionAvailable()
-      ? safeStorage.decryptString(blob)
-      : blob.toString('utf8')
-    return KEY_HEX.test(hex) ? hex.toLowerCase() : null
-  } catch {
-    return null
-  }
+  // From the in-memory vault (loaded once at startup — no Keychain touch here).
+  const hex = secrets.get('syncKey')
+  return hex && KEY_HEX.test(hex) ? hex.toLowerCase() : null
 }
 
 async function persistKey(hex: string): Promise<void> {
-  const blob = safeStorage.isEncryptionAvailable()
-    ? safeStorage.encryptString(hex)
-    : Buffer.from(hex, 'utf8') // fallback (e.g. Linux w/o keyring); still inside userData
-  await writeFile(keyFile(), blob)
+  await secrets.set('syncKey', hex)
 }
 
 /** Return the device key, generating + sealing a fresh one on first use. */

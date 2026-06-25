@@ -69,3 +69,23 @@ tests against a real libSQL file (pipeline-service, todo-service, draft-service)
 The non-negotiable Electron invariants live in the root `CLAUDE.md` and `docs/SECURITY.md`.
 They are enforced here (`src/main/window`, `src/preload`) — don't loosen sandbox / context
 isolation / nav lockdown, and only expose scoped methods over `contextBridge`.
+
+### Secrets & the macOS keychain prompt
+
+All at-rest secrets (Logto refresh token, Google connector tokens, broker sync token,
+per-device sync key) live in **one** `safeStorage`-sealed vault, `src/main/secrets/store.ts`
+(`neeme-secrets.bin`). `loadAll()` runs first in `app.whenReady()` — one Keychain decrypt at
+boot; every owner then reads its slice from memory. Add a new secret as a key on `SecretsShape`
+(`get`/`set`), not a new sealed file — N files = N Keychain prompts on launch.
+
+The macOS "… wants to use … Safe Storage" prompt is a **code-signing** artifact, not a bug:
+the keychain ACL is granted to a stable signing identity. So —
+- **`pnpm dev` is ad-hoc-signed → it re-prompts on every launch** (expected; "Always Allow"
+  can't persist). Live with it, or re-sign `node_modules/electron/dist/Electron.app` with a
+  stable self-signed identity so the ACL sticks.
+- **A properly Developer-ID-signed + notarized release prompts once**, then "Always Allow"
+  (not "Allow") persists forever. The CI release signs (`.github/workflows/release.yml`:
+  `CSC_LINK` + `APPLE_*`). If a *packaged* build re-prompts every launch, verify it's the
+  signed DMG: `codesign -dv --verbose=4 <app>` (expect Developer ID + stable identifier/team)
+  and `spctl -a -vv <app>` (expect Notarized). An unsigned local `build:unpack` /
+  `electron-vite preview` will behave like dev.

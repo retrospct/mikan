@@ -1,6 +1,6 @@
 {
   "name": "@nimi/brand",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "The nimi brand layer: build-time product identity (Mikan) + platform-agnostic design tokens. Consumed from source by the desktop app (web adapter) and a future RN/Expo app (native adapter).",
   "private": true,
   "type": "module",

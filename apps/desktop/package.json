@@ -1,6 +1,6 @@
 {
   "name": "@nimi/desktop",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "nimi — a privacy-first, local-first personal memory desktop app (Electron)",
   "main": "./out/main/index.js",
   "author": "jlee",

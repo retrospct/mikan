@@ -7,19 +7,27 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert
+  Alert,
+  View
 } from 'react-native'
-import { getDb } from '../../src/db'
+import { getDb, getCurrentKey, encrypt } from '../../src/db'
 
 /**
  * Capture screen — quick text note → local Turso embedded-replica → db.push().
  *
  * Writes to the local DB first (works offline), then pushes so the desktop picks
  * it up. Same items table as the desktop schema; no shape impedance.
+ *
+ * Field encryption: items.text is encrypted with the shared AES-256-GCM key
+ * (enc:<iv>:<tag>:<ct>) when a key is present — byte-identical to the desktop's
+ * pipeline-service.ts output. Without a key, writes plaintext and shows a banner
+ * reminding the user to add their recovery key in Settings.
  */
 export default function CaptureScreen(): ReactElement {
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const key = getCurrentKey()
 
   async function handleSave(): Promise<void> {
     const trimmed = text.trim()
@@ -30,7 +38,7 @@ export default function CaptureScreen(): ReactElement {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
       await db.run(
         'INSERT INTO items (id, source_name, content_type, text, status) VALUES (?, ?, ?, ?, ?)',
-        id, 'mobile', 'text', trimmed, 'captured'
+        id, 'mobile', 'text', encrypt(trimmed, key), 'captured'
       )
       await db.push()
       setText('')
@@ -48,6 +56,13 @@ export default function CaptureScreen(): ReactElement {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      {!key && (
+        <View style={styles.banner}>
+          <Text style={styles.bannerText}>
+            Add your recovery key in Settings to sync securely with desktop.
+          </Text>
+        </View>
+      )}
       <Text style={styles.label}>Quick note</Text>
       <TextInput
         style={styles.input}
@@ -72,6 +87,14 @@ export default function CaptureScreen(): ReactElement {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, gap: 12 },
+  banner: {
+    backgroundColor: '#fef3c7',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginTop: 4
+  },
+  bannerText: { fontSize: 13, color: '#92400e' },
   label: { fontSize: 18, fontWeight: '600', marginTop: 8 },
   input: {
     flex: 1,

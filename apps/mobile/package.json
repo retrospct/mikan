@@ -14,10 +14,12 @@
   "dependencies": {
     "@nimi/brand": "workspace:*",
     "@nimi/contract": "workspace:*",
+    "@noble/ciphers": "^2.2.0",
     "@tursodatabase/sync-react-native": "^0.6.1",
     "expo": "^56.0.12",
     "expo-auth-session": "^56.0.14",
     "expo-constants": "^56.0.18",
+    "expo-crypto": "~56.0.4",
     "expo-dev-client": "^56.0.20",
     "expo-linking": "^56.0.14",
     "expo-router": "^56.2.11",

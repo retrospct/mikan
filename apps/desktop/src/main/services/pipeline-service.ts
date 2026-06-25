@@ -1,5 +1,5 @@
 import { desc, eq, inArray, sql } from 'drizzle-orm'
-import { client, db } from '../db'
+import { client, db, vecClient } from '../db'
 import { items, connectorState, type Item as ItemRow } from '../db/schema'
 import { chunkText } from '../pipeline/chunk'
 import { embedder } from '../pipeline/embed'
@@ -123,7 +123,7 @@ async function indexItem(id: string, text: string): Promise<void> {
   const chunks = chunkText(text)
   const vectors = await embedder.embed(chunks)
   for (let i = 0; i < chunks.length; i++) {
-    await client.execute({
+    await vecClient.execute({
       sql: 'INSERT OR REPLACE INTO chunks (item_id, chunk_idx, text, embedding) VALUES (?, ?, ?, vector32(?))',
       args: [id, i, chunks[i]!, JSON.stringify(vectors[i] ?? [])]
     })
@@ -259,23 +259,35 @@ export const pipelineService = {
   async search(query: string, topK = 8): Promise<SearchHit[]> {
     const [queryVector] = await embedder.embed([query])
     if (!queryVector) return []
-    const res = await client.execute({
-      sql: `SELECT c.item_id AS item_id, c.chunk_idx AS chunk_idx, c.text AS chunk_text,
-                   vector_distance_cos(c.embedding, vector32(?)) AS dist,
-                   i.source_name AS source_name, i.content_type AS content_type
-            FROM chunks c JOIN items i ON i.id = c.item_id
+    // chunks live in neeme-vec.db (vecClient); items live in neeme.db (client).
+    // Cross-file JOINs aren't possible in SQLite, so fetch chunk hits first then
+    // hydrate item metadata from the main DB.
+    const chunkRes = await vecClient.execute({
+      sql: `SELECT item_id, chunk_idx, text AS chunk_text,
+                   vector_distance_cos(embedding, vector32(?)) AS dist
+            FROM chunks
             ORDER BY dist ASC LIMIT ?`,
       args: [JSON.stringify(queryVector), topK]
     })
-    return res.rows.map((r) => ({
-      itemId: String(r.item_id),
-      chunkIdx: Number(r.chunk_idx),
-      // chunks.text stores plaintext (indexed from decrypted content; local-only artifact)
-      text: String(r.chunk_text),
-      score: Number(r.dist),
-      sourceName: String(r.source_name),
-      contentType: String(r.content_type) as ContentType
-    }))
+    if (chunkRes.rows.length === 0) return []
+    const itemIds = [...new Set(chunkRes.rows.map((r) => String(r.item_id)))]
+    const itemRes = await client.execute({
+      sql: `SELECT id, source_name, content_type FROM items WHERE id IN (${itemIds.map(() => '?').join(',')})`,
+      args: itemIds
+    })
+    const itemMap = new Map(itemRes.rows.map((r) => [String(r.id), r]))
+    return chunkRes.rows.flatMap((r) => {
+      const item = itemMap.get(String(r.item_id))
+      if (!item) return []
+      return [{
+        itemId: String(r.item_id),
+        chunkIdx: Number(r.chunk_idx),
+        text: String(r.chunk_text),
+        score: Number(r.dist),
+        sourceName: String(item.source_name),
+        contentType: String(item.content_type) as ContentType
+      }]
+    })
   },
 
   async listItems(): Promise<Item[]> {
@@ -303,7 +315,7 @@ export const pipelineService = {
    *  Reads and decrypts text before re-indexing so the vector space uses plaintext. */
   async reindexAll(): Promise<number> {
     const rows = await db.select().from(items)
-    await client.execute('DELETE FROM chunks')
+    await vecClient.execute('DELETE FROM chunks')
     let n = 0
     for (const row of rows) {
       const plaintext = decrypt(row.text)

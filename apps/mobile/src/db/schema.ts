@@ -1,6 +1,8 @@
 // Mirrors the desktop schema (apps/desktop/src/main/db/schema.ts) at parity.
 // Intentionally a strict subset — only the tables mobile needs for Phase 0.
-// Vector chunks are local-only (recomputed per device, never synced) — same as desktop.
+// chunks is excluded: mobile has no embedding/chunking pipeline, and including it
+// as plain BLOB caused schema drift with the desktop's F32_BLOB vector index on
+// the shared Turso primary (see HANDOFF-mobile-rn-turso.md V7 finding).
 
 export const CREATE_TABLES = `
   CREATE TABLE IF NOT EXISTS items (
@@ -8,6 +10,7 @@ export const CREATE_TABLES = `
     source_name TEXT NOT NULL,
     content_type TEXT NOT NULL DEFAULT 'text',
     size_bytes  INTEGER NOT NULL DEFAULT 0,
+    stored_path TEXT,
     text        TEXT,
     status      TEXT NOT NULL DEFAULT 'captured',
     connector   TEXT,
@@ -22,15 +25,8 @@ export const CREATE_TABLES = `
     notes        TEXT,
     status       TEXT NOT NULL DEFAULT 'open',
     day          TEXT,
+    position     INTEGER NOT NULL DEFAULT 0,
     created_at   INTEGER NOT NULL DEFAULT (unixepoch()),
     completed_at INTEGER
-  );
-
-  CREATE TABLE IF NOT EXISTS chunks (
-    item_id   TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
-    chunk_idx INTEGER NOT NULL,
-    text      TEXT NOT NULL,
-    embedding BLOB,
-    PRIMARY KEY (item_id, chunk_idx)
   );
 `

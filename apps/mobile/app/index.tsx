@@ -28,15 +28,11 @@ export default function Index(): ReactElement | null {
         if (!cancelled) setTarget('/(tabs)/feed')
       } catch (e) {
         console.warn('[nimi/db] startup bootstrap failed:', e)
-        // Only a broker auth rejection (401) means the token is bad — drop it and
-        // re-auth. Other failures (local DB, offline) keep the session: route to
-        // the feed, which degrades gracefully until the next pull.
-        if (String(e).includes('Broker 401')) {
-          await clearStoredToken()
-          if (!cancelled) setTarget('/(auth)/login')
-        } else if (!cancelled) {
-          setTarget('/(tabs)/feed')
-        }
+        // A broker auth rejection (401) means the token is bad — drop it and re-auth.
+        // Any other failure (network down, Turso error) sends to login so the user can
+        // explicitly re-authenticate; the feed with a closed DB is a dead end.
+        await clearStoredToken()
+        if (!cancelled) setTarget('/(auth)/login')
       }
     })()
     return () => {

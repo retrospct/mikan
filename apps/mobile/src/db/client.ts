@@ -15,20 +15,32 @@ export type DbClient = Awaited<ReturnType<typeof openDb>>
 
 let _db: DbClient | null = null
 
+// The shared AES-256-GCM key received from the desktop's recovery-key flow.
+// Stored in key-store and loaded at bootstrap time. Screens read it via
+// getCurrentKey() to encrypt writes and decrypt reads.
+let _syncKey: string | null = null
+
+export function getCurrentKey(): string | null {
+  return _syncKey
+}
+
+export function setCurrentKey(hexKey: string | null): void {
+  _syncKey = hexKey
+}
+
 export async function openDb(opts: {
   syncUrl: string
   authToken: string
-  encryptionKey?: string
 }) {
   const db = await connect({
     path: 'nimi.db',
     url: opts.syncUrl,
     authToken: opts.authToken,
-    // 0.6.1 takes at-rest encryption as { key, cipher }; the broker doesn't
-    // return a key yet (Phase 1 — see CLAUDE.md "Phase 1 gaps").
-    remoteEncryption: opts.encryptionKey
-      ? { key: opts.encryptionKey, cipher: 'aes256gcm' }
-      : undefined,
+    // remoteEncryption is intentionally absent: the shared content key encrypts
+    // individual fields (enc:<iv>:<tag>:<ct>) at the application layer — the same
+    // approach as the desktop (apps/desktop/src/main/db/crypto.ts). Turso-level
+    // at-rest encryption would use a different, per-device key and break
+    // cross-device interop.
   })
 
   // Create tables on first open (idempotent). The RN binding's exec() runs a

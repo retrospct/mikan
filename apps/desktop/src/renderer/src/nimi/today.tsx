@@ -17,8 +17,6 @@ function greeting(): string {
   if (h < 18) return 'Afternoon'
   return 'Evening'
 }
-// TODO(memory-weather): re-enable with the MemoryWeather banner below.
-// const FIRST_NAME = 'Jordan'
 function dateLabel(): string {
   return new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -68,21 +66,42 @@ export function AppHeader({
   )
 }
 
-// TODO(memory-weather): temporarily disabled — re-enable this component, its
-// render below, the `onWeather` destructure, and the FIRST_NAME const together.
-// function MemoryWeather({ count, onOpen }: { count: number; onOpen: () => void }): JSX.Element {
-//   return (
-//     <div className="weather" onClick={onOpen} style={{ cursor: 'pointer' }}>
-//       <div className="weather-main">
-//         <div className="weather-t">
-//           Hey {FIRST_NAME} — overnight I lined up <b>{count} things</b> beside today&apos;s list.
-//         </div>
-//         <div className="weather-meta">1,284 memories · last fed 9h ago</div>
-//       </div>
-//       <NIcon name="chevRight" size={16} style={{ color: 'var(--ink-3)', flex: '0 0 auto' }} />
-//     </div>
-//   )
-// }
+// The ambient "memory weather" banner. `count` is how many context items Nimi
+// surfaced beside today's tasks (real, from each task's ctx pool); `memoryCount`
+// + `lastFed` come from the live archive (newest-first). `userName` is the signed-
+// in identity (null in a local/unconfigured build → the greeting drops the name).
+function MemoryWeather({
+  count,
+  userName,
+  memoryCount,
+  lastFed,
+  onOpen
+}: {
+  count: number
+  userName: string | null
+  memoryCount: number
+  lastFed: string | null
+  onOpen: () => void
+}): JSX.Element {
+  const meta = [
+    `${memoryCount.toLocaleString()} ${memoryCount === 1 ? 'memory' : 'memories'}`,
+    lastFed ? `last fed ${lastFed.toLowerCase()}` : null
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  return (
+    <div className="weather" onClick={onOpen} style={{ cursor: 'pointer' }}>
+      <div className="weather-main">
+        <div className="weather-t">
+          {userName ? `Hey ${userName} — ` : ''}overnight I lined up <b>{count} things</b> beside
+          today&apos;s list.
+        </div>
+        <div className="weather-meta">{meta}</div>
+      </div>
+      <NIcon name="chevRight" size={16} style={{ color: 'var(--ink-3)', flex: '0 0 auto' }} />
+    </div>
+  )
+}
 
 // stacked mini-thumbnails for the ambient strip
 function CtxThumbs({ memIds }: { memIds: string[] }): JSX.Element {
@@ -208,6 +227,12 @@ interface TodayViewProps {
   carriedCount: number
   backlogCount: number
   badge: number
+  /** Signed-in display name, or null in a local/unconfigured build. */
+  userName: string | null
+  /** Live archive size (real). */
+  memoryCount: number
+  /** Pre-formatted relative time of the most-recent capture, or null if empty. */
+  lastFed: string | null
   onOpen: (id: string) => void
   onToggle: (id: string) => void
   onAdd: () => void
@@ -227,12 +252,15 @@ export function TodayView({
   carriedCount,
   backlogCount,
   badge,
+  userName,
+  memoryCount,
+  lastFed,
   onOpen,
   onToggle,
   onPlan,
   onTomorrow,
   onSearch,
-  // onWeather, // TODO(memory-weather): re-enable with the MemoryWeather render
+  onWeather,
   onSettings,
   nimiState
 }: TodayViewProps): JSX.Element {
@@ -281,12 +309,15 @@ export function TodayView({
           onTomorrow={onTomorrow}
           onSettings={onSettings}
         />
-        {/* TODO(memory-weather): temporarily disabled — re-enable with the component above.
-        <MemoryWeather
-          count={tasks.reduce((a, t) => a + (t.ctx ? t.ctx.length : 0), 0)}
-          onOpen={onWeather}
-        />
-        */}
+        {memoryCount > 0 && (
+          <MemoryWeather
+            count={tasks.reduce((a, t) => a + (t.ctx ? t.ctx.length : 0), 0)}
+            userName={userName}
+            memoryCount={memoryCount}
+            lastFed={lastFed}
+            onOpen={onWeather}
+          />
+        )}
         <div className="today-top">
           <span className="today-cap">
             Today · <b>{left}</b> of {cap}

@@ -9,7 +9,7 @@ import { NimiMark, Dots } from './mark'
 import { VoiceRecorder } from './voice'
 import { data } from './api'
 import { captureFiles, kindOfFile } from './capture-file'
-import { TASK_SUGGESTIONS, uncoverTodos, nextTranscript } from './ui-stubs'
+import { TASK_SUGGESTIONS, nextTranscript } from './ui-stubs'
 import type { MemoryKind, Task, UncoveredTodo, BacklogItem } from '@nimi/contract/views'
 
 type AddTodo = (
@@ -25,11 +25,15 @@ const ADD_MODES = [
 export function AddSheet({
   onClose,
   onFed,
+  onCaptured,
   onAddTodo,
   onRecordingChange
 }: {
   onClose: () => void
+  /** Fired when feeding starts (drives the immediate "cheer" feedback). */
   onFed: () => void
+  /** Fired once the real capture(s) resolve — drives the archive refresh. */
+  onCaptured?: () => void
   onAddTodo: AddTodo
   onRecordingChange?: (v: boolean) => void
 }): JSX.Element {
@@ -73,6 +77,7 @@ export function AddSheet({
         {mode === 'feed' ? (
           <FeedPane
             onFed={onFed}
+            onCaptured={onCaptured}
             onAddTodo={onAddTodo}
             onClose={onClose}
             recording={recording}
@@ -99,12 +104,14 @@ interface Attach {
 // ── Feed: capture → index → uncover candidate to-dos ────────────────────────
 function FeedPane({
   onFed,
+  onCaptured,
   onAddTodo,
   onClose,
   recording,
   setRecording
 }: {
   onFed: () => void
+  onCaptured?: () => void
   onAddTodo: AddTodo
   onClose: () => void
   recording: boolean
@@ -115,7 +122,8 @@ function FeedPane({
   const [mode, setMode] = useState<'note' | 'voice' | 'link'>('note')
   const [attaches, setAttaches] = useState<Attach[]>([])
   const [text, setText] = useState('')
-  const [conns, setConns] = useState(0)
+  const [filed, setFiled] = useState(0)
+  const [failed, setFailed] = useState(false)
   const [todos, setTodos] = useState<UncoveredTodo[]>([])
   const [added, setAdded] = useState<Set<string>>(new Set())
   const taRef = useRef<HTMLTextAreaElement>(null)
@@ -172,23 +180,34 @@ function FeedPane({
   const feed = (): void => {
     if (!text.trim() && !hasAttach) return
     setPhase('indexing')
+    setFailed(false)
     onFed && onFed()
-    // capture text and files in parallel; AI-uncovered todos are still stubbed (roadmap #3)
-    const captures: Promise<unknown>[] = []
-    if (text.trim()) captures.push(data.pipeline.captureText(text.trim()))
-    if (hasAttach) captures.push(captureFiles(attaches.map((a) => a.file)))
-    void Promise.all(captures)
-    const found = 2 + Math.floor(Math.random() * 4)
-    let i = 0
-    const tick = setInterval(() => {
-      i++
-      setConns(Math.min(found, i))
-      if (i >= found) clearInterval(tick)
-    }, 130)
-    setTimeout(() => {
-      setTodos(uncoverTodos())
+    // Capture text + files in parallel and report what actually landed. We wait
+    // for the real captures (no fixed timer), with a small minimum dwell so
+    // "Reading it in" doesn't flash past when the worker answers instantly.
+    // captureText resolves to one CaptureResult; captureFiles to an array.
+    void (async () => {
+      const captures: Promise<unknown>[] = []
+      if (text.trim()) captures.push(data.pipeline.captureText(text.trim()))
+      if (hasAttach) captures.push(captureFiles(attaches.map((a) => a.file)))
+      try {
+        const [results] = await Promise.all([
+          Promise.all(captures),
+          new Promise((r) => setTimeout(r, 900))
+        ])
+        let n = 0
+        for (const r of results) n += Array.isArray(r) ? r.length : 1
+        setFiled(n)
+        // New memories landed — let the app refresh the archive (thumbs, ctx
+        // lookups, search rows) instead of waiting for a reload.
+        onCaptured && onCaptured()
+        // Real inferred to-dos (AI-gap: `[]` until the drafter is configured).
+        setTodos(await data.pipeline.uncoverTodos())
+      } catch {
+        setFailed(true)
+      }
       setPhase('done')
-    }, 1750)
+    })()
   }
 
   if (phase === 'input') {
@@ -356,9 +375,6 @@ function FeedPane({
         <div className="gather-prog" style={{ marginTop: '4px' }}>
           <i style={{ width: '100%' }} />
         </div>
-        <div className="add-conns">
-          <b>{conns}</b> connection{conns === 1 ? '' : 's'} so far
-        </div>
       </div>
     )
   }
@@ -368,12 +384,21 @@ function FeedPane({
     <>
       <div className="sheet-body">
         <div className="add-done-head">
-          <NimiMark state="done" fill={9} size={30} />
+          <NimiMark state={failed ? 'idle' : 'done'} fill={9} size={30} />
           <div>
-            <div className="add-done-t">
-              Filed away — {conns} connection{conns === 1 ? '' : 's'} found
-            </div>
-            <div className="add-done-s">It&apos;ll surface beside anything it relates to.</div>
+            {failed ? (
+              <>
+                <div className="add-done-t">Couldn&apos;t file that</div>
+                <div className="add-done-s">Something went wrong — give it another try.</div>
+              </>
+            ) : (
+              <>
+                <div className="add-done-t">
+                  Filed away — {filed} {filed === 1 ? 'memory' : 'memories'}
+                </div>
+                <div className="add-done-s">It&apos;ll surface beside anything it relates to.</div>
+              </>
+            )}
           </div>
         </div>
         {todos.length > 0 && (
@@ -445,7 +470,8 @@ function FeedPane({
           onClick={() => {
             setPhase('input')
             setText('')
-            setConns(0)
+            setFiled(0)
+            setFailed(false)
             setTodos([])
             setAdded(new Set())
             setAttaches([])
@@ -472,6 +498,9 @@ function TodoPane({
   const [phase, setPhase] = useState<'input' | 'ranking' | 'done'>('input')
   const [text, setText] = useState('')
   const [kept, setKept] = useState(0)
+  // onAddTodo resolves to a Task when it landed on Today, or null on the backlog
+  // fallback (day full / worker unreachable). Drives the honest "where it went" copy.
+  const [landedToday, setLandedToday] = useState(false)
   const taRef = useRef<HTMLTextAreaElement>(null)
   useEffect(() => {
     taRef.current && taRef.current.focus()
@@ -490,6 +519,7 @@ function TodoPane({
       const task = onAddTodo
         ? await onAddTodo({ title: tx, why: 'You added this', conf: null })
         : null
+      setLandedToday(!!task)
       setKept(task?.ctx?.length ?? 0)
       setPhase('done')
     })()
@@ -511,7 +541,9 @@ function TodoPane({
     return (
       <div className="add-stage">
         <NimiMark state="done" fill={9} size={66} />
-        <div className="add-stage-t">Added to your backlog</div>
+        <div className="add-stage-t">
+          {landedToday ? 'Added to today' : 'Added to your backlog'}
+        </div>
         <div className="add-stage-s">
           {kept > 0 ? (
             <>
@@ -527,6 +559,7 @@ function TodoPane({
             onClick={() => {
               setText('')
               setKept(0)
+              setLandedToday(false)
               setPhase('input')
             }}
           >

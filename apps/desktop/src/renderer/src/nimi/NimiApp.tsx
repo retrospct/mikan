@@ -218,6 +218,21 @@ export default function NimiApp(): JSX.Element {
   }
   const onFed = (): void => cheer()
 
+  // After a capture resolves, re-pull the archive so new memories show up in the
+  // MemoryContext lookup (card thumbs, task ctx, search rows) without a reload.
+  // Archive-only: captures don't mutate the todo list, and refetching tasks here
+  // would clobber optimistic state. Keep the stale archive if the refresh fails.
+  const refreshArchive = (): void => {
+    void data.pipeline
+      .archive()
+      .then((arch) => setArchive(arch))
+      .catch(() => undefined)
+  }
+  const onCaptured = (): void => {
+    cheer()
+    refreshArchive()
+  }
+
   // carry `keep` onto today + pull `add` backlog ids in; plan() sweeps the rest.
   const applyPlan = async (keep: string[], add: string[]): Promise<void> => {
     setOverlay(null)
@@ -346,6 +361,9 @@ export default function NimiApp(): JSX.Element {
                     carriedCount={carriedCount}
                     backlogCount={backlog.length}
                     badge={waiting}
+                    userName={auth.claims?.name ?? null}
+                    memoryCount={archive.length}
+                    lastFed={archive[0]?.when ?? null}
                     onOpen={setOpenId}
                     onToggle={toggleTask}
                     onAdd={() => setOverlay('add')}
@@ -358,8 +376,9 @@ export default function NimiApp(): JSX.Element {
                 ) : (
                   <FeedView
                     captureStyle={TWEAKS.captureStyle}
-                    onCaptured={cheer}
+                    onCaptured={onCaptured}
                     onAddTodo={addTodo}
+                    onAdd={() => setOverlay('add')}
                     onRecordingChange={setFeedRecording}
                     nimiState={headState}
                     badge={waiting}
@@ -385,6 +404,7 @@ export default function NimiApp(): JSX.Element {
                   <AddSheet
                     onClose={() => setOverlay(null)}
                     onFed={onFed}
+                    onCaptured={onCaptured}
                     onAddTodo={addTodo}
                     onRecordingChange={setAddRecording}
                   />
@@ -395,6 +415,7 @@ export default function NimiApp(): JSX.Element {
                     cap={CAP}
                     fresh={!planned}
                     backlog={backlog}
+                    userName={auth.claims?.name ?? null}
                     onClose={cancelPlan}
                     onApply={applyPlan}
                   />

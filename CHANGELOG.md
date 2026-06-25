@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/retrospct/nimi/compare/v1.4.0...v1.5.0) (2026-06-25)
+
+
+### Features
+
+* **sync:** transfer recovery key via QR (desktop render + mobile scan) ([#89](https://github.com/retrospct/nimi/issues/89)) ([ba99f7d](https://github.com/retrospct/nimi/commit/ba99f7df1b68ac123c9a9e57091b0846303283d7))
+
+
+### Bug Fixes
+
+* **desktop:** consolidate at-rest secrets into one keychain-sealed vault ([#92](https://github.com/retrospct/nimi/issues/92)) ([e19bdb0](https://github.com/retrospct/nimi/commit/e19bdb058983fb8ecb2da96ed9db4369122ba479))
+* **desktop:** wire renderer prototype stubs to real backend (UX punch list §A–C) ([#90](https://github.com/retrospct/nimi/issues/90)) ([ecd01bc](https://github.com/retrospct/nimi/commit/ecd01bc302fa3baeba3cb0a67c8f03b5d1d163ba))
+
 ## [1.4.0](https://github.com/retrospct/nimi/compare/v1.3.0...v1.4.0) (2026-06-25)
 
 

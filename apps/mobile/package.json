@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~56.0.15",
     "@nimi/brand": "workspace:*",
     "@nimi/contract": "workspace:*",
     "@noble/ciphers": "^2.2.0",
@@ -29,8 +30,7 @@
     "react": "^19.2.3",
     "react-native": "^0.85.3",
     "react-native-safe-area-context": "^5.7.0",
-    "react-native-screens": "^4.25.2",
-    "react-native-web": "^0.21.2"
+    "react-native-screens": "^4.25.2"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

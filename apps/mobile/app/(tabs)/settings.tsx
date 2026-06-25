@@ -10,11 +10,7 @@ import {
   ActivityIndicator,
   Modal
 } from 'react-native'
-import {
-  CameraView,
-  useCameraPermissions,
-  type BarcodeScanningResult
-} from 'expo-camera'
+import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera'
 import { getSyncKey, setSyncKey, clearSyncKey } from '../../src/db/key-store'
 import { setCurrentKey } from '../../src/db/client'
 
@@ -122,11 +118,10 @@ export default function SettingsScreen(): ReactElement {
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <Text style={styles.heading}>Cloud sync key</Text>
       <Text style={styles.body}>
-        To sync securely across devices, both desktop and mobile must share the
-        same AES-256-GCM content encryption key. On desktop, open{' '}
-        <Text style={styles.mono}>Settings → Cloud sync → Reveal recovery key</Text>.
-        Scan the QR with the camera below, or paste the 64-character hex string
-        manually.
+        To sync securely across devices, both desktop and mobile must share the same AES-256-GCM
+        content encryption key. On desktop, open{' '}
+        <Text style={styles.mono}>Settings → Cloud sync → Reveal recovery key</Text>. Scan the QR
+        with the camera below, or paste the 64-character hex string manually.
       </Text>
 
       <View style={styles.statusRow}>
@@ -178,10 +173,11 @@ export default function SettingsScreen(): ReactElement {
         onPress={handleSave}
         disabled={!keyInput.trim() || loading}
       >
-        {loading
-          ? <ActivityIndicator color="#18181b" />
-          : <Text style={styles.buttonSecondaryText}>Save key</Text>
-        }
+        {loading ? (
+          <ActivityIndicator color="#18181b" />
+        ) : (
+          <Text style={styles.buttonSecondaryText}>Save key</Text>
+        )}
       </Pressable>
 
       {isKeySet && (
@@ -200,9 +196,7 @@ export default function SettingsScreen(): ReactElement {
           />
           <View style={styles.scannerOverlay} pointerEvents="box-none">
             <View style={styles.scannerFrame} />
-            <Text style={styles.scannerHint}>
-              Point the camera at the QR code on your desktop
-            </Text>
+            <Text style={styles.scannerHint}>Point the camera at the QR code on your desktop</Text>
             <Pressable style={styles.scannerCancel} onPress={() => setScanning(false)}>
               <Text style={styles.scannerCancelText}>Cancel</Text>
             </Pressable>

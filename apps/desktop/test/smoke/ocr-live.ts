@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   const pngRow = await waitForExtracted(client, pngResult.memory.id, 'PNG')
   check("png status === 'extracted'", pngRow.status === 'extracted')
   check('png text non-empty', pngRow.text.trim().length > 0)
-  check('png text contains "Nimi"', pngRow.text.toLowerCase().includes('nimi'))
+  check('png text contains "Mikan"', pngRow.text.toLowerCase().includes('nimi'))
 
   // ── HEIC via heic-convert → tesseract ────────────────────────────────────
   console.log('\nHEIC OCR (heic-convert → tesseract.js)')
@@ -83,7 +83,7 @@ async function main(): Promise<void> {
   const heicRow = await waitForExtracted(client, heicResult.memory.id, 'HEIC')
   check("heic status === 'extracted'", heicRow.status === 'extracted')
   check('heic text non-empty', heicRow.text.trim().length > 0)
-  check('heic text contains "Nimi"', heicRow.text.toLowerCase().includes('nimi'))
+  check('heic text contains "Mikan"', heicRow.text.toLowerCase().includes('nimi'))
 
   // ── Summary ──────────────────────────────────────────────────────────────
   const failed = results.filter((r) => !r.ok)

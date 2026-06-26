@@ -1,7 +1,7 @@
 /**
  * Live ASR smoke — tests actual Whisper (transformers.js) extraction with a real WAV.
  *
- * The WAV fixture (sample.wav) contains "Hello Nimi smoke test audio transcription"
+ * The WAV fixture (sample.wav) contains "Hello Mikan smoke test audio transcription"
  * synthesised by macOS `say`. WhisperAsr downloads the Whisper-tiny ONNX model
  * (~75 MB) on first run; ffmpeg-static decodes the WAV to 16 kHz mono PCM for it.
  *

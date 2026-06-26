@@ -82,7 +82,7 @@ async function main(): Promise<void> {
   const txt = await pipelineService.captureFile(bytesOf('sample.txt'), 'sample.txt', 'text/plain')
   const txtRow = await rowOf(txt.memory.id)
   check("items.status === 'extracted'", txtRow?.status === 'extracted')
-  check('text contains fixture phrase', !!txtRow && txtRow.text.includes('Hello Nimi smoke test'))
+  check('text contains fixture phrase', !!txtRow && txtRow.text.includes('Hello Mikan smoke test'))
   check('chunks indexed (> 0)', (await chunkCount(txt.memory.id)) > 0)
 
   // ── Image (PNG): stored, parked as pending (no extractor) ────────────────

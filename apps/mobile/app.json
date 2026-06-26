@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Nimi",
-    "slug": "nimi",
+    "name": "Mikan",
+    "slug": "mikan",
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "mikan",
@@ -9,13 +9,13 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "cool.jlee.nimi"
+      "bundleIdentifier": "dev.retro.mikan"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "cool.jlee.nimi"
+      "package": "dev.retro.mikan"
     },
     "plugins": [
       "expo-router",
@@ -23,7 +23,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Nimi uses the camera to scan the sync recovery key QR shown on your desktop."
+          "cameraPermission": "Mikan uses the camera to scan the sync recovery key QR shown on your desktop."
         }
       ]
     ],

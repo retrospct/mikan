@@ -7,7 +7,7 @@
 ## What's implemented
 
 - **Main process** (`apps/desktop/src/main/auth/logto.ts`): OIDC Authorization Code + PKCE in the
-  **system browser**, deep-link redirect (`mikan://callback`, from `@nimi/brand`), token exchange + refresh,
+  **system browser**, deep-link redirect (`mikan://callback`, from `@mikan/brand`), token exchange + refresh,
   refresh token sealed via Electron `safeStorage`. Inert when unconfigured.
 - **IPC** (`packages/contract/src/ipc.ts`, `apps/desktop/src/preload`): `window.api.auth.{login,logout,getAccessToken,getState,onChanged}`.
 - **Renderer** (`apps/desktop/src/renderer/src/hooks/useAuth.ts` + `nimi/auth.tsx`): hydrates the API
@@ -17,7 +17,7 @@
 
 ## To turn it on
 
-> **Deep-link scheme** (from the brand layer, `@nimi/brand`): the redirect is
+> **Deep-link scheme** (from the brand layer, `@mikan/brand`): the redirect is
 > `mikan://callback` (it replaced the old internal `neeme://`). The scheme lives in
 > `packages/brand/src/identity.json`.
 
@@ -107,7 +107,7 @@ callback home.
 to the app (the known dev limitation).
 
 1. Fill `apps/desktop/.env` **before** building (`MAIN_VITE_*` are baked in at build time).
-2. `pnpm --filter @nimi/desktop build:unpack` → `open apps/desktop/release/mikan/mac*/Mikan.app`
+2. `pnpm --filter @mikan/desktop build:unpack` → `open apps/desktop/release/mikan/mac*/Mikan.app`
    (output dir + `productName` come from `identity.mikan`).
 3. Same checks as A2–A5; `mikan://` is OS-registered so the callback always routes home.
 
@@ -180,7 +180,7 @@ scheme or they'll capture each other's callbacks.
   on macOS the `open-url` event usually still fires; on Windows/Linux deep links rely on the
   single-instance lock + argv parsing (already wired). If dev redirects don't return, use Option B
   (packaged build). The redirect is `${brand.scheme}://callback`
-  (`auth/logto.ts`, scheme from `@nimi/brand`); a loopback redirect would mean code changes (a local
+  (`auth/logto.ts`, scheme from `@mikan/brand`); a loopback redirect would mean code changes (a local
   HTTP listener) — not wired today.
 - The `id_token` **is** signature-verified client-side now (`auth/oidc.ts` `verifyIdToken`: JWKS
   signature + `iss`/`aud`/`exp` + the `nonce` bound on the authorize request). The **access token**

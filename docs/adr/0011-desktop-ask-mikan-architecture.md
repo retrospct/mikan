@@ -7,7 +7,7 @@
 [[0009-mobile-rn-turso-cloud-pipeline]] (mobile keeps server-side tools); reconciles
 [[0003-all-typescript-on-device-pipeline]] (desktop stays on-device) with cloud reasoning;
 requires auth from [[0002-authentication]] (Logto, shipped ROADMAP #9); reuses `services/mastra`
-(`nimiAgent`).
+(`mikanAgent`).
 
 ## Problem
 

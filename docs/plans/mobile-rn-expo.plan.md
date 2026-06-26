@@ -2,16 +2,16 @@
 todos:
   - id: scaffold
     status: done
-    content: 'Scaffold apps/mobile as an Expo (managed, TypeScript) app; register it in pnpm-workspace.yaml (apps/* already globs it) and add the @nimi/contract workspace dep + base scripts to apps/mobile/package.json — named @nimi/mobile, following the @acme/expo convention in t3-turbo'
+    content: 'Scaffold apps/mobile as an Expo (managed, TypeScript) app; register it in pnpm-workspace.yaml (apps/* already globs it) and add the @mikan/contract workspace dep + base scripts to apps/mobile/package.json — named @mikan/mobile, following the @acme/expo convention in t3-turbo'
   - id: turbo-wire
     status: done
     content: 'Wire apps/mobile into turbo.json tasks (typecheck, lint, plus a non-cached persistent start/dev task); add EXPO_PUBLIC_* to globalEnv; add Metro cache output (node_modules/.cache/metro) to the build task outputs so Turborepo can cache and restore the Metro bundle cache — following t3-turbo''s turbo.json task structure'
   - id: metro-contract
     status: done
-    content: 'Add apps/mobile/metro.config.js starting from getDefaultConfig(__dirname) — Expo SDK 52+ auto-detects the pnpm workspace root and sets watchFolders/nodeModulesPaths; add unstable_enablePackageExports: true explicitly (needed for @nimi/contract''s subpath exports map) and a FileStore cache at node_modules/.cache/metro (t3-turbo pattern). Verify a value import from @nimi/contract/api bundles cleanly.'
+    content: 'Add apps/mobile/metro.config.js starting from getDefaultConfig(__dirname) — Expo SDK 52+ auto-detects the pnpm workspace root and sets watchFolders/nodeModulesPaths; add unstable_enablePackageExports: true explicitly (needed for @mikan/contract''s subpath exports map) and a FileStore cache at node_modules/.cache/metro (t3-turbo pattern). Verify a value import from @mikan/contract/api bundles cleanly.'
   - id: tsconfig-wire
     status: done
-    content: 'Add apps/mobile/tsconfig.json extending expo/tsconfig.base (or a shared tooling/typescript base when that lands) with jsx: react-native, moduleSuffixes: [".native", ""], paths: { "@nimi/contract/*": ["../../packages/contract/src/*"] }, and allowImportingTsExtensions — following t3-turbo''s apps/expo/tsconfig.json pattern'
+    content: 'Add apps/mobile/tsconfig.json extending expo/tsconfig.base (or a shared tooling/typescript base when that lands) with jsx: react-native, moduleSuffixes: [".native", ""], paths: { "@mikan/contract/*": ["../../packages/contract/src/*"] }, and allowImportingTsExtensions — following t3-turbo''s apps/expo/tsconfig.json pattern'
   - id: runtime-config
     status: done
     content: 'Resolve the import.meta.env coupling in packages/contract/src/api/runtime.ts by following t3-turbo''s app-layer config injection pattern: strip env var reads from runtime.ts, export a configureClient(opts) factory, and have apps/mobile/src/utils/api.ts call it with process.env.EXPO_PUBLIC_NEEME_API_URL (+ getBaseUrl() fallback for Expo Go LAN dev); apps/desktop continues to call it with import.meta.env.VITE_NEEME_API_URL'
@@ -31,7 +31,7 @@ todos:
     status: pending
     content: 'Phase 1 (not yet started): fire memory/ingest Inngest event from capture.tsx; wire real libSQL queries in Mastra tools; per-user DB routing in Mastra route handler; add embed step to Inngest pipeline; deploy services/mastra to Vercel. See ADR 0009 Phase 1 checklist.'
 name: mobile RN + Expo companion
-overview: 'Mobile scaffold (Phase 0 complete) takes the Turso embedded-replica path chosen in ADR 0009, not the original FastAPI HTTP client plan. apps/mobile uses @tursodatabase/sync-react-native: the root layout exchanges the Logto access token with the existing token broker (ADR 0008) to get syncUrl + authToken, then opens a per-user local replica. feed.tsx reads from the local DB (offline-capable); capture.tsx inserts locally then calls db.sync() to push to the cloud. The desktop picks up mobile captures on its next sync. AI pipeline for mobile captures is Inngest (services/mastra) with step.ai.infer() — validated in Phase 0 spikes. Conversational AI is Mastra (claude-sonnet-4-6, two stub tools). The FastAPI HTTP client path in @nimi/contract/api is still wired but not used as the primary data path. Phase 1 wires the Inngest event, real Mastra tools, and Logto auth.'
+overview: 'Mobile scaffold (Phase 0 complete) takes the Turso embedded-replica path chosen in ADR 0009, not the original FastAPI HTTP client plan. apps/mobile uses @tursodatabase/sync-react-native: the root layout exchanges the Logto access token with the existing token broker (ADR 0008) to get syncUrl + authToken, then opens a per-user local replica. feed.tsx reads from the local DB (offline-capable); capture.tsx inserts locally then calls db.sync() to push to the cloud. The desktop picks up mobile captures on its next sync. AI pipeline for mobile captures is Inngest (services/mastra) with step.ai.infer() — validated in Phase 0 spikes. Conversational AI is Mastra (claude-sonnet-4-6, two stub tools). The FastAPI HTTP client path in @mikan/contract/api is still wired but not used as the primary data path. Phase 1 wires the Inngest event, real Mastra tools, and Logto auth.'
 isProject: false
 ---
 # Mobile RN + Expo companion — ROADMAP #14
@@ -42,7 +42,7 @@ isProject: false
 > Metro cache in Turborepo outputs, and a `tooling/typescript` tsconfig sharing model.
 
 Stand up the **mobile surface**: a new `apps/mobile` Expo (managed workflow, TypeScript)
-app inside the already-monorepo'd repo, sharing `@nimi/contract` with `apps/desktop`. Scope is
+app inside the already-monorepo'd repo, sharing `@mikan/contract` with `apps/desktop`. Scope is
 **"start the surface"** — a companion, not a full port: auth + Feed read + capture-a-note. This
 item is **gated by [ADR 0006](../adr/0006-repo-structure.md)** (monorepo NOW; mobile lives at
 `apps/mobile`), which is ✅ done — the structure exists, this slots into it.
@@ -59,7 +59,7 @@ The repo is a pnpm-workspace + turborepo monorepo:
 - [`package.json`](../../package.json) (root) fans scripts out with `turbo run …`; pnpm `10.26.0`,
   TypeScript `^6`.
 
-`@nimi/contract` is the seam to reuse. Its [`package.json`](../../packages/contract/package.json)
+`@mikan/contract` is the seam to reuse. Its [`package.json`](../../packages/contract/package.json)
 exports map is consumed **from `.ts` source** (no build step — the apps bundle the TypeScript
 directly). This is identical to t3-turbo's `@acme/api` pattern, where
 `"default": "./src/index.ts"` in the exports map lets both Metro and Vite consume TS source
@@ -67,16 +67,16 @@ without a compile step.
 
 | Contract entry | Reuse on mobile? | Why |
 | --- | --- | --- |
-| `@nimi/contract/views` ([views.ts](../../packages/contract/src/views.ts)) | ✅ yes | Pure view-model types (`Memory`, `Task`, `FedItem`, `MatchHit`) — no Node/Electron imports. |
-| `@nimi/contract/api` ([api/index.ts](../../packages/contract/src/api/index.ts)) | ✅ yes (the point) | Plain-`fetch` hey-api client to the neeme FastAPI — the **only** data path mobile has. |
-| `@nimi/contract/api/token-store` ([token-store.ts](../../packages/contract/src/api/token-store.ts)) | ✅ yes | In-memory bearer holder, explicitly written "works unchanged in React Native / Expo". |
-| `@nimi/contract/api/runtime` ([api/runtime.ts](../../packages/contract/src/api/runtime.ts)) | ⚠️ needs refactor | Reads `import.meta.env.VITE_NEEME_API_URL` — **Vite-only** (see fix below). |
-| `@nimi/contract/ipc` ([ipc.ts](../../packages/contract/src/ipc.ts)) | ❌ no runtime meaning | `window.api.*` is the Electron preload/IPC surface; RN has no preload. (Types could be imported, but the transport doesn't exist.) |
+| `@mikan/contract/views` ([views.ts](../../packages/contract/src/views.ts)) | ✅ yes | Pure view-model types (`Memory`, `Task`, `FedItem`, `MatchHit`) — no Node/Electron imports. |
+| `@mikan/contract/api` ([api/index.ts](../../packages/contract/src/api/index.ts)) | ✅ yes (the point) | Plain-`fetch` hey-api client to the neeme FastAPI — the **only** data path mobile has. |
+| `@mikan/contract/api/token-store` ([token-store.ts](../../packages/contract/src/api/token-store.ts)) | ✅ yes | In-memory bearer holder, explicitly written "works unchanged in React Native / Expo". |
+| `@mikan/contract/api/runtime` ([api/runtime.ts](../../packages/contract/src/api/runtime.ts)) | ⚠️ needs refactor | Reads `import.meta.env.VITE_NEEME_API_URL` — **Vite-only** (see fix below). |
+| `@mikan/contract/ipc` ([ipc.ts](../../packages/contract/src/ipc.ts)) | ❌ no runtime meaning | `window.api.*` is the Electron preload/IPC surface; RN has no preload. (Types could be imported, but the transport doesn't exist.) |
 
 The desktop UI surfaces mobile would mirror live in
-[`apps/desktop/src/renderer/src/nimi/`](../../apps/desktop/src/renderer/src/nimi/) — `NimiApp.tsx`
+[`apps/desktop/src/renderer/src/mikan/`](../../apps/desktop/src/renderer/src/mikan/) — `MikanApp.tsx`
 (shell/nav), `feed.tsx` (the recent-capture stream + quick capture), `today.tsx` (daily todos),
-`add.tsx` (capture sheet). The desktop seam pattern ([`api.ts`](../../apps/desktop/src/renderer/src/nimi/api.ts):
+`add.tsx` (capture sheet). The desktop seam pattern ([`api.ts`](../../apps/desktop/src/renderer/src/mikan/api.ts):
 `window.api` in Electron, mock in browser) is a good template for an analogous mobile `data` seam
 — except mobile's "real" backend is HTTP, not IPC.
 
@@ -86,7 +86,7 @@ The scaffold follows the conventions of t3-turbo's `apps/expo` app (Expo SDK 54,
 turborepo). Key differences from a from-scratch approach are called out in each step.
 
 1. **Create the app.** `apps/mobile` via `create-expo-app` (managed, TS template). Give it
-   `apps/mobile/package.json` (`name: "@nimi/mobile"`, `"@nimi/contract": "workspace:*"` in
+   `apps/mobile/package.json` (`name: "@mikan/mobile"`, `"@mikan/contract": "workspace:*"` in
    `devDependencies` — t3-turbo puts `@acme/api` in devDependencies since it's type-only/source;
    runtime deps like `expo`, `expo-router`, `react`, `react-native` go in `dependencies`). Scripts:
    `start` / `ios` / `android` / `typecheck` / `lint` / `clean`. No edit to
@@ -112,13 +112,13 @@ turborepo). Key differences from a from-scratch approach are called out in each 
    ```jsonc
    // apps/mobile/tsconfig.json
    {
-     "extends": "expo/tsconfig.base",          // or "@nimi/tsconfig/base.json" when tooling/ lands
+     "extends": "expo/tsconfig.base",          // or "@mikan/tsconfig/base.json" when tooling/ lands
      "compilerOptions": {
        "jsx": "react-native",
        "checkJs": false,
        "moduleSuffixes": [".ios", ".android", ".native", ""],  // platform-specific file resolution
        "paths": {
-         "@nimi/contract/*": ["../../packages/contract/src/*"],
+         "@mikan/contract/*": ["../../packages/contract/src/*"],
          "~/*": ["./src/*"]                    // app-local alias, matches t3-turbo's ~ convention
        }
      },
@@ -149,7 +149,7 @@ This means t3-turbo's `metro.config.js` is minimal — just `getDefaultConfig(__
 `FileStore` for the Turborepo cache + `withNativeWind`. **Manual `watchFolders` and
 `nodeModulesPaths` wiring from the old pattern is no longer needed.**
 
-However, `@nimi/contract`'s subpath exports (`./views`, `./api`, `./api/token-store`, etc.) require
+However, `@mikan/contract`'s subpath exports (`./views`, `./api`, `./api/token-store`, etc.) require
 one addition that t3-turbo does NOT need (because their `@acme/api` has only a single `.` entry):
 
 ```js
@@ -167,18 +167,18 @@ config.cacheStores = [
   }),
 ];
 
-// Needed for @nimi/contract's subpath exports map (./views, ./api, ./api/token-store, etc.)
+// Needed for @mikan/contract's subpath exports map (./views, ./api, ./api/token-store, etc.)
 // t3-turbo doesn't need this because @acme/api only has a single "." export entry.
 config.resolver.unstable_enablePackageExports = true;
 
 module.exports = config;
 ```
 
-**Verification:** a trivial `import type { Memory } from '@nimi/contract/views'` **and** a value
-import `import { getRecent } from '@nimi/contract/api'` both bundle and run in Expo Go / a dev
+**Verification:** a trivial `import type { Memory } from '@mikan/contract/views'` **and** a value
+import `import { getRecent } from '@mikan/contract/api'` both bundle and run in Expo Go / a dev
 client. The `FileStore` location should also appear in turbo's cache output after a `turbo build`.
 
-**Remaining caution:** `@nimi/contract` is `"type": "module"` (ESM). Metro's ESM support has
+**Remaining caution:** `@mikan/contract` is `"type": "module"` (ESM). Metro's ESM support has
 historically been opt-in. With Expo SDK 54 this is generally resolved, but if Metro's transformer
 rejects bare `.ts` source from the workspace package, the fallback is to add a `babel.config.js`
 that explicitly transpiles the `packages/contract` source — verify this in an actual Expo Go run.
@@ -228,13 +228,13 @@ Then each app wires it up at startup:
 
 ```typescript
 // apps/desktop/src/renderer/src/main.tsx (existing init, updated)
-import { configureClient } from "@nimi/contract/api/runtime";
+import { configureClient } from "@mikan/contract/api/runtime";
 configureClient({ baseUrl: import.meta.env.VITE_NEEME_API_URL });
 
 // apps/mobile/src/utils/api.ts (new, follows t3-turbo base-url pattern)
 import Constants from "expo-constants";
-import { configureClient } from "@nimi/contract/api/runtime";
-import { getToken } from "@nimi/contract/api/token-store";
+import { configureClient } from "@mikan/contract/api/runtime";
+import { getToken } from "@mikan/contract/api/token-store";
 
 function getBaseUrl(): string {
   // In Expo Go / dev client: use the LAN IP from the Expo debugger host
@@ -254,7 +254,7 @@ export const nimiClient = configureClient({ baseUrl: getBaseUrl(), getToken });
 shared package has zero bundler-global dependencies — no `import.meta.env`, no `process.env`,
 no `Constants`. This is the direct analog of t3-turbo's `getBaseUrl()` / `api.tsx` split.
 
-**`import.meta.env` side-effect on `@nimi/contract`'s tsconfig:** `packages/contract/tsconfig.json`
+**`import.meta.env` side-effect on `@mikan/contract`'s tsconfig:** `packages/contract/tsconfig.json`
 currently pulls `"types": ["vite/client"]` to get `import.meta.env` typing. Once `runtime.ts`
 no longer uses it, remove that types entry so the contract package has zero Vite coupling.
 
@@ -273,7 +273,7 @@ code in their respective `apps/`.
 
 | Area | t3-turbo | nimi / notes |
 | --- | --- | --- |
-| **Shared API package exports** | Single `.` entry, one file | `@nimi/contract` has 5 subpath exports — needs `unstable_enablePackageExports: true` in metro.config.js |
+| **Shared API package exports** | Single `.` entry, one file | `@mikan/contract` has 5 subpath exports — needs `unstable_enablePackageExports: true` in metro.config.js |
 | **API transport** | tRPC v11 (procedure calls, type-safe server + client) | plain-fetch hey-api generated client (OpenAPI-based); analogy holds for the "shared typed API layer" role |
 | **Web app** | Next.js (NEXT_PUBLIC_* env) | Electron + Vite (VITE_* env) — different env-var prefixes, same injection point principle |
 | **Auth** | better-auth with `@better-auth/expo` | Logto PKCE with `@logto/rn` — same system-browser PKCE pattern |
@@ -287,7 +287,7 @@ code in their respective `apps/`.
 Mobile has **no Electron worker, no libSQL utilityProcess, no on-device pipeline**. The entire
 `window.api.*` path (capture → content-hash store → extract → embed → vector search, all
 in-process) **does not exist on RN**. So the companion's only data path is the **neeme FastAPI
-HTTP client** in `@nimi/contract/api` (`getRecent`, `search`, `addNote`, `getToday`, `addTodo`, …).
+HTTP client** in `@mikan/contract/api` (`getRecent`, `search`, `addNote`, `getToday`, `addTodo`, …).
 
 **This makes #14 depend on a reachable remote surface — call it out loudly:**
 
@@ -311,7 +311,7 @@ view-models (`Memory`, `FedItem`, `Task` in [views.ts](../../packages/contract/s
 desktop the **main-process projection layer** (`apps/desktop/src/main/services/project.ts`) bridges
 that gap; mobile has no such layer. So plan a **small mobile-side projection** (FastAPI shapes →
 view-models) so screens can render the same `views.ts` types. (Open question: should that projector
-be promoted into `@nimi/contract` so both clients share it once the API is the source of truth?)
+be promoted into `@mikan/contract` so both clients share it once the API is the source of truth?)
 
 ## Auth approach (reuse #9 identity)
 
@@ -321,7 +321,7 @@ Auth #9 (Logto **Native** + PKCE, id_token JWKS-verified) is ✅ done for deskto
 - Use `@logto/rn` (with `expo-web-browser` / `expo-auth-session` + `expo-secure-store` peer deps).
   System-browser PKCE — never an embedded webview (RFC 8252), matching ADR 0002's stance.
 - On login, push the access token into the shared
-  [`@nimi/contract/api/token-store`](../../packages/contract/src/api/token-store.ts) via
+  [`@mikan/contract/api/token-store`](../../packages/contract/src/api/token-store.ts) via
   `setToken(...)`; the hey-api client reads it lazily per request (`auth: () => getToken()`), so a
   late login takes effect with no client re-init — exactly the desktop pattern in
   [`useAuth.ts`](../../apps/desktop/src/renderer/src/hooks/useAuth.ts) (which itself calls
@@ -343,7 +343,7 @@ open:
 1. **Auth gate** — a Logto login screen / signed-out state; signed-in unlocks the tabs. (No-op /
    "configure auth" state when Logto env is unset, mirroring desktop's graceful degradation.)
 2. **Feed (read)** — list recent captures via `getRecent` → projected to `FedItem[]`; the read-only
-   analog of desktop [`feed.tsx`](../../apps/desktop/src/renderer/src/nimi/feed.tsx). `pending` vs
+   analog of desktop [`feed.tsx`](../../apps/desktop/src/renderer/src/mikan/feed.tsx). `pending` vs
    `done` status surfaced the same way.
 3. **Capture-a-note** — a text field → `addNote` (`POST /notes`); the smallest write that proves the
    round-trip (capture on phone, see it in the feed). File/photo/voice capture is **explicitly out
@@ -360,7 +360,7 @@ start deliverable.
   not bare. Confirm.
 - **EAS Build.** Adopt EAS for dev-client + later store builds, or stay local for now? (Ties into
   #12/#13's signing/distribution story for the desktop side.)
-- **Shared-package strategy.** Keep consuming `@nimi/contract` as **TS source via Metro** (chosen
+- **Shared-package strategy.** Keep consuming `@mikan/contract` as **TS source via Metro** (chosen
   default, matches desktop and t3-turbo's `@acme/api` pattern), or add a build step / publish?
   The `import.meta.env` fix (configureClient factory) removes the last blocker to source-only
   consumption — this should now be the clear winner.
@@ -379,7 +379,7 @@ start deliverable.
 ## Risks / notes
 
 - **`unstable_enablePackageExports`** is the one metro.config.js addition nimi needs beyond
-  t3-turbo's minimal config — without it, `@nimi/contract`'s subpath imports (`/views`, `/api`,
+  t3-turbo's minimal config — without it, `@mikan/contract`'s subpath imports (`/views`, `/api`,
   `/api/token-store`) fail to resolve. Budget a verification step for this.
 - **`import.meta.env` will break the shared client under Metro** — must be resolved (via the
   `configureClient` factory above) before any API call works on mobile (it's not theoretical).
@@ -387,7 +387,7 @@ start deliverable.
   has nothing to render; this is a sequencing dependency, not a code bug.
 - **Shape impedance** (FastAPI response models ≠ `views.ts`) needs a projector; don't assume the
   desktop view-models come back from HTTP.
-- **`@nimi/contract` is `"type": "module"` (ESM).** Metro's ESM handling has improved significantly
+- **`@mikan/contract` is `"type": "module"` (ESM).** Metro's ESM handling has improved significantly
   in Expo SDK 54, but if the transformer rejects bare `.ts` ESM source from the workspace package,
   add a `babel.config.js` override that explicitly transpiles the `packages/contract` directory.
 - Keep **per-app agent context hygiene** (ADR 0006): `apps/mobile` gets its own `CLAUDE.md` /
@@ -396,10 +396,10 @@ start deliverable.
 
 ## Verify
 
-- `pnpm install` links `@nimi/mobile` + the `@nimi/contract` workspace symlink with no errors.
+- `pnpm install` links `@mikan/mobile` + the `@mikan/contract` workspace symlink with no errors.
 - `pnpm -w typecheck` (turbo) green including `apps/mobile`; `pnpm -w lint` green.
-- `pnpm --filter @nimi/mobile start` (or `turbo run start`) boots Metro; the app loads in Expo Go /
-  a dev client with **both** a type-only and a value import from `@nimi/contract` resolving (proves
+- `pnpm --filter @mikan/mobile start` (or `turbo run start`) boots Metro; the app loads in Expo Go /
+  a dev client with **both** a type-only and a value import from `@mikan/contract` resolving (proves
   the Metro/exports/symlink + `configureClient` fixes).
 - The Metro cache lands at `apps/mobile/node_modules/.cache/metro` after the first build
   (confirms the `FileStore` is wired and Turborepo will pick it up on the next run).

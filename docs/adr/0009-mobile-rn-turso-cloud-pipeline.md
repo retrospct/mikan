@@ -20,7 +20,7 @@ the mobile slot now scaffolded, we need to commit to three interrelated decision
 ### Why the original plan (thin FastAPI HTTP client) is wrong
 
 The original `mobile-rn-expo.plan.md` planned to drive the mobile UI entirely from the
-`@nimi/contract/api` hey-api client pointed at the `neeme` FastAPI. Three facts killed it:
+`@mikan/contract/api` hey-api client pointed at the `neeme` FastAPI. Three facts killed it:
 
 | Constraint | Why it matters |
 |---|---|
@@ -123,7 +123,7 @@ iOS/Android app (apps/mobile)
 ## Consequences
 
 ### Positive
-- Mobile reuses the broker, the Turso schema, and `@nimi/contract` view-model types already built for desktop.
+- Mobile reuses the broker, the Turso schema, and `@mikan/contract` view-model types already built for desktop.
 - Offline-first: the app reads and writes without a network connection.
 - Desktop and mobile stay in sync via the same Turso DB — captures made on either surface appear on the other.
 - The Inngest + Mastra services are independently deployable; they don't couple to the Electron binary.
@@ -140,7 +140,7 @@ iOS/Android app (apps/mobile)
 | Spike | File | What it validates |
 |---|---|---|
 | Turso offline sync | `apps/mobile/src/db/`, `app/(tabs)/_spike-db.tsx` | `@tursodatabase/sync-react-native` builds + links on iOS dev client; write → offline → sync round-trip works |
-| Mastra agent | `services/mastra/src/agents/nimi-agent.ts`, `src/tools/` | Tool-calling loop; agent instructions produce correct behavior |
+| Mastra agent | `services/mastra/src/agents/mikan-agent.ts`, `src/tools/` | Tool-calling loop; agent instructions produce correct behavior |
 | Inngest durable pipeline | `services/mastra/src/inngest/functions/ingest-pipeline.ts` | `step.ai.infer()` pauses between steps; retries are per-step, not whole-function |
 
 ## Phase 1 checklist (not yet done)

@@ -17,7 +17,7 @@ old hand-rolled base and adopt a real foundation later, I'll have done the visua
 
 Adopt a **copy-in component foundation** — shadcn/ui on **Base UI** primitives, with **Phosphor**
 icons — and execute the redesign **on that foundation, incrementally, screen by screen**.
-`@nimi/brand` stays the canonical design-token source; the shadcn preset only *seeds* the CSS
+`@mikan/brand` stays the canonical design-token source; the shadcn preset only *seeds* the CSS
 variables, which are bridged into brand tokens so there is one theming system, not two. The result:
 a consistent, themeable base that makes the redesign faster and gives Ask Mikan ready primitives.
 
@@ -37,7 +37,7 @@ a consistent, themeable base that makes the redesign faster and gives Ask Mikan 
    locked into a runtime dependency I can't theme or fork.
 7. As a maintainer, I want Base UI primitives under the components, so that accessibility and
    composition come from a maintained headless layer rather than hand-rolled behavior.
-8. As a maintainer, I want `@nimi/brand` to stay the single source of truth for tokens, so that
+8. As a maintainer, I want `@mikan/brand` to stay the single source of truth for tokens, so that
    the design system doesn't fragment into two competing theming systems.
 9. As a maintainer, I want the shadcn preset's variables bridged into brand tokens, so that
    adopting the preset doesn't fork our theme.
@@ -63,11 +63,11 @@ a consistent, themeable base that makes the redesign faster and gives Ask Mikan 
 - **Foundation:** initialize shadcn with the chosen preset on **Base UI** primitives via the Vite
   template, pointer registry (`init --preset b3tgpxOpHE --base base --template vite --pointer`).
   Components are **copy-in** (we own the source); no styled runtime library.
-- **Theming:** `@nimi/brand` remains canonical. Add a **brand ↔ shadcn CSS-variable bridge** so
+- **Theming:** `@mikan/brand` remains canonical. Add a **brand ↔ shadcn CSS-variable bridge** so
   shadcn components read brand values. The preset is a *seed*, not the final look; the redesign
   overrides it. This bridge must be defined **before** broad component adoption to prevent drift.
 - **Icons:** set shadcn `iconLibrary: phosphor`; introduce Phosphor and migrate the existing
-  hand-drawn icon usages **per screen**. The brand `NimiMark` logo is retained as-is.
+  hand-drawn icon usages **per screen**. The brand `MikanMark` logo is retained as-is.
 - **Redesign sequencing:** adopt the foundation first, then redesign **on** it, one surface at a
   time (Today → Feed → Task detail → Plan ritual → Search/overlay → Settings). No parallel redesign
   of the old hand-rolled UI.

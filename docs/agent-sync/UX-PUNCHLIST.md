@@ -6,7 +6,7 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
 
 > Lane note: these are all renderer-side. Where a fix needs a contract change
 > (e.g. an explicit "add to backlog" mutator), call it out and land the
-> `@nimi/contract` half first.
+> `@mikan/contract` half first.
 
 ---
 
@@ -55,24 +55,24 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
   (`task.tsx:103`); draft Edit/Redo no handler (`task.tsx:247`); Copy draft toggles
   icon only, never writes clipboard (`task.tsx:193`); chat Attach no handler (`task.tsx:722`). **high/med**
 - [ ] **Add success copy lies:** "Added to your backlog" (`add.tsx:511`) but on success
-  `addTodo` adds to **Today** (`NimiApp.tsx:217`). **high**
+  `addTodo` adds to **Today** (`MikanApp.tsx:217`). **high**
 - [ ] **Unplanned-day header mislabeled:** button is `aria-label="Plan tomorrow"`
   but wired to `onPlan` → today's plan ritual (`today.tsx:55,247`). **high**
 - [ ] **Plan ritual is bypassable:** switching tabs or `cancelPlan()` sets
-  `planned = true` without planning (`NimiApp.tsx:293,445`). **high**
+  `planned = true` without planning (`MikanApp.tsx:293,445`). **high**
 - [ ] **Empty slots / weather open the wrong thing:** empty slot "pick one more"
   → `onPlan` not `onAdd` (`today.tsx:185,303`); weather click → Plan overlay. **med**
 
 ### C. State-sync bugs (renderer keeps stale data after a backend mutation)
 
 - [ ] **Archive never refreshes after capture.** `MemoryContext`/`archive` load once
-  on mount (`NimiApp.tsx:154`); `onFed` only cheers (`:237`). New captures, connector
+  on mount (`MikanApp.tsx:154`); `onFed` only cheers (`:237`). New captures, connector
   syncs (`useConnectors.ts:61`), and ingested mail are invisible until reload. Broken
   thumbs/search rows/task ctx for anything new. **high**
 - [ ] **Add is fire-and-forget.** `Promise.all(captures)` not awaited; "Filed away"
   fires on a 1750ms timer regardless of success/failure (`add.tsx:177`). **high**
 - [ ] **Stale UI after worker restart** (sync toggle / key import) — renderer doesn't
-  refetch tasks/backlog/archive (`useSync.ts`, `NimiApp.tsx:153`). See APP-GAPS.md §Sync. **high**
+  refetch tasks/backlog/archive (`useSync.ts`, `MikanApp.tsx:153`). See APP-GAPS.md §Sync. **high**
 
 ### D. Accessibility / keyboard / focus
 
@@ -91,7 +91,7 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
   (`!state.configured` → renders `null`). It reads as a minor affordance, not the
   front door. When authenticated it becomes a `priv-pill` name/sign-out chip (~L25–30).
 - **Want:** a dedicated login screen/surface (like the Settings overlay pattern in
-  `NimiApp.tsx`) that presents sign-in as a first-class flow, with the lock chip in
+  `MikanApp.tsx`) that presents sign-in as a first-class flow, with the lock chip in
   the header reduced to identity/sign-out only.
 - **Decision needed (product):** is login **required** (a gate the app sits behind)
   or **optional**? Mikan is local-first and fully usable offline today, so a hard
@@ -106,12 +106,12 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
   surfaces `useSync` status/errors. Without this, login + broker + per-user DB are
   all wired but unreachable by a normal user.
 - **Pointers:** `auth.tsx`, `hooks/useAuth.ts`, `hooks/useSync.ts`,
-  `nimi/settings.tsx` (Settings overlay host), `NimiApp.tsx` overlay/`settingsOpen`
+  `nimi/settings.tsx` (Settings overlay host), `MikanApp.tsx` overlay/`settingsOpen`
   state, main wiring in `src/main/index.ts` (~L140–156 broker token inject,
   L188–191 auth IPC).
 - [x] **Login gate, not a header lock.** When Logto is configured the whole app
   now sits behind a full-screen sign-in gate (`nimi/auth-gate.tsx`, wired in
-  `NimiApp.tsx`). `useAuth` gained a `ready` flag so the gate never flashes before
+  `MikanApp.tsx`). `useAuth` gained a `ready` flag so the gate never flashes before
   a cached session restores; `src/main/auth/logto.ts` now keeps a cached session
   on offline/transient refresh failures (only a real 400/401 signs you out), so a
   hard gate never locks an offline user out of local-first data.
@@ -146,7 +146,7 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
 ### 2. The "A fresh day / Plan today" page was supposed to be gone
 - **Symptom:** this empty-state hero ("A fresh day", "Plan today", "N carried
   over · N in your backlog") still shows — thought it was removed.
-- **Pointer:** Today empty state in `today.tsx`; but `NimiApp.tsx` ~L255 has
+- **Pointer:** Today empty state in `today.tsx`; but `MikanApp.tsx` ~L255 has
   `setOverlay('plan') // go straight to planning — no empty intermediate screen`,
   so the *intent* was to skip an empty intermediate screen. Intent vs. reality
   disagree.
@@ -156,14 +156,14 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
 
 ### 3. Define what the **+** (FAB) button does
 - **Current:** the FAB always opens `AddSheet` defaulting to `mode='feed'`
-  ("Feed a memory" tab) — `NimiApp.tsx` `onAdd` → `setOverlay('add')`;
+  ("Feed a memory" tab) — `MikanApp.tsx` `onAdd` → `setOverlay('add')`;
   `add.tsx` `useState<'feed'|'todo'>('feed')` (~L35).
 - **Want:** write down the intended behavior/spec so the default tab and entry
   points are deliberate (see #5 for the context-aware default).
 
 ### 4. Where does a new to-do get added? (today vs. backlog toggle)
 - **Current:** `TodoPane` hard-codes the destination — the hint literally reads
-  `GOES TO BACKLOG` (`add.tsx` ~L565). `NimiApp.addTodo` (~L198) only falls back
+  `GOES TO BACKLOG` (`add.tsx` ~L565). `MikanApp.addTodo` (~L198) only falls back
   to backlog when the cap-5 is already reached (`CAP_REACHED`); otherwise it tries
   Today. There is no user-facing choice.
 - **Want:** an explicit **"Add to Today"** toggle in the add-to-do flow:
@@ -171,7 +171,7 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
   - otherwise the to-do goes to the backlog (and the toggle is shown disabled with
     a reason, e.g. "Today's full").
 - **Contract note:** there is currently no "add to backlog" mutator
-  (`NimiApp.tsx` ~L198–213 fakes it in local state). A clean fix likely needs a
+  (`MikanApp.tsx` ~L198–213 fakes it in local state). A clean fix likely needs a
   contract addition — land that first.
 
 ### 5. On the backlog screen, **+** should default to "Add a to-do"

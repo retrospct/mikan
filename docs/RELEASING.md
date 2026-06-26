@@ -10,14 +10,14 @@ review → confirm → merge → watch loop.
 - **Unified versioning.** Every workspace (`apps/desktop`, `apps/mobile`,
   `packages/contract`, `packages/brand`, `services/token-broker`) and the repo root share
   **one version** — release-please bumps them all via `extra-files`. Today only
-  `@nimi/desktop` reads the version at build time; the rest get a coherent bump so the repo
+  `@mikan/desktop` reads the version at build time; the rest get a coherent bump so the repo
   stays in lockstep (and mobile is ready when it ships).
 - **Conventional Commits drive the version + changelog.** `feat:` → minor, `fix:` → patch,
   `feat!:` / `BREAKING CHANGE:` → major. Other types (`chore`, `docs`, `refactor`, …) don't
   bump but still appear in history. Enforced by **commitlint** (husky `commit-msg` hook +
   `.github/workflows/commitlint.yml`).
 - **Single brand: Mikan.** The desktop app builds Mikan and publishes to `retrospct/mikan`.
-  The build-time brand layer (`@nimi/brand`) is kept (it's the product-identity + design-token
+  The build-time brand layer (`@mikan/brand`) is kept (it's the product-identity + design-token
   SSOT) but currently carries a single brand.
 
 ## Moving parts

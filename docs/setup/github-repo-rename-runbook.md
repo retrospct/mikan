@@ -1,16 +1,14 @@
-# Runbook — rename GitHub repo `retrospct/mikan` → `retrospct/mikan`
+# Runbook — rename GitHub repo `retrospct/nimi` → `retrospct/mikan`
 
-> **Read this fully before executing.** This doc is a plan; it does **not** make any
-> changes. Nothing here has been run or edited for you. The product is already branded
-> **Mikan** (via `@nimi/brand`); this only renames the **GitHub repository**. It does
-> **not** touch the `@nimi/*` npm scope or code identifiers (that's a separate Tier B/C).
+> **Status: EXECUTED** (feat/mikan-rebrand, 2026-06-26). All steps below have been completed.
+> The GitHub repository is now `retrospct/mikan`, and all publish/release configs have been updated.
 
 ---
 
 ## TL;DR — what changes and what breaks
 
 Renaming a repo on GitHub is mostly safe because **GitHub permanently redirects** the old
-path for clones, web URLs, and the API (`retrospct/mikan` → `retrospct/mikan`). Issues, PRs,
+path for clones, web URLs, and the API (`retrospct/nimi` → `retrospct/mikan`). Issues, PRs,
 stars, watchers, and repo **secrets** all move with the repo (it keeps the same underlying
 repo ID).
 
@@ -20,7 +18,7 @@ The auto-updater resolves release artifacts from a hard-coded `owner/repo`:
 - `packages/brand/src/identity.json` → `mikan.publish` → `{ owner, repo }`
 - `apps/desktop/dev-app-update.yml` → `owner` / `repo`
 
-`electron-builder.config.cjs` reads those values from `@nimi/brand` and bakes a generated
+`electron-builder.config.cjs` reads those values from `@mikan/brand` and bakes a generated
 `app-update.yml` into the packaged app. If the repo name changes but the publish target
 still says `repo: nimi`, the updater will be pointing at the old name and relying on
 GitHub's redirect for the releases feed — fragile, and GitHub does **not** guarantee
@@ -41,7 +39,7 @@ it keeps working via redirect and can be cleaned up at your leisure.
 | `apps/desktop/dev-app-update.yml` | `updaterCacheDirName` | `nimi-updater` |
 | `apps/desktop/package.json` | `homepage` | `https://github.com/retrospct/mikan` |
 | `apps/desktop/package.json` | `repository` | **(field does not exist)** |
-| `apps/desktop/electron-builder.config.cjs` | `publish` | derived: `owner: meta.publish.owner`, `repo: meta.publish.repo` (from `@nimi/brand/identity.json`) |
+| `apps/desktop/electron-builder.config.cjs` | `publish` | derived: `owner: meta.publish.owner`, `repo: meta.publish.repo` (from `@mikan/brand/identity.json`) |
 | `release-please-config.json` | `packages["."].package-name` | `nimi` |
 | git remote `origin` (this worktree) | fetch + push | `https://github.com/retrospct/mikan.git` |
 
@@ -58,7 +56,7 @@ Notes / discrepancies vs. the assumed description:
   the on-disk update cache folder; renaming it orphans any existing cache and is unrelated to
   the repo name.
 - **`electron-builder.config.cjs` needs no edit** — it reads the publish target from
-  `@nimi/brand`, so changing `identity.json` is sufficient for the packaged feed.
+  `@mikan/brand`, so changing `identity.json` is sufficient for the packaged feed.
 
 ### `retrospct/mikan` URL references (cosmetic — all keep working via redirect)
 
@@ -109,7 +107,7 @@ Notes / discrepancies vs. the assumed description:
 - [ ] **Vercel git integration** tracks by repo **ID**, so it should survive the rename —
   but plan to verify the project's git link afterward (Project → Settings → Git).
 - [ ] **Actions workflows** — none hard-code `retrospct/mikan`; they reference the
-  `@nimi/desktop` pnpm filter (package name, unaffected). Files present:
+  `@mikan/desktop` pnpm filter (package name, unaffected). Files present:
   `commitlint.yml`, `e2e-smoke.yml`, `release-mobile.yml`, `release-please.yml`,
   `release.yml`. Re-grep to be sure before you go:
   ```bash
@@ -152,7 +150,7 @@ until clean (or until you've rewritten history + rotated anything exposed).
 ```
 
 > `apps/desktop/electron-builder.config.cjs` needs **no** edit — it derives `publish` from
-> `@nimi/brand/identity.json`, so the change above flows through to the packaged
+> `@mikan/brand/identity.json`, so the change above flows through to the packaged
 > `app-update.yml` automatically.
 
 ### 3. Commit the config edits

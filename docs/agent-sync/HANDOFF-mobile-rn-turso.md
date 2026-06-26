@@ -32,7 +32,7 @@ mobile E2E parity**; V8 (offline persistence) **not yet run**.
 | # | Gate | Result | Evidence |
 |---|---|---|---|
 | V1 | typecheck contract/desktop/brand/token-broker | ✅ | `pnpm typecheck` (5/5) |
-| V2 | typecheck `@nimi/mobile` + `@nimi/mastra` | ✅ | both green after migrations |
+| V2 | typecheck `@mikan/mobile` + `@mikan/mastra` | ✅ | both green after migrations |
 | V3 | Mastra agent (playground :4111) | ✅ | `searchMemories` + `addTodo` fired via gateway (Sonnet 4.6); no invented memories |
 | V4 | Inngest pipeline (:8288) | ✅ | `memory/ingest` run **Completed**; non-empty brief from Haiku 4.5 |
 | V5 | iOS dev client builds + launches | ✅ | Turso native module compiles/links; app renders the Mikan login screen, no red screen |
@@ -123,7 +123,7 @@ apps/mobile/
   src/db/{client,schema,bootstrap,index}.ts ← connect/exec/pull, broker→openDb bootstrap
 services/mastra/
   src/model.ts                ← AI Gateway model resolution
-  src/agents/nimi-agent.ts · src/tools/*  ← agent + (mock) tools
+  src/agents/mikan-agent.ts · src/tools/*  ← agent + (mock) tools
   src/inngest/functions/ingest-pipeline.ts · scripts/inngest-dev-server.ts
 docs/adr/0008 (broker) · 0009 (mobile RN+Turso)
 ```

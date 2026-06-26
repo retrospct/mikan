@@ -4,7 +4,7 @@ Shared punch list. **Baseline:** all 15 original items shipped. Lanes: **back** 
 
 ## Shipped
 
-- **Monorepo migration (#0):** flat → `apps/desktop` + `packages/contract` (`@nimi/contract`), pnpm workspaces + turborepo. See [ADR 0006](adr/0006-repo-structure.md).
+- **Monorepo migration (#0):** flat → `apps/desktop` + `packages/contract` (`@mikan/contract`), pnpm workspaces + turborepo. See [ADR 0006](adr/0006-repo-structure.md).
 - On-device pipeline: capture → content-hash store → extract → chunk → embed → libSQL vector search.
 - Real on-device embedder (transformers.js / MiniLM) behind a swappable seam.
 - Daily focus todos: cap-5 + finish-the-list latch, plan/carry-over, per-todo context pool (surface / pin / dismiss).
@@ -19,7 +19,7 @@ Shared punch list. **Baseline:** all 15 original items shipped. Lanes: **back** 
 
 ## Punch list
 
-> **#0 monorepo migration — ✅ DONE** (see Shipped). Paths: `apps/desktop/src/…`; contract = `packages/contract` (`@nimi/contract`). Everything below branches off the already-monorepo'd `main`.
+> **#0 monorepo migration — ✅ DONE** (see Shipped). Paths: `apps/desktop/src/…`; contract = `packages/contract` (`@mikan/contract`). Everything below branches off the already-monorepo'd `main`.
 
 | #   | Item                                                                                                     | Lane         | Unblocks                                         | Size | When       |
 | --- | -------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------ | ---- | ---------- |
@@ -75,5 +75,5 @@ All 15 original items are shipped. The items below track work that emerged after
 ## Decisions gating work
 
 - **AI model (gates #3):** → [ADR 0004](adr/0004-ai-drafting-model.md) _(accepted: cloud BYO-key behind a `Drafter` seam)_
-- **OCR / ASR (gates #5):** → [ADR 0005](adr/0005-image-audio-extraction.md) _(accepted + shipped: tesseract.js OCR / Whisper ASR portable path; macOS Vision+Speech fast path via `resources/mac/nimi-extract` Swift helper)_
+- **OCR / ASR (gates #5):** → [ADR 0005](adr/0005-image-audio-extraction.md) _(accepted + shipped: tesseract.js OCR / Whisper ASR portable path; macOS Vision+Speech fast path via `resources/mac/mikan-extract` Swift helper)_
 - **Repo structure (gates #14):** → [ADR 0006](adr/0006-repo-structure.md) _(accepted: monorepo NOW — ✅ done)_

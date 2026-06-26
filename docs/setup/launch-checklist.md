@@ -62,7 +62,7 @@ it and retire the old project
   and a real support inbox. Keep this separate from the `send.getmikan.com` sending
   reputation.
 - **Marketing site `getmikan.com`** (separate PR, after the brand layer lands): a
-  small site — suggested `apps/web` consuming `@nimi/brand`, Astro on
+  small site — suggested `apps/web` consuming `@mikan/brand`, Astro on
   Vercel. Serves the homepage + `/terms` + `/privacy`, and is the target for Logto's
   **unknown-session redirect URL**. Unblocks: Google consent links, Logto terms/privacy links + the
   registration "agree to terms" checkbox. Set Logto "agree to terms" =
@@ -77,7 +77,7 @@ it and retire the old project
   the `https://auth.getmikan.com/callback/<connector-id>` variant when the custom
   domain goes Active**, or Google sign-in breaks there.
 - Real 1024×1024 icons — **Mikan done** (`apps/desktop/assets/mikan/icon.{svg,png}`,
-  derived from the NimiMark on the teal field; regenerate platform sets from the SVG).
+  derived from the MikanMark on the teal field; regenerate platform sets from the SVG).
 - Branch protection — require the `commitlint` check on PRs once PRs resume.
 
 ## Already done (for reference)

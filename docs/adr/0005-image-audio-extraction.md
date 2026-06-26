@@ -81,7 +81,7 @@ unlike drafting, this is the case least likely to ever need the cloud fallback.
 
 1. [x] Extend `extract.ts` with image + audio branches behind a per-type seam (`extractMedia`, routes to `ocr`/`asr` singletons).
 2. [x] Portable path: `tesseract.js` (OCR) + `WhisperAsr` (transformers.js Whisper tiny + ffmpeg decode), lazy-load + cache under `userData/models/`.
-3. [x] macOS Vision/Speech fast path via `nimi-extract.swift` CLI helper (`resources/mac/`); `NEEME_MAC_HELPER` injected by `worker/client.ts`; falls back to portable when helper absent or `NEEME_EXTRACTOR=portable`.
+3. [x] macOS Vision/Speech fast path via `mikan-extract.swift` CLI helper (`resources/mac/`); `NEEME_MAC_HELPER` injected by `worker/client.ts`; falls back to portable when helper absent or `NEEME_EXTRACTOR=portable`.
 4. [x] HEIC decode handled: `TesseractOcr` converts HEIC → JPEG via `heic-convert` before Tesseract; `MacVisionOcr` reads HEIC natively via `CGImageSource`. **Note on native Speech ASR:** TCC authorization flows through the parent Electron app; on macOS, `SFSpeechRecognizer` with `requiresOnDeviceRecognition = true` runs entirely on-device. Falls back to portable Whisper if helper is absent.
 
 ### Env knobs
@@ -95,7 +95,7 @@ unlike drafting, this is the case least likely to ever need the cloud fallback.
 ### Build helper (macOS)
 
 ```bash
-pnpm --filter @nimi/desktop build:mac-helper
+pnpm --filter @mikan/desktop build:mac-helper
 # or directly:
-swiftc resources/mac/nimi-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/nimi-extract
+swiftc resources/mac/mikan-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/mikan-extract
 ```

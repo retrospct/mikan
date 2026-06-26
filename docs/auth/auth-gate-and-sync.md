@@ -30,7 +30,7 @@ becomes a lock-out.
 | Yes | signed out | **Login gate** (`AuthGate`) |
 | Yes | signed in (incl. **offline** w/ cached session) | **App** |
 
-The gate decision lives at the top of `NimiApp`'s render:
+The gate decision lives at the top of `MikanApp`'s render:
 
 ```ts
 const gated = auth.configured && (!authReady || !auth.isAuthenticated)
@@ -203,7 +203,7 @@ export flow is the only backup.
 
 ## 5. What's verified vs. not
 
-- **Verified here:** `pnpm --filter @nimi/desktop typecheck`, `lint` (clean on all
+- **Verified here:** `pnpm --filter @mikan/desktop typecheck`, `lint` (clean on all
   touched files), `test` (266 pass), and a full `build`.
 - **Not verified here (needs a GUI + creds):** the live sign-in → toggle → broker
   → Turso round-trip, and the two-device recovery-key flow. Run on a packaged

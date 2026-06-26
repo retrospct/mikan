@@ -18,7 +18,7 @@ These collide in conversation — keep them distinct in code, docs, and UI copy:
 | Term | Means | Not to be confused with |
 |---|---|---|
 | **Mikan** / **Mikan-app** | The product and the desktop/mobile client. | The agent. |
-| **Mikan-agent** (`nimiAgent`) | The server-side Mastra agent (Claude) in `services/mastra`. | The app, or the UI surface. |
+| **Mikan-agent** (`mikanAgent`) | The server-side Mastra agent (Claude) in `services/mastra`. | The app, or the UI surface. |
 | **Ask Mikan** | The *UI surface* for conversing with Mikan-agent. On desktop it is the **evolved global search overlay** (header magnifier + shortcut), not a separate tab. | A standalone chatbot product. |
 
 ## Core domain terms
@@ -64,4 +64,4 @@ The app is a narrow, centered single column over a wallpaper margin.
   0008 (sync broker), 0009 (mobile cloud pipeline), **0010** (UI foundation), **0011** (Ask Mikan).
 - `docs/ROADMAP.md` — punch list + v1.1 wire-up/hardening.
 - `services/mastra/` — the Mikan-agent + Inngest pipeline (the cloud lane).
-- `apps/desktop/src/renderer/src/nimi/` — the client surfaces and current hand-rolled UI.
+- `apps/desktop/src/renderer/src/mikan/` — the client surfaces and current hand-rolled UI.

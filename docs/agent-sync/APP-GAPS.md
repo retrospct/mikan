@@ -59,7 +59,7 @@ Severity: **high** = data loss / wrong behavior / broken shipped path ·
   while logged out, then logs in, stays local-only until a manual toggle. **high**
 - [ ] **Stale renderer after worker restart.** `setSyncEnabled`/`importRecoveryKey`
   re-fork the worker but the renderer never refetches tasks/backlog/archive
-  (`useSync.ts:79`, `NimiApp.tsx:153-168`). (Cross-listed in UX-PUNCHLIST §C.) **high**
+  (`useSync.ts:79`, `MikanApp.tsx:153-168`). (Cross-listed in UX-PUNCHLIST §C.) **high**
 - [ ] **No conflict resolution.** Pre-sync migration uses `INSERT OR IGNORE`
   (`db/migrate.ts:127`); libSQL replica is last-write-wins; concurrent multi-device
   edits to the same row are undefined at the app layer. **med**
@@ -110,4 +110,4 @@ testing a packaged build:
 - **Semantic search quality** — default `LocalEmbedder` downloads an ONNX model;
   `NEEME_EMBEDDER=hash` (tests/CI) is non-semantic.
 - **Login gate** — when Logto env is baked in, the whole app sits behind sign-in
-  (`NimiApp.tsx:330`); local-first data is reachable only after login.
+  (`MikanApp.tsx:330`); local-first data is reachable only after login.

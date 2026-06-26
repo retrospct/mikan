@@ -9,8 +9,8 @@ the strict production CSP. See `docs/SECURITY.md` for the policy rationale.
 
 | Tier               | Command                                               | Needs secret? | Needs display? | Covers                                                                  |
 | ------------------ | ----------------------------------------------------- | ------------- | -------------- | ----------------------------------------------------------------------- |
-| **1 — Static**     | `pnpm typecheck && pnpm --filter @nimi/desktop build` | No            | No             | Types, build, font assets emitted                                       |
-| **2 — E2E smoke**  | `xvfb-run -a pnpm --filter @nimi/desktop test:e2e`    | No            | Xvfb           | `test/e2e/csp.spec.ts`: violations, fonts, no Google Fonts, strict meta |
+| **1 — Static**     | `pnpm typecheck && pnpm --filter @mikan/desktop build` | No            | No             | Types, build, font assets emitted                                       |
+| **2 — E2E smoke**  | `xvfb-run -a pnpm --filter @mikan/desktop test:e2e`    | No            | Xvfb           | `test/e2e/csp.spec.ts`: violations, fonts, no Google Fonts, strict meta |
 | **3 — GUI/visual** | This runbook (§1–§2)                                  | No            | Yes            | Renders correctly with bundled fonts; artifact capture                  |
 
 Tiers 1–2 are automated by `.github/workflows/e2e-smoke.yml` on every PR.

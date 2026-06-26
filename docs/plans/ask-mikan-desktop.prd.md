@@ -152,7 +152,7 @@ the app**. Offline or signed-out, the overlay is simply local search — exactly
   `CONTEXT.md`; reconciles ADR-0003 (on-device) with ADR-0009 (cloud agent) via a per-surface split.
 - **Dependencies:** Phase 1 foundation (composer/message/approval primitives); the Mastra
   client-tool spike is a prerequisite only for the *multi-hop* enhancement, not for v1.
-- The `services/mastra` `nimiAgent` already exists (ADR-0009 Phase-0 spike validated the
+- The `services/mastra` `mikanAgent` already exists (ADR-0009 Phase-0 spike validated the
   tool-calling loop); this PRD repurposes it for desktop with client-executed tools.
 - Hosted-model cost is a real operating concern → rate-limits/quotas are part of v1, not an
   afterthought.

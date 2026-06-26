@@ -2,7 +2,7 @@
 //
 // Ported from the design bundle (nimi-data.jsx + the BACKLOG that lived in
 // nimi-plan.jsx). This is hand-authored placeholder content. The view-model
-// types now live in `@nimi/contract/views` — this file only holds sample data
+// types now live in `@mikan/contract/views` — this file only holds sample data
 // and `makeMockApi()`, the adapter `api.ts` falls back to when `window.api` is
 // absent (i.e. running in a plain browser, not Electron). It mutates module-local
 // arrays and returns the updated view shapes, mirroring the real worker so the
@@ -15,8 +15,8 @@ import type {
   MemoryKind,
   Task,
   UncoveredTodo
-} from '@nimi/contract/views'
-import { CAP_REACHED, type CaptureResult, type NimiApi, type Todo } from '@nimi/contract/ipc'
+} from '@mikan/contract/views'
+import { CAP_REACHED, type CaptureResult, type NimiApi, type Todo } from '@mikan/contract/ipc'
 
 type MockApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui' | 'update'>
 

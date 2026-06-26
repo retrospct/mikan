@@ -20,8 +20,8 @@
  * — see ./oidc.ts. The access token is opaque to us; our backend remains the
  * trust boundary that verifies it (still deferred — no backend yet).
  */
-import { brand } from '@nimi/brand'
-import type { AuthClaims, AuthState } from '@nimi/contract/ipc'
+import { brand } from '@mikan/brand'
+import type { AuthClaims, AuthState } from '@mikan/contract/ipc'
 import { shell } from 'electron'
 import { createRemoteJWKSet } from 'jose'
 import * as secrets from '../secrets/store'

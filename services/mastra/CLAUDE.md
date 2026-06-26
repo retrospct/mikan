@@ -1,4 +1,4 @@
-# @nimi/mastra — agent guide
+# @mikan/mastra — agent guide
 
 Phase 0 spike: Mastra agent + Inngest durable pipeline on Vercel. Read the root `CLAUDE.md` first.
 

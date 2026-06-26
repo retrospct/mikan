@@ -15,8 +15,8 @@ import '@fontsource/jetbrains-mono/600.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
-import { configureClient } from '@nimi/contract/api/runtime'
-import { applyBrandTheme, BrandProvider } from '@nimi/brand/web'
+import { configureClient } from '@mikan/contract/api/runtime'
+import { applyBrandTheme, BrandProvider } from '@mikan/brand/web'
 
 // t3-turbo pattern: app layer injects its env var into the shared client.
 // Desktop uses VITE_NEEME_API_URL (statically replaced by electron-vite at build).

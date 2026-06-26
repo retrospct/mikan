@@ -1,4 +1,4 @@
-import { brand } from '@nimi/brand'
+import { brand } from '@mikan/brand'
 import { useState, type ReactElement } from 'react'
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'

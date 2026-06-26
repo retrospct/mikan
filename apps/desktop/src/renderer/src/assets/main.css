@@ -1,11 +1,11 @@
 @import 'tailwindcss';
 
 /* Map Tailwind's colour utilities onto the runtime brand variables that
-   @nimi/brand's web adapter writes to :root (applyBrandTheme). This is the
+   @mikan/brand's web adapter writes to :root (applyBrandTheme). This is the
    shadcn-style indirection: `bg-brand`, `text-fg`, `border-border`, etc. resolve
    through --brand-*, so switching BRAND (or, later, light/dark) re-points every
    utility with no recompile and no hard-coded hex in components. The values live
-   in @nimi/brand; this file only wires names. */
+   in @mikan/brand; this file only wires names. */
 @theme inline {
   --color-brand: var(--brand-primary);
   --color-brand-active: var(--brand-primary-active);

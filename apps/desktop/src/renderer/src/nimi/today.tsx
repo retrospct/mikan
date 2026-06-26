@@ -1,6 +1,6 @@
 // today.tsx — header, memory weather, Today list, task cards, bottom nav.
-import { useBrand } from '@nimi/brand/web'
-import type { Task } from '@nimi/contract/views'
+import { useBrand } from '@mikan/brand/web'
+import type { Task } from '@mikan/contract/views'
 import type { JSX } from 'react'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { MemoryContext } from './api'

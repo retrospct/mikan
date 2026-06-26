@@ -21,7 +21,7 @@
  * Windows, libsecret/kwallet on Linux); we keep the existing plaintext fallback
  * for platforms without a backing keyring.
  */
-import type { AuthClaims, BrokerTokenResponse } from '@nimi/contract/ipc'
+import type { AuthClaims, BrokerTokenResponse } from '@mikan/contract/ipc'
 import { app, safeStorage } from 'electron'
 import { readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'

@@ -1,5 +1,5 @@
 import Constants from 'expo-constants'
-import { configureClient } from '@nimi/contract/api/runtime'
+import { configureClient } from '@mikan/contract/api/runtime'
 
 /**
  * t3-turbo pattern: the app layer injects its base URL into the shared client.

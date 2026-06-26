@@ -19,9 +19,9 @@
     "resolveJsonModule": true,
     "paths": {
       "@renderer/*": ["./src/renderer/src/*"],
-      "@nimi/contract/*": ["../../packages/contract/src/*"],
-      "@nimi/brand": ["../../packages/brand/src/index.ts"],
-      "@nimi/brand/*": ["../../packages/brand/src/*"]
+      "@mikan/contract/*": ["../../packages/contract/src/*"],
+      "@mikan/brand": ["../../packages/brand/src/index.ts"],
+      "@mikan/brand/*": ["../../packages/brand/src/*"]
     }
   }
 }

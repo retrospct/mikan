@@ -14,14 +14,14 @@ nimi/
   apps/
     desktop/        ← the Electron app (main · preload · renderer). Has its own CLAUDE.md.
   packages/
-    contract/       ← @nimi/contract: the backend⇄UI contract (ipc + view-model types)
+    contract/       ← @mikan/contract: the backend⇄UI contract (ipc + view-model types)
                       + the shared HTTP API client. Consumed from source.
   turbo.json        ← task graph (build · typecheck · dev)
   pnpm-workspace.yaml
   package.json      ← workspace root: turbo scripts, eslint, prettier
 ```
 
-Future: `apps/mobile` (RN/Expo) joins later and shares `@nimi/contract` (ADR 0006 #14).
+Future: `apps/mobile` (RN/Expo) joins later and shares `@mikan/contract` (ADR 0006 #14).
 
 ## Before you start (coordination)
 
@@ -54,7 +54,7 @@ Never set `sandbox:false`, `nodeIntegration:true`, `contextIsolation:false`, or
 
 ## The contract
 
-- `@nimi/contract` lives in `packages/contract`. Import: `import type { Task, Memory } from '@nimi/contract/views'`.
+- `@mikan/contract` lives in `packages/contract`. Import: `import type { Task, Memory } from '@mikan/contract/views'`.
 - `packages/contract/src/views.ts` — the view model the UI renders. `packages/contract/src/ipc.ts` — the `window.api.*` surface + channels.
 - Consumed **from .ts source** (no build step) — keep it free of Node/Electron imports so the renderer and a future RN/Expo app can use it.
 - The worker projects its data model → the view model in `apps/desktop/src/main/services/project.ts` (the **AI-gap**). Details: `docs/INTEGRATION.md`.
@@ -65,12 +65,12 @@ Never set `sandbox:false`, `nodeIntegration:true`, `contextIsolation:false`, or
 Run from the repo root (turbo fans out across packages):
 
 ```bash
-pnpm typecheck   # turbo: @nimi/contract + desktop (tsc node + web) — must be green
+pnpm typecheck   # turbo: @mikan/contract + desktop (tsc node + web) — must be green
 pnpm build       # turbo: electron-vite main + worker, preload, renderer
 pnpm lint        # eslint over the workspace; your changed files must be clean
 ```
 
-- Scope to one package with `--filter`, e.g. `pnpm --filter @nimi/desktop build`.
+- Scope to one package with `--filter`, e.g. `pnpm --filter @mikan/desktop build`.
 - Pre-existing eslint debt lives in `packages/contract/src/api/generated/**` (hey-api output) — not yours.
 - **No Electron runtime in CI/agents** → worker behavior (native `onnxruntime-node`, model download, libSQL vector search) needs a live `pnpm dev` smoke test before merge.
 - Offline/dev fallback: `NEEME_EMBEDDER=hash pnpm dev` (skips the real model). `NEEME_*` and `VITE_*` are declared in `turbo.json` `globalEnv` so they pass through turbo's strict env.

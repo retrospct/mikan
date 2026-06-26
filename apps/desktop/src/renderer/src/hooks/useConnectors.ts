@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { ConnectorsState, ConnectorId } from '@nimi/contract/ipc'
+import type { ConnectorsState, ConnectorId } from '@mikan/contract/ipc'
 import { isElectron } from '../nimi/api'
 
 const EMPTY: ConnectorsState = {

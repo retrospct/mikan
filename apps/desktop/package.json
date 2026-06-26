@@ -1,10 +1,10 @@
 {
-  "name": "@nimi/desktop",
+  "name": "@mikan/desktop",
   "version": "1.5.0",
-  "description": "nimi — a privacy-first, local-first personal memory desktop app (Electron)",
+  "description": "mikan — a privacy-first, local-first personal memory desktop app (Electron)",
   "main": "./out/main/index.js",
   "author": "jlee",
-  "homepage": "https://github.com/retrospct/nimi",
+    "homepage": "https://github.com/retrospct/mikan",
   "scripts": {
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
@@ -23,7 +23,7 @@
     "build:unpack": "npm run build && electron-builder --dir --config electron-builder.config.cjs",
     "build:win": "npm run build && electron-builder --win --config electron-builder.config.cjs",
     "build:mac": "electron-vite build && electron-builder --mac --config electron-builder.config.cjs",
-    "build:mac-helper": "swiftc resources/mac/nimi-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/nimi-extract && echo 'nimi-extract compiled'"
+    "build:mac-helper": "swiftc resources/mac/mikan-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/mikan-extract && echo 'mikan-extract compiled'"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -32,8 +32,8 @@
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@huggingface/transformers": "^4.2.0",
     "@libsql/client": "^0.17.4",
-    "@nimi/brand": "workspace:*",
-    "@nimi/contract": "workspace:*",
+    "@mikan/brand": "workspace:*",
+    "@mikan/contract": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "electron-updater": "^6.8.9",
     "ffmpeg-static": "^5.3.0",

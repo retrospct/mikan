@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getHealth } from '@nimi/contract/api'
+import { getHealth } from '@mikan/contract/api'
 
 type Health = { status?: string; backends?: Record<string, boolean> }
 type State = { kind: 'loading' } | { kind: 'ok'; data: Health } | { kind: 'error'; message: string }

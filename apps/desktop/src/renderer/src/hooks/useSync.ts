@@ -1,4 +1,4 @@
-import type { SyncSettings, SyncStatus } from '@nimi/contract/ipc'
+import type { SyncSettings, SyncStatus } from '@mikan/contract/ipc'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { isElectron } from '../nimi/api'
 

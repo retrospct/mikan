@@ -1,6 +1,6 @@
 // add.tsx — the + button's sheet. Primary: feed content for indexing.
 // Secondary: jot a to-do into the backlog. Indexing uncovers candidate to-dos.
-import { useBrand } from '@nimi/brand/web'
+import { useBrand } from '@mikan/brand/web'
 import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
@@ -10,7 +10,7 @@ import { VoiceRecorder } from './voice'
 import { data } from './api'
 import { captureFiles, kindOfFile } from './capture-file'
 import { TASK_SUGGESTIONS, nextTranscript } from './ui-stubs'
-import type { MemoryKind, Task, UncoveredTodo, BacklogItem } from '@nimi/contract/views'
+import type { MemoryKind, Task, UncoveredTodo, BacklogItem } from '@mikan/contract/views'
 
 type AddTodo = (
   item: Partial<BacklogItem> & { title: string; why?: string; conf?: number | null; ctx?: string[] }

@@ -9,7 +9,7 @@
  * Runs in the worker (off the main loop).
  */
 import { createHash } from 'node:crypto'
-import type { ContextEntry, Item, ItemStatus, Todo } from '@nimi/contract/ipc'
+import type { ContextEntry, Item, ItemStatus, Todo } from '@mikan/contract/ipc'
 import type {
   BacklogItem,
   FedItem,
@@ -20,7 +20,7 @@ import type {
   Task,
   TaskStatus,
   UncoveredTodo
-} from '@nimi/contract/views'
+} from '@mikan/contract/views'
 import type { TaskDraft, UncoveredDraft } from '../pipeline/draft'
 
 const DAY_MS = 86_400_000

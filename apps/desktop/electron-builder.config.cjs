@@ -2,8 +2,8 @@
 //
 // Replaces the former electron-builder.yml: YAML can't read identity.json, but
 // build identity (productName, appId, deep-link scheme, icon, publish target) is
-// owned by @nimi/brand so the TS app and the packager can't drift.
-const identity = require('@nimi/brand/identity.json')
+// owned by @mikan/brand so the TS app and the packager can't drift.
+const identity = require('@mikan/brand/identity.json')
 
 const meta = identity.mikan
 

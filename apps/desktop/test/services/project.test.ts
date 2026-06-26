@@ -6,7 +6,7 @@ import {
   toTask,
   toBacklogItem
 } from '../../src/main/services/project'
-import type { Item, Todo, ContextEntry } from '@nimi/contract/ipc'
+import type { Item, Todo, ContextEntry } from '@mikan/contract/ipc'
 import type { TaskDraft } from '../../src/main/pipeline/draft'
 
 // ── factories ─────────────────────────────────────────────────────────────────

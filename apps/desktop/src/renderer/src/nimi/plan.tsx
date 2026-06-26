@@ -3,7 +3,7 @@ import { useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { NimiMark } from './mark'
-import type { BacklogItem, Task } from '@nimi/contract/views'
+import type { BacklogItem, Task } from '@mikan/contract/views'
 
 export function PlanRitual({
   tasks,

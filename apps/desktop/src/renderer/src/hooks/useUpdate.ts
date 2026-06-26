@@ -1,4 +1,4 @@
-import type { UpdateStatus } from '@nimi/contract/ipc'
+import type { UpdateStatus } from '@mikan/contract/ipc'
 import { useCallback, useEffect, useState } from 'react'
 import { isElectron } from '../nimi/api'
 

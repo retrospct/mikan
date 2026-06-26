@@ -1,5 +1,5 @@
 {
-  "name": "@nimi/mobile",
+  "name": "@mikan/mobile",
   "version": "1.5.0",
   "private": true,
   "main": "index.ts",
@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~56.0.15",
-    "@nimi/brand": "workspace:*",
-    "@nimi/contract": "workspace:*",
+    "@mikan/brand": "workspace:*",
+    "@mikan/contract": "workspace:*",
     "@noble/ciphers": "^2.2.0",
     "@tursodatabase/sync-react-native": "^0.6.1",
     "expo": "^56.0.12",

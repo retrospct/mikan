@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { NimiApi } from '@nimi/contract/ipc'
+import { NimiApi } from '@mikan/contract/ipc'
 
 declare global {
   interface Window {

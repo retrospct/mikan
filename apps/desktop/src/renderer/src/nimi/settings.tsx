@@ -8,7 +8,7 @@
 //   - Sync: the cloud-replica toggle + per-device encryption / recovery key.
 //   - Connections: the Gmail + Google Calendar connectors (self-contained).
 //   - Updates: current version + check / restart-to-update.
-import { useBrand } from '@nimi/brand/web'
+import { useBrand } from '@mikan/brand/web'
 import { QRCodeSVG } from 'qrcode.react'
 import { useState, type JSX } from 'react'
 import { useAuth } from '../hooks/useAuth'

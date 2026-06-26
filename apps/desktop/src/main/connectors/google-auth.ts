@@ -26,7 +26,7 @@ import { shell } from 'electron'
 import { createServer } from 'node:http'
 import * as secrets from '../secrets/store'
 import { randomVerifier, pkceChallenge, randomState } from '../auth/oidc'
-import type { ConnectorId, ConnectorsState, ProviderState } from '@nimi/contract/ipc'
+import type { ConnectorId, ConnectorsState, ProviderState } from '@mikan/contract/ipc'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'

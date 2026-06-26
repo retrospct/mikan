@@ -10,7 +10,7 @@
  * and does not need an Electron context; the portable tesseract path is what this
  * headless smoke covers.
  *
- * Run: NEEME_USER_DATA=/tmp/nimi-smoke-ocr pnpm --filter @nimi/desktop exec tsx test/smoke/ocr-live.ts
+ * Run: NEEME_USER_DATA=/tmp/nimi-smoke-ocr pnpm --filter @mikan/desktop exec tsx test/smoke/ocr-live.ts
  */
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'

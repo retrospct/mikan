@@ -30,8 +30,8 @@ and a visual tier that produces a screenshot + a short demo video.
 ## 1. Deterministic tier (always run first — no judgement)
 
 ```bash
-pnpm typecheck && pnpm --filter @nimi/desktop build
-xvfb-run -a -s "-screen 0 1280x1024x24" pnpm --filter @nimi/desktop test:e2e
+pnpm typecheck && pnpm --filter @mikan/desktop build
+xvfb-run -a -s "-screen 0 1280x1024x24" pnpm --filter @mikan/desktop test:e2e
 ```
 
 If a spec exists for the feature (e.g. `test/e2e/csp.spec.ts`), this is the

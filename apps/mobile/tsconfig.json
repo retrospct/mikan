@@ -11,13 +11,13 @@
       "node"
     ],
     "paths": {
-      "@nimi/contract/*": [
+      "@mikan/contract/*": [
         "../../packages/contract/src/*"
       ],
-      "@nimi/brand": [
+      "@mikan/brand": [
         "../../packages/brand/src/index.ts"
       ],
-      "@nimi/brand/*": [
+      "@mikan/brand/*": [
         "../../packages/brand/src/*"
       ]
     }

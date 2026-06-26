@@ -10,14 +10,14 @@
  * loop is skipped with a clear note) so it's safe to run anywhere.
  *
  * Run (gate-only, no creds needed):
- *   pnpm --filter @nimi/desktop test:smoke:sync
+ *   pnpm --filter @mikan/desktop test:smoke:sync
  *
  * Run the full two-device loop (set all four, see docs/setup/turso-credentials.md):
  *   NEEME_SYNC=on \
  *   NEEME_SYNC_URL=libsql://<db>.turso.io \
  *   NEEME_SYNC_AUTH_TOKEN=<token> \
  *   NEEME_SYNC_ENCRYPTION_KEY=<64-hex> \
- *   pnpm --filter @nimi/desktop test:smoke:sync
+ *   pnpm --filter @mikan/desktop test:smoke:sync
  *
  * Internals: the db layer builds its libSQL client once per process from the env,
  * so each "device" is a separate child process with its own NEEME_USER_DATA. The

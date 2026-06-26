@@ -7,8 +7,8 @@
 // from here instead of touching `window.api` directly — that keeps the
 // `window.api`-may-be-undefined reality in exactly one place.
 import { createContext } from 'react'
-import type { Memory } from '@nimi/contract/views'
-import type { NimiApi } from '@nimi/contract/ipc'
+import type { Memory } from '@mikan/contract/views'
+import type { NimiApi } from '@mikan/contract/ipc'
 import { makeMockApi } from './mock'
 
 /** The slice of the contract the UI actually drives (auth is handled separately). */

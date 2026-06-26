@@ -6,7 +6,7 @@ import {
   type ConnectorsState,
   type NimiApi,
   type UpdateStatus
-} from '@nimi/contract/ipc'
+} from '@mikan/contract/ipc'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 
 // Custom APIs for renderer — the only data surface the renderer can reach.

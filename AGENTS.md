@@ -9,14 +9,14 @@ See **`CLAUDE.md`** for the full shared spine (architecture, contract, verify st
 | Service | Required for dev? | Notes |
 |--------|-------------------|--------|
 | **Electron app** (`pnpm dev`) | Yes | Starts main + preload + renderer (Vite `:5173`) + data **utilityProcess** worker |
-| **neeme FastAPI** (`:8000`) | No | Sibling repo; only if testing `@nimi/contract/api` HTTP client |
+| **neeme FastAPI** (`:8000`) | No | Sibling repo; only if testing `@mikan/contract/api` HTTP client |
 | **Logto OIDC** | No | Inert until `MAIN_VITE_LOGTO_*` env is set |
 
 ### Verify (no runtime)
 
 From repo root: `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output).
 
-`pnpm test` fans out to `@nimi/desktop` vitest: 158 tests in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
+`pnpm test` fans out to `@mikan/desktop` vitest: 158 tests in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
 
 ### Run the desktop app
 
@@ -30,7 +30,7 @@ Use `NEEME_EMBEDDER=hash` in cloud/CI VMs to skip ONNX model download and `onnxr
 
 **Display:** Electron needs X11 (`DISPLAY` is usually `:1` in this environment). Harmless `dbus` errors in logs are normal without a session bus.
 
-**Worker / DB:** On successful boot, main forks the `neeme-data` utilityProcess and creates `neeme.db` under Electron `userData` (Linux: `~/.config/@nimi/desktop/neeme.db`). The renderer still uses sample data in `apps/desktop/src/renderer/src/nimi/data.ts`; IPC (`window.api.pipeline.*`, `window.api.todos.*`) is wired for integration work.
+**Worker / DB:** On successful boot, main forks the `neeme-data` utilityProcess and creates `neeme.db` under Electron `userData` (Linux: `~/.config/@mikan/desktop/neeme.db`). The renderer still uses sample data in `apps/desktop/src/renderer/src/mikan/data.ts`; IPC (`window.api.pipeline.*`, `window.api.todos.*`) is wired for integration work.
 
 ### Data-layer smoke (optional, no Electron UI)
 
@@ -56,11 +56,11 @@ Two committed tiers under `apps/desktop/test/` (fixtures in `test/fixtures/`). B
 
 ```bash
 # Tier 1 — headless pipeline (no Electron, no display): capture → extract → index → search
-pnpm --filter @nimi/desktop test:smoke
+pnpm --filter @mikan/desktop test:smoke
 
 # Tier 2 — Playwright Electron E2E (real picker + drag-drop → IPC → worker → DB).
 # Launches the BUILT app, so build first. Electron _electron needs no browser download.
-pnpm --filter @nimi/desktop build && pnpm --filter @nimi/desktop test:e2e
+pnpm --filter @mikan/desktop build && pnpm --filter @mikan/desktop test:e2e
 ```
 
 The E2E reads ground truth back through `window.api.pipeline.archive()` (the app's own DB
@@ -74,12 +74,12 @@ Opt-in Turso sync with mandatory field encryption. Full procedure:
 
 ```bash
 # Tier 1 — gate check (no creds): NEEME_SYNC=on without a valid key must stay local
-pnpm --filter @nimi/desktop test:smoke:sync
+pnpm --filter @mikan/desktop test:smoke:sync
 
 # Tier 2 — live two-device replica loop (needs a Turso DB; key is REQUIRED)
 NEEME_SYNC=on NEEME_SYNC_URL=libsql://<db>.turso.io \
 NEEME_SYNC_AUTH_TOKEN=<token> NEEME_SYNC_ENCRYPTION_KEY=<64-hex> \
-pnpm --filter @nimi/desktop test:smoke:sync
+pnpm --filter @mikan/desktop test:smoke:sync
 ```
 
 Sync **fails closed**: `NEEME_SYNC=on` enables sync only with a valid 64-hex
@@ -90,8 +90,8 @@ four env vars when running as a cloud agent).
 ### Tier 3 — packaged installer on a second computer (Mac/Windows)
 
 ```bash
-pnpm --filter @nimi/desktop build:mac    # → apps/desktop/dist/nimi-<ver>.dmg
-pnpm --filter @nimi/desktop build:win    # → dist/nimi-<ver>-setup.exe (build ON Windows)
+pnpm --filter @mikan/desktop build:mac    # → apps/desktop/dist/nimi-<ver>.dmg
+pnpm --filter @mikan/desktop build:win    # → dist/nimi-<ver>-setup.exe (build ON Windows)
 ```
 
 Unsigned: macOS → right-click **Open** (or `xattr -dr com.apple.quarantine /Applications/Mikan.app`);
@@ -115,12 +115,12 @@ Features that require `NEEME_ANTHROPIC_KEY` + a display are covered by runbooks 
 
 Runbooks follow `docs/testing/RUNBOOK-TEMPLATE.md`; the `gui-smoke` skill
 (`.cursor/skills/gui-smoke/SKILL.md`) is the SOP for running them + capturing
-artifacts. The deterministic tier (`pnpm --filter @nimi/desktop test:e2e` under
+artifacts. The deterministic tier (`pnpm --filter @mikan/desktop test:e2e` under
 Xvfb) runs automatically on PRs via `.github/workflows/e2e-smoke.yml`; see
 `docs/testing/automation-setup.md` for wiring an auto-launched cloud agent for the
 visual tier.
 
 ### Scoped commands
 
-- Desktop only: `pnpm --filter @nimi/desktop dev|build|typecheck|test`
+- Desktop only: `pnpm --filter @mikan/desktop dev|build|typecheck|test`
 - See root `README.md` and `CLAUDE.md` for monorepo layout and agent lanes (`docs/agent-sync/INBOX.md`).

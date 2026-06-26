@@ -13,7 +13,7 @@
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  /* accent — driven by the active brand (@nimi/brand). applyBrandTheme writes
+  /* accent — driven by the active brand (@mikan/brand). applyBrandTheme writes
      --brand-primary / --brand-primary-active per mode; the matcha oklch values
      are a pre-mount fallback only. soft/faint/line derive from --accent. */
   --accent: var(--brand-primary, oklch(0.8 0.13 142));

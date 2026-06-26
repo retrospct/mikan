@@ -8,7 +8,7 @@
  *   capture → content-hash store → extract (pdf/text) → chunk → embed → index →
  *   search, plus idempotency and the image→pending contract.
  *
- * Run:  pnpm --filter @nimi/desktop test:smoke
+ * Run:  pnpm --filter @mikan/desktop test:smoke
  */
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

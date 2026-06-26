@@ -2,7 +2,7 @@
 // Kept in its own (component-free) module so icons.tsx can export only the <NIcon>
 // component, satisfying react-refresh/only-export-components.
 import type { IconName } from './icons'
-import type { MemoryKind } from '@nimi/contract/views'
+import type { MemoryKind } from '@mikan/contract/views'
 
 export const KIND_ICON: Record<string, IconName> = {
   note: 'note',

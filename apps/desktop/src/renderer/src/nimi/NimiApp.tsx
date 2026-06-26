@@ -17,7 +17,7 @@
 // Data comes from the `data` seam (apps/.../nimi/api.ts): the real `window.api`
 // in Electron, an in-memory mock in the browser preview. AI-only fields come back
 // null until the drafting layer lands (docs/INTEGRATION.md).
-import type { BacklogItem, Memory, Task } from '@nimi/contract/views'
+import type { BacklogItem, Memory, Task } from '@mikan/contract/views'
 import type { JSX } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
@@ -113,7 +113,7 @@ export default function NimiApp(): JSX.Element {
     el.setAttribute('data-theme', TWEAKS.theme)
     el.setAttribute('data-density', TWEAKS.density)
     el.setAttribute('data-ambient', TWEAKS.ambient ? 'on' : 'off')
-    // Colour comes from the active brand (@nimi/brand); BrandProvider applies the
+    // Colour comes from the active brand (@mikan/brand); BrandProvider applies the
     // brand tokens and re-applies them when data-theme flips above.
   }, [])
 

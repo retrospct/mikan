@@ -1,7 +1,7 @@
 {
-  "name": "@nimi/brand",
+  "name": "@mikan/brand",
   "version": "1.5.0",
-  "description": "The nimi Mikan brand layer: product identity (Mikan) + platform-agnostic design tokens. Consumed from source by the desktop app (web adapter) and the React Native/Expo mobile app (native adapter).",
+  "description": "The mikan brand layer: product identity (Mikan) + platform-agnostic design tokens. Consumed from source by the desktop app (web adapter) and the React Native/Expo mobile app (native adapter).",
   "private": true,
   "type": "module",
   "exports": {

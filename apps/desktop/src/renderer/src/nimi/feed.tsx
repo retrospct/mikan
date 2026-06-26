@@ -8,7 +8,7 @@ import { VoiceRecorder } from './voice'
 import { AppHeader } from './today'
 import { data } from './api'
 import { captureFiles, kindOfFile } from './capture-file'
-import type { FedItem, MemoryKind, UncoveredTodo } from '@nimi/contract/views'
+import type { FedItem, MemoryKind, UncoveredTodo } from '@mikan/contract/views'
 import type { IconName } from './icons'
 import type { NimiMarkState } from './types'
 

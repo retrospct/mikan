@@ -17,7 +17,7 @@
  *             run or expired token (HTTP 410) → full events list.
  */
 import { pipelineService, type ExternalProvenance } from './pipeline-service'
-import type { ConnectorId, IngestResult } from '@nimi/contract/ipc'
+import type { ConnectorId, IngestResult } from '@mikan/contract/ipc'
 import {
   gmailToText,
   gmailTitle,

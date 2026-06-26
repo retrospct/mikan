@@ -2,7 +2,7 @@
  * View-model contract — the shapes the **UI renders**, and therefore the shapes
  * the backend's `window.api.*` returns. Lifted verbatim from the design's
  * `renderer/src/neeme/data.ts` so the UI can swap mock data for `window.api.*`
- * with a mechanical import change (`from './data'` → `from '@nimi/contract/views'`).
+ * with a mechanical import change (`from './data'` → `from '@mikan/contract/views'`).
  *
  * Keep this free of Node/Electron/Drizzle imports (the renderer imports it).
  *

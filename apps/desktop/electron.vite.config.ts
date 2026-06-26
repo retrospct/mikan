@@ -9,14 +9,14 @@ const { version: APP_VERSION } = JSON.parse(readFileSync('./package.json', 'utf-
   version: string
 }
 
-// Read brand identity straight from @nimi/brand's source (cwd-relative, same as
+// Read brand identity straight from @mikan/brand's source (cwd-relative, same as
 // the package.json read above). Avoids an ESM JSON import attribute, which
 // electron-vite's config transpile drops.
 const brandIdentity = JSON.parse(
   readFileSync(resolve('../../packages/brand/src/identity.json'), 'utf-8')
 ) as Record<string, { productName: string }>
 
-// Single brand: Mikan. (@nimi/brand resolves the active brand statically now, so
+// Single brand: Mikan. (@mikan/brand resolves the active brand statically now, so
 // there's no `__BRAND__` define to inject.)
 const PRODUCT_NAME = brandIdentity.mikan.productName
 
@@ -41,8 +41,8 @@ function brandHtmlPlugin(): Plugin {
 //     (covered by script-src 'self'), so this never ships.
 //   - style-src 'unsafe-inline' — Vite injects <style> tags for CSS/HMR in dev
 //     (prod links a same-origin stylesheet instead, covered by style-src 'self').
-//   - connect-src ws:/http: localhost — Vite HMR websocket + the optional FastAPI
-//     round-trip smoke (ApiStatus / @nimi/contract/api), neither of which ships.
+  //   - connect-src ws:/http: localhost — Vite HMR websocket + the optional FastAPI
+  //     round-trip smoke (ApiStatus / @mikan/contract/api), neither of which ships.
 // This serve-only plugin rewrites the meta CSP for dev so we never have to loosen
 // the policy that actually ships. Keep DEV_CSP in sync with the meta tag + the
 // runtime header in src/main/index.ts.
@@ -64,13 +64,13 @@ function devCspPlugin(): Plugin {
   }
 }
 
-// `@nimi/contract` and `@nimi/brand` are internal workspace packages consumed
+// `@mikan/contract` and `@mikan/brand` are internal workspace packages consumed
 // *from .ts source*. externalizeDepsPlugin externalizes everything in
 // `dependencies` (so native modules like onnxruntime-node aren't bundled) — but
 // these MUST be bundled, or Node would try to `require()` a .ts file at runtime.
 // Exclude them.
-const CONTRACT = '@nimi/contract'
-const BRAND_PKG = '@nimi/brand'
+const CONTRACT = '@mikan/contract'
+const BRAND_PKG = '@mikan/brand'
 
 // The preload runs sandboxed (sandbox:true, a hard security invariant), so it
 // CANNOT `require()` npm modules by name at runtime — they must be bundled in.

@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store'
-import { setToken, clearToken } from '@nimi/contract/api/token-store'
+import { setToken, clearToken } from '@mikan/contract/api/token-store'
 
 const ACCESS_TOKEN_KEY = 'nimi_access_token'
 

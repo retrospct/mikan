@@ -1,4 +1,4 @@
-# @nimi/token-broker
+# @mikan/token-broker
 
 Logto → Turso token broker. Implements ADR 0008: a stateless server-side TS service that JWKS-verifies the Logto access token and mints a short-lived, DB-scoped Turso token for the caller's personal embedded replica.
 

@@ -20,8 +20,8 @@
  * which is gated on `app.isPackaged`. The header path needs a packaged-artifact
  * tier (Tier 3) to exercise.
  *
- * Prereq:  pnpm --filter @nimi/desktop build   (produces out/main/index.js)
- * Run:     pnpm --filter @nimi/desktop test:e2e
+ * Prereq:  pnpm --filter @mikan/desktop build   (produces out/main/index.js)
+ * Run:     pnpm --filter @mikan/desktop test:e2e
  */
 import {
   test,

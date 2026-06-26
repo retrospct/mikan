@@ -6,8 +6,8 @@ import { embedder } from '../pipeline/embed'
 import { detectContentType, extract, extractMedia, suffixOf } from '../pipeline/extract'
 import { putRaw } from '../pipeline/raw-store'
 import { encrypt, decrypt } from '../db/crypto'
-import type { CaptureResult, ContentType, Item, ItemStatus, SearchHit } from '@nimi/contract/ipc'
-import type { FedItem, MatchHit, Memory } from '@nimi/contract/views'
+import type { CaptureResult, ContentType, Item, ItemStatus, SearchHit } from '@mikan/contract/ipc'
+import type { FedItem, MatchHit, Memory } from '@mikan/contract/views'
 import { toFedItem, toMatchHits, toMemory } from './project'
 
 /**

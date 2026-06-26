@@ -43,7 +43,7 @@ vi.mock('node:fs/promises', () => ({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-import type { BrokerTokenResponse } from '@nimi/contract/ipc'
+import type { BrokerTokenResponse } from '@mikan/contract/ipc'
 
 function freshToken(overrides: Partial<BrokerTokenResponse> = {}): BrokerTokenResponse {
   return {

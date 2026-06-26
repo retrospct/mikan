@@ -1,5 +1,5 @@
-import { clearToken, setToken } from '@nimi/contract/api/token-store'
-import type { AuthState } from '@nimi/contract/ipc'
+import { clearToken, setToken } from '@mikan/contract/api/token-store'
+import type { AuthState } from '@mikan/contract/ipc'
 import { useEffect, useState } from 'react'
 import { isElectron } from '../nimi/api'
 

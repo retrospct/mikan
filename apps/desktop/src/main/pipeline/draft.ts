@@ -1,4 +1,4 @@
-import type { NoteKind } from '@nimi/contract/views'
+import type { NoteKind } from '@mikan/contract/views'
 
 /**
  * The drafting seam. Mirrors `embed.ts`: a plain interface, a `NullDrafter` that

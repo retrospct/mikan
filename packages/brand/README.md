@@ -1,11 +1,11 @@
-# @nimi/brand
+# @mikan/brand
 
-The **brand layer**: a single brand, **Mikan**, resolved statically by `@nimi/brand`.
+The **brand layer**: a single brand, **Mikan**, resolved statically by `@mikan/brand`.
 A brand = product identity (name, appId, deep-link scheme, icon, URLs, tagline) + a
 colour theme. The architecture (a `BrandConfig` type + platform adapters) stays
 brand-agnostic, so a second product could be reintroduced later from git history
 without rearchitecting — but today nothing selects a brand. Consumed **from `.ts`
-source** (no build step), like `@nimi/contract`.
+source** (no build step), like `@mikan/contract`.
 
 ## Layout
 
@@ -25,11 +25,11 @@ src/
 
 | Entry                       | Use from                      | Contains                                     |
 | --------------------------- | ----------------------------- | -------------------------------------------- |
-| `@nimi/brand`               | anywhere (main, renderer, RN) | the `brand`, tokens, types — no DOM          |
-| `@nimi/brand/tokens`        | anywhere                      | system tokens + colour token types           |
-| `@nimi/brand/identity.json` | TS configs + electron-builder | build identity SSOT                          |
-| `@nimi/brand/web`           | Electron renderer only        | CSS-var adapter, `BrandProvider`, `useBrand` |
-| `@nimi/brand/native`        | React Native only             | `nativeTheme()` JS-object adapter            |
+| `@mikan/brand`               | anywhere (main, renderer, RN) | the `brand`, tokens, types — no DOM          |
+| `@mikan/brand/tokens`        | anywhere                      | system tokens + colour token types           |
+| `@mikan/brand/identity.json` | TS configs + electron-builder | build identity SSOT                          |
+| `@mikan/brand/web`           | Electron renderer only        | CSS-var adapter, `BrandProvider`, `useBrand` |
+| `@mikan/brand/native`        | React Native only             | `nativeTheme()` JS-object adapter            |
 
 `./web` is the only DOM-dependent entry — RN must never import it.
 
@@ -81,7 +81,7 @@ tool (items 2–4) before GA.
 - **Assistant persona name.** User-facing copy ("Ask Mikan", "Welcome to Mikan",
   "Add to Mikan") now uses `brand.productName` for the in-app assistant. **Decision
   pending:** confirm the assistant should share the product name vs. carry its own.
-- **Mobile app identity wiring.** `apps/mobile` imports `@nimi/brand` (login screen
+- **Mobile app identity wiring.** `apps/mobile` imports `@mikan/brand` (login screen
   reads `brand.productName`/`brand.tagline`), but the Expo app identity is **not yet
   wired to it**: `app.json` is still static (`name: Mikan`, `scheme: nimi`,
   `bundleIdentifier cool.jlee.nimi`). When mobile graduates, align `app.json` (or a

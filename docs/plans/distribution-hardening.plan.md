@@ -3,7 +3,7 @@ todos:
   # --- #11 Vuln cleanup + CSP tighten (lane: back, size S, P1 quick) ---
   - id: v11-audit-baseline
     status: pending
-    content: 'Capture the vuln baseline: `pnpm audit` (currently clean) + `gh api repos/retrospct/nimi/dependabot/alerts` (3 alerts: drizzle-orm GHSA-gpj5-g38j-94v9 x2, esbuild GHSA-67mh-4wv8-2f99 — all already "fixed"); record any newly-open ones and confirm the lockfile pins patched versions (drizzle-orm >=0.45.2, esbuild >=0.25 via vite 7)'
+    content: 'Capture the vuln baseline: `pnpm audit` (currently clean) + `gh api repos/retrospct/mikan/dependabot/alerts` (3 alerts: drizzle-orm GHSA-gpj5-g38j-94v9 x2, esbuild GHSA-67mh-4wv8-2f99 — all already "fixed"); record any newly-open ones and confirm the lockfile pins patched versions (drizzle-orm >=0.45.2, esbuild >=0.25 via vite 7)'
   - id: v11-electron-cve
     status: pending
     content: 'Check Electron itself for advisories at the pinned 42.x (`pnpm why electron`, electronjs.org/releases + GH advisories); bump within the supported major if a Chromium/V8 CVE applies, then re-run `pnpm build` + `pnpm dev` smoke'
@@ -154,7 +154,7 @@ deferred `v13-win-canary` todo.
 - **Vulns are effectively already remediated.** `pnpm audit` at repo root returns **"No known
   vulnerabilities found."** The three dependabot alerts the [`INBOX`](../agent-sync/INBOX.md)
   flags (`@back … clear the 3 dependabot vulns (#1, #11)`) are, per
-  `gh api repos/retrospct/nimi/dependabot/alerts`:
+  `gh api repos/retrospct/mikan/dependabot/alerts`:
   - `drizzle-orm` **GHSA-gpj5-g38j-94v9** (high, `< 0.45.2`) — alerts #1 and #3 — **state: fixed**
   - `esbuild` **GHSA-67mh-4wv8-2f99** (medium, `<= 0.24.2`) — alert #2 — **state: fixed**
 
@@ -562,7 +562,7 @@ part of the secure-release definition-of-done.
 
 ```bash
 pnpm audit                                   # clean
-gh api repos/retrospct/nimi/dependabot/alerts # no open alerts
+gh api repos/retrospct/mikan/dependabot/alerts # no open alerts
 pnpm typecheck && pnpm build && pnpm lint    # green (contract + preload + main changes)
 pnpm --filter @nimi/desktop build:mac        # signed, notarized dmg/zip
 # spctl/codesign/stapler checks pass (see #13)

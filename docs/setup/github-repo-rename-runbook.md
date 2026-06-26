@@ -1,4 +1,4 @@
-# Runbook — rename GitHub repo `retrospct/nimi` → `retrospct/mikan`
+# Runbook — rename GitHub repo `retrospct/mikan` → `retrospct/mikan`
 
 > **Read this fully before executing.** This doc is a plan; it does **not** make any
 > changes. Nothing here has been run or edited for you. The product is already branded
@@ -10,7 +10,7 @@
 ## TL;DR — what changes and what breaks
 
 Renaming a repo on GitHub is mostly safe because **GitHub permanently redirects** the old
-path for clones, web URLs, and the API (`retrospct/nimi` → `retrospct/mikan`). Issues, PRs,
+path for clones, web URLs, and the API (`retrospct/mikan` → `retrospct/mikan`). Issues, PRs,
 stars, watchers, and repo **secrets** all move with the repo (it keeps the same underlying
 repo ID).
 
@@ -39,11 +39,11 @@ it keeps working via redirect and can be cleaned up at your leisure.
 | `packages/brand/src/identity.json` | `mikan.publish` | `{ "owner": "retrospct", "repo": "nimi" }` |
 | `apps/desktop/dev-app-update.yml` | `provider` / `owner` / `repo` | `github` / `retrospct` / `nimi` |
 | `apps/desktop/dev-app-update.yml` | `updaterCacheDirName` | `nimi-updater` |
-| `apps/desktop/package.json` | `homepage` | `https://github.com/retrospct/nimi` |
+| `apps/desktop/package.json` | `homepage` | `https://github.com/retrospct/mikan` |
 | `apps/desktop/package.json` | `repository` | **(field does not exist)** |
 | `apps/desktop/electron-builder.config.cjs` | `publish` | derived: `owner: meta.publish.owner`, `repo: meta.publish.repo` (from `@nimi/brand/identity.json`) |
 | `release-please-config.json` | `packages["."].package-name` | `nimi` |
-| git remote `origin` (this worktree) | fetch + push | `https://github.com/retrospct/nimi.git` |
+| git remote `origin` (this worktree) | fetch + push | `https://github.com/retrospct/mikan.git` |
 
 Notes / discrepancies vs. the assumed description:
 
@@ -60,7 +60,7 @@ Notes / discrepancies vs. the assumed description:
 - **`electron-builder.config.cjs` needs no edit** — it reads the publish target from
   `@nimi/brand`, so changing `identity.json` is sufficient for the packaged feed.
 
-### `retrospct/nimi` URL references (cosmetic — all keep working via redirect)
+### `retrospct/mikan` URL references (cosmetic — all keep working via redirect)
 
 30 references across **tracked** files:
 
@@ -105,15 +105,15 @@ Notes / discrepancies vs. the assumed description:
   ignored and not staged.
 - [ ] **GitHub repo secrets persist across rename** (they're attached to the repo object):
   `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_*`, `MAIN_VITE_*`, etc. List them now so you can
-  diff after: `gh secret list --repo retrospct/nimi`.
+  diff after: `gh secret list --repo retrospct/mikan`.
 - [ ] **Vercel git integration** tracks by repo **ID**, so it should survive the rename —
   but plan to verify the project's git link afterward (Project → Settings → Git).
-- [ ] **Actions workflows** — none hard-code `retrospct/nimi`; they reference the
+- [ ] **Actions workflows** — none hard-code `retrospct/mikan`; they reference the
   `@nimi/desktop` pnpm filter (package name, unaffected). Files present:
   `commitlint.yml`, `e2e-smoke.yml`, `release-mobile.yml`, `release-please.yml`,
   `release.yml`. Re-grep to be sure before you go:
   ```bash
-  git grep -n "retrospct/nimi" .github/workflows/   # expect: no matches
+  git grep -n "retrospct/mikan" .github/workflows/   # expect: no matches
   ```
 
 ---
@@ -147,7 +147,7 @@ until clean (or until you've rewritten history + rotated anything exposed).
 
 **`apps/desktop/package.json`** — `homepage` (cosmetic, but do it in the same pass):
 ```diff
--  "homepage": "https://github.com/retrospct/nimi",
+-  "homepage": "https://github.com/retrospct/mikan",
 +  "homepage": "https://github.com/retrospct/mikan",
 ```
 
@@ -167,8 +167,8 @@ git push
 Run from **a clone** (not strictly required to be this worktree). This renames the repo on
 GitHub **and** rewrites that clone's `origin` URL for you:
 ```bash
-gh repo rename mikan --repo retrospct/nimi
-# or, from inside a clone whose origin is retrospct/nimi:
+gh repo rename mikan --repo retrospct/mikan
+# or, from inside a clone whose origin is retrospct/mikan:
 gh repo rename mikan
 ```
 
@@ -187,7 +187,7 @@ git remote -v   # verify
 All of these keep working via redirect; do them only if you want tidy URLs.
 - Bulk-update doc URLs (skip `CHANGELOG.md` — it's historical):
   ```bash
-  git grep -rl "retrospct/nimi" -- ':!CHANGELOG.md' | xargs sed -i '' 's#retrospct/nimi#retrospct/mikan#g'
+  git grep -rl "retrospct/mikan" -- ':!CHANGELOG.md' | xargs sed -i '' 's#retrospct/mikan#retrospct/mikan#g'
   ```
 - `release-please-config.json` → `packages["."].package-name`: `"nimi"` → `"mikan"`.
   **Cosmetic only** — this affects release-PR titles / changelog naming, **not** the GitHub
@@ -201,8 +201,8 @@ All of these keep working via redirect; do them only if you want tidy URLs.
 ```bash
 # Repo identity moved and old path redirects:
 gh repo view retrospct/mikan --json name,url,visibility
-gh api repos/retrospct/nimi --jq '.full_name'      # → "retrospct/mikan" (redirect)
-git ls-remote https://github.com/retrospct/nimi.git >/dev/null && echo "old clone URL redirects OK"
+gh api repos/retrospct/mikan --jq '.full_name'      # → "retrospct/mikan" (redirect)
+git ls-remote https://github.com/retrospct/mikan.git >/dev/null && echo "old clone URL redirects OK"
 
 # Auto-updater feed points at the new repo:
 rg -n "repo:" apps/desktop/dev-app-update.yml       # → repo: mikan
@@ -229,10 +229,10 @@ gh repo rename nimi --repo retrospct/mikan
 Then revert the Step-2 config edits (or `git revert` the commit) and re-fix remotes
 (Step 5). 
 
-> **Squatting risk:** once you rename away from `nimi`, the name `retrospct/nimi` becomes
+> **Squatting risk:** once you rename away from `nimi`, the name `retrospct/mikan` becomes
 > available for **anyone** to create. If protecting the old name matters (it currently backs
 > redirects and the updater fallback), consider creating a placeholder repo at
-> `retrospct/nimi` after the rename, or simply keep the rename reversible until you're
+> `retrospct/mikan` after the rename, or simply keep the rename reversible until you're
 > confident. GitHub's redirect breaks the moment someone else claims the old name.
 
 ---
@@ -256,7 +256,7 @@ runbook.** When you do:
 
 ## Mobile & services exposure
 
-> **Question:** does renaming `retrospct/nimi` → `retrospct/mikan` require any change in the
+> **Question:** does renaming `retrospct/mikan` → `retrospct/mikan` require any change in the
 > **mobile** app (`apps/mobile`, RN/Expo) or the **services** (`services/token-broker`,
 > `services/mastra`, both Vercel)? **Answer: no.** None of them is coupled to the GitHub
 > **repo name**. The desktop electron-updater publish target remains the *only* hard-coupled
@@ -269,7 +269,7 @@ runbook.** When you do:
 | **Mobile** (`apps/mobile`) | Expo **EAS Build** (`release-mobile.yml`, inert until `EXPO_TOKEN`); EAS Update would be keyed by Expo **project ID**, never GitHub | **No** | **None** |
 | **token-broker** (`services/token-broker`) | Vercel git integration (tracks project by internal **repo ID**) | **No** | **None** |
 | **mastra** (`services/mastra`) | Vercel via `mastra build` → `vercel deploy` (`@mastra/deployer-vercel`); Inngest keyed by signing/event keys | **No** | **None** |
-| CI (`.github/`) | GitHub Actions | **No** — no hardcoded `retrospct/nimi`; only dynamic `${{ github.* }}` | **None** |
+| CI (`.github/`) | GitHub Actions | **No** — no hardcoded `retrospct/mikan`; only dynamic `${{ github.* }}` | **None** |
 
 ### Mobile — evidence
 
@@ -307,7 +307,7 @@ runbook.** When you do:
   own namespace), *not* the GitHub repo — renaming the GitHub repo does not touch it, and it
   would not break. Re-slugging to `mikan` is an **optional brand cleanup**, separate from and
   unaffected by this rename.
-- `git grep -n "retrospct/nimi" apps/mobile` → **no matches.** The only `github.com` string
+- `git grep -n "retrospct/mikan" apps/mobile` → **no matches.** The only `github.com` string
   in mobile is a doc link to the upstream `t3-oss/t3-turbo` template
   (`apps/mobile/CLAUDE.md:9`), unrelated to our repo.
 
@@ -335,7 +335,7 @@ runbook.** When you do:
 
 - Env vars (`README.md`) are all Logto/Turso identity (`LOGTO_*`, `TURSO_*`, `TOKEN_TTL_SECONDS`,
   `PORT`) — **none embeds the repo name**.
-- `git grep -n "retrospct/nimi" services/token-broker` → **no matches**;
+- `git grep -n "retrospct/mikan" services/token-broker` → **no matches**;
   `git grep -n "github.com" services/token-broker` → **no matches**.
 
 **token-broker verdict: no change required on rename.**
@@ -350,14 +350,14 @@ runbook.** When you do:
   **Vercel AI Gateway** (`AI_GATEWAY_API_KEY`) — keyed by signing/event/API keys, **not** the
   GitHub repo name. The Inngest serve route is `api/inngest.ts` (a Vercel route), not a
   GitHub-derived URL.
-- `git grep -n "retrospct/nimi" services/mastra` → **no matches**;
+- `git grep -n "retrospct/mikan" services/mastra` → **no matches**;
   `git grep -n "github.com" services/mastra` → **no matches**.
 
 **mastra verdict: no change required on rename.**
 
 ### CI / workflows — evidence
 
-- `git grep -n "retrospct/nimi" .github/` → **no matches.** No workflow hardcodes the repo
+- `git grep -n "retrospct/mikan" .github/` → **no matches.** No workflow hardcodes the repo
   path. `release-mobile.yml` (the only mobile/EAS deploy workflow) references the
   `apps/mobile` working directory and the `EXPO_TOKEN` secret — never the repo name. Any
   `${{ github.repository }}` usages elsewhere are **dynamic** and resolve to the new name
@@ -366,7 +366,7 @@ runbook.** When you do:
 ### Action items for mobile / services
 
 **None.** To be explicit and reassuring: there is **nothing to edit** in `apps/mobile`,
-`services/token-broker`, or `services/mastra` for the `retrospct/nimi → retrospct/mikan`
+`services/token-broker`, or `services/mastra` for the `retrospct/mikan → retrospct/mikan`
 rename. Mobile OTA (when enabled) is keyed by Expo project ID; both services deploy through
 Vercel's repo-ID-tracked git integration; and no config, code, env var, deploy hook, or
 webhook in any of them embeds the GitHub repo name. (Optional, unrelated brand cleanup: the

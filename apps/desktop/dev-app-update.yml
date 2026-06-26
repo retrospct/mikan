@@ -1,4 +1,4 @@
 provider: github
 owner: retrospct
-repo: nimi
-updaterCacheDirName: nimi-updater
+repo: mikan
+updaterCacheDirName: mikan-updater

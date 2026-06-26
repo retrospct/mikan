@@ -16,7 +16,7 @@ review → confirm → merge → watch loop.
   `feat!:` / `BREAKING CHANGE:` → major. Other types (`chore`, `docs`, `refactor`, …) don't
   bump but still appear in history. Enforced by **commitlint** (husky `commit-msg` hook +
   `.github/workflows/commitlint.yml`).
-- **Single brand: Mikan.** The desktop app builds Mikan and publishes to `retrospct/nimi`.
+- **Single brand: Mikan.** The desktop app builds Mikan and publishes to `retrospct/mikan`.
   The build-time brand layer (`@nimi/brand`) is kept (it's the product-identity + design-token
   SSOT) but currently carries a single brand.
 

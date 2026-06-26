@@ -5,7 +5,7 @@
   "separate-pull-requests": true,
   "packages": {
     ".": {
-      "package-name": "nimi",
+      "package-name": "mikan",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         { "type": "json", "path": "apps/desktop/package.json", "jsonpath": "$.version" },

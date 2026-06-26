@@ -39,7 +39,7 @@ only part that requires a cloud agent with an X11 display and an Anthropic key.
 ## 1. Checkout and install
 
 ```bash
-git clone https://github.com/retrospct/nimi.git   # skip if already cloned
+git clone https://github.com/retrospct/mikan.git   # skip if already cloned
 cd nimi
 git checkout claude/strange-bassi-9974c1
 pnpm install

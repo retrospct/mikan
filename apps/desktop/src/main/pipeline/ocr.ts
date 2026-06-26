@@ -89,7 +89,9 @@ export class TesseractOcr implements Ocr {
       if (tempPath) {
         try {
           unlinkSync(tempPath)
-        } catch {}
+        } catch {
+          // ignore: temp file may already be removed
+        }
       }
     }
   }

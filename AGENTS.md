@@ -14,9 +14,11 @@ See **`CLAUDE.md`** for the full shared spine (architecture, contract, verify st
 
 ### Verify (no runtime)
 
-From repo root: `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output).
+From repo root: `pnpm typecheck` (green), `pnpm build` (green), `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output); `pnpm lint` over the whole workspace also currently reports pre-existing `services/**` errors, so it exits non-zero — only your changed files need to be clean.
 
-`pnpm test` fans out to `@nimi/desktop` vitest: 158 tests in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
+`pnpm test` fans out to `@nimi/desktop` vitest in plain Node (no Electron, no model download): pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
+
+> **Pre-existing test-harness drift (not an env problem):** commit `00b72eb` moved the `chunks` table out of the main DB into a separate local-only `neeme-vec.db` (`vecClient`), but `apps/desktop/test/helpers.ts` (`clearTables`) and `apps/desktop/test/smoke/capture-file.ts` (`chunkCount`) still query `chunks` on the main `client`. As of this writing that makes ~81 tests across the 6 integration files fail with `SQLITE_ERROR: no such table: chunks`, and `test:smoke` throws the same error; ~187 unit tests still pass. The fix is to point those test helpers at `vecClient`. The **app and the real pipeline are unaffected** — capture → embed → index → search works (verified via the data-layer smoke below and a live GUI capture).
 
 ### Run the desktop app
 

@@ -6,11 +6,11 @@ See **`CLAUDE.md`** for the full shared spine (architecture, contract, verify st
 
 ### Services (this repo)
 
-| Service | Required for dev? | Notes |
-|--------|-------------------|--------|
-| **Electron app** (`pnpm dev`) | Yes | Starts main + preload + renderer (Vite `:5173`) + data **utilityProcess** worker |
-| **neeme FastAPI** (`:8000`) | No | Sibling repo; only if testing `@nimi/contract/api` HTTP client |
-| **Logto OIDC** | No | Inert until `MAIN_VITE_LOGTO_*` env is set |
+| Service                       | Required for dev? | Notes                                                                            |
+| ----------------------------- | ----------------- | -------------------------------------------------------------------------------- |
+| **Electron app** (`pnpm dev`) | Yes               | Starts main + preload + renderer (Vite `:5173`) + data **utilityProcess** worker |
+| **neeme FastAPI** (`:8000`)   | No                | Sibling repo; only if testing `@nimi/contract/api` HTTP client                   |
+| **Logto OIDC**                | No                | Inert until `MAIN_VITE_LOGTO_*` env is set                                       |
 
 ### Verify (no runtime)
 
@@ -30,7 +30,7 @@ Use `NEEME_EMBEDDER=hash` in cloud/CI VMs to skip ONNX model download and `onnxr
 
 **Display:** Electron needs X11 (`DISPLAY` is usually `:1` in this environment). Harmless `dbus` errors in logs are normal without a session bus.
 
-**Worker / DB:** On successful boot, main forks the `neeme-data` utilityProcess and creates `neeme.db` under Electron `userData` (Linux: `~/.config/@nimi/desktop/neeme.db`). The renderer still uses sample data in `apps/desktop/src/renderer/src/nimi/data.ts`; IPC (`window.api.pipeline.*`, `window.api.todos.*`) is wired for integration work.
+**Worker / DB:** On successful boot, main forks the `neeme-data` utilityProcess and creates `neeme.db` under Electron `userData` (Linux: `~/.config/@nimi/desktop/neeme.db`). In Electron, renderer data flows through `apps/desktop/src/renderer/src/nimi/api.ts` to the real `window.api.pipeline.*` / `window.api.todos.*` IPC surface; the in-memory `mock.ts` is only the plain-browser preview fallback.
 
 ### Data-layer smoke (optional, no Electron UI)
 
@@ -108,10 +108,10 @@ Windows SmartScreen → **More info → Run anyway**. Packaged userData/DB: macO
 Features that require `NEEME_ANTHROPIC_KEY` + a display are covered by runbooks in
 `docs/testing/`. Run them using a GUI-capable cloud agent.
 
-| Runbook | Feature | Needs |
-|---|---|---|
-| `docs/testing/uncovered-todos-gui-runbook.md` | Feed → "I spotted these to-dos" | `NEEME_ANTHROPIC_KEY`, `DISPLAY` |
-| `docs/testing/csp-smoke-runbook.md` | CSP hardening + local fonts (#11) | `DISPLAY` (deterministic tier needs neither) |
+| Runbook                                       | Feature                           | Needs                                        |
+| --------------------------------------------- | --------------------------------- | -------------------------------------------- |
+| `docs/testing/uncovered-todos-gui-runbook.md` | Feed → "I spotted these to-dos"   | `NEEME_ANTHROPIC_KEY`, `DISPLAY`             |
+| `docs/testing/csp-smoke-runbook.md`           | CSP hardening + local fonts (#11) | `DISPLAY` (deterministic tier needs neither) |
 
 Runbooks follow `docs/testing/RUNBOOK-TEMPLATE.md`; the `gui-smoke` skill
 (`.cursor/skills/gui-smoke/SKILL.md`) is the SOP for running them + capturing

@@ -1,13 +1,13 @@
 // task.tsx — task detail. Reads like a brief Nimi prepared for you:
 // a summary in its voice, the draft it took a crack at, then the sources it used.
 import { useBrand } from '@mikan/brand/web'
-import { useContext, useEffect, useRef, useState } from 'react'
-import type { JSX, ReactNode } from 'react'
-import { NIcon } from './icons'
-import { kindIcon } from './iconKind'
-import { MikanMark, MikanSay, Dots } from './mark'
-import { data, MemoryContext } from './api'
 import type { Memory, Task } from '@mikan/contract/views'
+import type { JSX, ReactNode } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { data, MemoryContext } from './api'
+import { kindIcon } from './iconKind'
+import { NIcon } from './icons'
+import { Dots, MikanMark, MikanSay } from './mark'
 
 // Relevance is real (`Task.relMap` from search); fall back to a neutral fit when
 // a ctx id has no score yet.

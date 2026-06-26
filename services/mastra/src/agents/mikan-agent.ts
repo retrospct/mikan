@@ -28,6 +28,6 @@ export const mikanAgent = new Agent({
   model: agentModel,
   tools: {
     searchMemories: searchMemoriesTool,
-    addTodo: addTodoTool,
-  },
+    addTodo: addTodoTool
+  }
 })

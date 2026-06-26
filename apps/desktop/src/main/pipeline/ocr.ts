@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs'
-import { join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { userDataDir } from '../runtime/paths'
 
 /**
@@ -57,9 +57,7 @@ export class TesseractOcr implements Ocr {
 
   async extract(filePath: string, mime?: string): Promise<string> {
     const isHeic =
-      filePath.toLowerCase().endsWith('.heic') ||
-      mime === 'image/heic' ||
-      mime === 'image/heif'
+      filePath.toLowerCase().endsWith('.heic') || mime === 'image/heic' || mime === 'image/heif'
 
     let recognizePath = filePath
     let tempPath: string | null = null

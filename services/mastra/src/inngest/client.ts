@@ -4,5 +4,5 @@ import { Inngest } from 'inngest'
 // payloads are now typed per-trigger via a Standard Schema (e.g. a Zod object)
 // on the trigger itself — see ingest-pipeline.ts.
 export const inngest = new Inngest({
-  id: 'mikan',
+  id: 'mikan'
 })

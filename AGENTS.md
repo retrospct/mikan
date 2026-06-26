@@ -16,6 +16,14 @@ See **`CLAUDE.md`** for the full shared spine (architecture, contract, verify st
 
 From repo root: `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output).
 
+> **Lint after build gotcha:** `pnpm build` writes the gitignored, regenerable
+> `services/mastra/.mastra/` bundles (multi-MB `.mjs`). They are **not** in
+> `eslint.config.mjs`'s ignore list, so running `pnpm lint` *after* a build makes
+> ESLint type-lint those giant files — ~20 min runtime that ends in
+> `RangeError: Invalid string length` (the `stylish` formatter overflows). Lint
+> *before* building, or `rm -rf services/mastra/.mastra` first; a clean `pnpm lint`
+> then finishes in ~6 s and reports only the pre-existing debt (exit 1).
+
 `pnpm test` fans out to `@nimi/desktop` vitest: 158 tests in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
 
 ### Run the desktop app

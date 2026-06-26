@@ -8,14 +8,14 @@
 import { useBrand } from '@mikan/brand/web'
 import type { JSX } from 'react'
 import { useState } from 'react'
-import { NimiMark } from './mark'
+import { MikanMark } from './mark'
 
 /** Neutral branded splash shown while main reports the initial auth state, so the
  *  gate never flashes the sign-in screen (or the app) before a cached session loads. */
 export function AuthSplash(): JSX.Element {
   return (
     <div className="auth-gate" aria-hidden>
-      <NimiMark state="idle" size={56} />
+      <MikanMark state="idle" size={56} />
     </div>
   )
 }
@@ -35,7 +35,7 @@ export function AuthGate({ onLogin }: { onLogin: () => void }): JSX.Element {
     <div className="auth-gate">
       <div className="auth-gate-card">
         <div className="auth-gate-brand">
-          <NimiMark state={awaiting ? 'thinking' : 'idle'} size={64} />
+          <MikanMark state={awaiting ? 'thinking' : 'idle'} size={64} />
         </div>
         <h1 className="auth-gate-ttl">Welcome to {brand.productName}</h1>
         <p className="auth-gate-sub">

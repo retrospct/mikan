@@ -1,4 +1,4 @@
-// NimiApp.tsx — the Nimi desktop surface: state, navigation, screens.
+// MikanApp.tsx — the Nimi desktop surface: state, navigation, screens.
 //
 // Ported from the design bundle's nimi-app.jsx. Two deliberate changes from the
 // prototype, per the implementation brief:
@@ -27,14 +27,14 @@ import { AuthGate, AuthSplash } from './auth-gate'
 import { AllDone } from './celebrate'
 import { FeedView } from './feed'
 import { NIcon } from './icons'
-import { Dots, NimiMark } from './mark'
-import './nimi.css'
+import { Dots, MikanMark } from './mark'
+import './mikan.css'
 import { PlanRitual } from './plan'
 import { SearchOverlay } from './search'
 import { SettingsView } from './settings'
 import { TaskDetail } from './task'
 import { BottomNav, TodayView } from './today'
-import type { NimiMarkState } from './types'
+import type { MikanMarkState } from './types'
 
 const CAP = 5
 
@@ -55,7 +55,7 @@ function LoadingView(): JSX.Element {
     <div className="view">
       <div className="scroll">
         <div className="add-stage">
-          <NimiMark state="thinking" size={66} />
+          <MikanMark state="thinking" size={66} />
           <div className="add-stage-t">
             Waking up
             <Dots />
@@ -73,7 +73,7 @@ function ErrorView({ onRetry }: { onRetry: () => void }): JSX.Element {
     <div className="view">
       <div className="scroll">
         <div className="add-stage">
-          <NimiMark state="idle" size={66} />
+          <MikanMark state="idle" size={66} />
           <div className="add-stage-t">Couldn&apos;t reach your memory</div>
           <div className="add-stage-s">The on-device worker didn&apos;t respond just now.</div>
           <button className="btn primary" style={{ marginTop: '6px' }} onClick={onRetry}>
@@ -85,7 +85,7 @@ function ErrorView({ onRetry }: { onRetry: () => void }): JSX.Element {
   )
 }
 
-export default function NimiApp(): JSX.Element {
+export default function MikanApp(): JSX.Element {
   // Auth gate: when Logto is configured, the whole app sits behind a sign-in
   // screen. `ready` guards against flashing the gate before a cached session is
   // restored; when Logto is unconfigured (dev/CI) the gate never shows.
@@ -98,7 +98,7 @@ export default function NimiApp(): JSX.Element {
   const [overlay, setOverlay] = useState<'add' | 'plan' | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
-  const [headState, setHeadState] = useState<NimiMarkState>('idle')
+  const [headState, setHeadState] = useState<MikanMarkState>('idle')
   const [planned, setPlanned] = useState(true) // a returning day is already planned
   const [yesterday, setYesterday] = useState<Task[]>([]) // leftovers to carry over
   const [showWin, setShowWin] = useState(false)
@@ -356,7 +356,7 @@ export default function NimiApp(): JSX.Element {
                     tasks={tasks}
                     cap={CAP}
                     layout={TWEAKS.todayLayout}
-                    nimiState={headState}
+                    mikanState={headState}
                     planned={planned}
                     carriedCount={carriedCount}
                     backlogCount={backlog.length}
@@ -380,7 +380,7 @@ export default function NimiApp(): JSX.Element {
                     onAddTodo={addTodo}
                     onAdd={() => setOverlay('add')}
                     onRecordingChange={setFeedRecording}
-                    nimiState={headState}
+                    mikanState={headState}
                     badge={waiting}
                     onSearch={openGlobalSearch}
                     onTomorrow={beginNewDay}

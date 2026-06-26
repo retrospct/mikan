@@ -1,4 +1,4 @@
-import NimiApp from './nimi/NimiApp'
+import MikanApp from './mikan/MikanApp'
 
 // The renderer mounts the Nimi desktop surface ported from the Claude Design
 // handoff (nimi.html): a capped daily focus list with context pools, the
@@ -11,7 +11,7 @@ import NimiApp from './nimi/NimiApp'
 // AI-only fields come back null until the drafting layer lands (docs/INTEGRATION.md).
 // Auth is wired separately via src/renderer/src/hooks. See ADR 0003.
 function App(): React.JSX.Element {
-  return <NimiApp />
+  return <MikanApp />
 }
 
 export default App

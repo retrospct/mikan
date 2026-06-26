@@ -5,7 +5,7 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import type { JSX, ReactNode } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NimiMark, NimiSay, Dots } from './mark'
+import { MikanMark, MikanSay, Dots } from './mark'
 import { data, MemoryContext } from './api'
 import type { Memory, Task } from '@mikan/contract/views'
 
@@ -179,7 +179,7 @@ function DraftCard({
   return (
     <div className="draft">
       <button className="draft-hd as-toggle" onClick={() => setCollapsed(true)}>
-        <NimiMark state="idle" size={24} />
+        <MikanMark state="idle" size={24} />
         <div className="draft-hd-main">
           <div className="draft-hd-t">I took a crack at it</div>
           <div className="draft-type">
@@ -410,7 +410,7 @@ export function TaskDetail({
         {/* Nimi's brief — what it did, what's needed */}
         {task.brief && !done && (
           <div className="brief">
-            <NimiMark state="idle" size={22} />
+            <MikanMark state="idle" size={22} />
             <div className="brief-tx">{renderBold(task.brief)}</div>
           </div>
         )}
@@ -432,7 +432,7 @@ export function TaskDetail({
           />
         ) : drafting ? (
           <div className="draft draft-working">
-            <NimiMark state="drafting" size={30} />
+            <MikanMark state="drafting" size={30} />
             <div className="draft-working-tx">
               Taking a crack at it
               <Dots />
@@ -441,7 +441,7 @@ export function TaskDetail({
         ) : (
           !done && (
             <button className="draft draft-cta" onClick={tryDraft}>
-              <NimiMark state="idle" size={30} />
+              <MikanMark state="idle" size={30} />
               <div className="draft-cta-main">
                 <div className="draft-cta-t">Want me to take a crack at it?</div>
                 <div className="draft-cta-s">I&apos;ll draft a start from what you kept</div>
@@ -571,7 +571,7 @@ export function TaskDetail({
 
         {done && (
           <div className="dt-donebanner">
-            <NimiMark state="done" fill={9} size={30} />
+            <MikanMark state="done" fill={9} size={30} />
             <div>
               <div className="dt-doneb-t">Done — nice work.</div>
               <div className="dt-doneb-s">
@@ -589,7 +589,7 @@ export function TaskDetail({
           aria-label={`Ask ${brand.productName}`}
           title={`Ask ${brand.productName}`}
         >
-          <NimiMark state="idle" size={26} />
+          <MikanMark state="idle" size={26} />
         </button>
         <button className="dt-dig" onClick={onDig}>
           <NIcon name="search" size={17} />
@@ -619,7 +619,7 @@ const CHAT_REPLIES: Record<string, string> = {
 }
 
 interface ChatMsg {
-  from: 'nimi' | 'me'
+  from: 'mikan' | 'me'
   text: string
 }
 
@@ -635,7 +635,7 @@ function TaskChat({
   const brand = useBrand()
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     {
-      from: 'nimi',
+      from: 'mikan',
       text: `Ask me anything about this — I've got the ${poolCount} source${poolCount === 1 ? '' : 's'} right here.`
     }
   ])
@@ -660,7 +660,7 @@ function TaskChat({
       const reply =
         CHAT_REPLIES[q] ||
         'Got it — I pulled what I have on that and tucked it into the sources below. Want me to fold it into the draft?'
-      setMsgs((m) => [...m, { from: 'nimi', text: reply }])
+      setMsgs((m) => [...m, { from: 'mikan', text: reply }])
       setThinking(false)
     }, 1200)
   }
@@ -672,7 +672,7 @@ function TaskChat({
         <div className="sheet-grab" />
         <div className="sheet-hd">
           <div className="sheet-hd-l">
-            <NimiMark state={thinking ? 'thinking' : 'idle'} size={28} />
+            <MikanMark state={thinking ? 'thinking' : 'idle'} size={28} />
             <div>
               <div className="sheet-ttl">Ask {brand.productName}</div>
               <div className="sheet-sub">
@@ -688,18 +688,18 @@ function TaskChat({
         <div className="chat-thread" ref={threadRef}>
           {msgs.map((m, i) => (
             <div key={i} className={'chat-msg ' + (m.from === 'me' ? 'me' : 'ai')}>
-              {m.from === 'nimi' && <NimiMark state="idle" size={20} />}
+              {m.from === 'mikan' && <MikanMark state="idle" size={20} />}
               <div className="chat-bubble">{m.text}</div>
             </div>
           ))}
           {thinking && (
             <div className="chat-msg ai">
-              <NimiMark state="thinking" size={20} />
+              <MikanMark state="thinking" size={20} />
               <div className="chat-bubble">
-                <NimiSay state="thinking" size={0}>
+                <MikanSay state="thinking" size={0}>
                   Thinking
                   <Dots />
-                </NimiSay>
+                </MikanSay>
               </div>
             </div>
           )}

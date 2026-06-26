@@ -6,9 +6,9 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { MemoryContext } from './api'
 import { kindIcon } from './iconKind'
 import { NIcon } from './icons'
-import { NimiMark, NimiNote } from './mark'
+import { MikanMark, MikanNote } from './mark'
 import { SyncControl } from './sync'
-import type { NimiMarkState } from './types'
+import type { MikanMarkState } from './types'
 
 function greeting(): string {
   const h = new Date().getHours()
@@ -26,13 +26,13 @@ function dateLabel(): string {
 }
 
 export function AppHeader({
-  nimiState,
+  mikanState,
   badge,
   onSearch,
   onTomorrow,
   onSettings
 }: {
-  nimiState: NimiMarkState
+  mikanState: MikanMarkState
   badge: number
   onSearch: () => void
   onTomorrow: () => void
@@ -42,7 +42,7 @@ export function AppHeader({
     <header className="hdr">
       <div className="hdr-l">
         <span className="hdr-mark">
-          <NimiMark state={nimiState} size={38} />
+          <MikanMark state={mikanState} size={38} />
           {badge > 0 && <span className="nm-badge">{badge}</span>}
         </span>
         <div className="hdr-greet">
@@ -184,10 +184,10 @@ function TaskCard({
         <div className="task-main">
           <div className="task-title">{task.title}</div>
           {task.done ? (
-            <NimiNote kind="done">Done — nice work.</NimiNote>
+            <MikanNote kind="done">Done — nice work.</MikanNote>
           ) : (
             <>
-              {task.note && <NimiNote kind={task.noteKind || 'gathered'}>{task.note}</NimiNote>}
+              {task.note && <MikanNote kind={task.noteKind || 'gathered'}>{task.note}</MikanNote>}
               <div className="ctx-strip">
                 {ctxN > 0 && <CtxThumbs memIds={task.ctx} />}
                 <span className="ctx-txt">{ctxLabel}</span>
@@ -241,7 +241,7 @@ interface TodayViewProps {
   onSearch: () => void
   onWeather: () => void
   onSettings: () => void
-  nimiState: NimiMarkState
+  mikanState: MikanMarkState
 }
 
 export function TodayView({
@@ -262,7 +262,7 @@ export function TodayView({
   onSearch,
   onWeather,
   onSettings,
-  nimiState
+  mikanState
 }: TodayViewProps): JSX.Element {
   const brand = useBrand()
   const filled = tasks.length
@@ -274,14 +274,14 @@ export function TodayView({
       <div className="view">
         <div className="scroll">
           <AppHeader
-            nimiState={nimiState}
+            mikanState={mikanState}
             badge={badge}
             onSearch={onSearch}
             onTomorrow={onPlan}
             onSettings={onSettings}
           />
           <div className="dayzero">
-            <NimiMark state="idle" size={66} />
+            <MikanMark state="idle" size={66} />
             <div className="dayzero-h">A fresh day</div>
             <div className="dayzero-s">
               Let&apos;s choose the five things that matter today. I kept yesterday&apos;s leftovers
@@ -303,7 +303,7 @@ export function TodayView({
     <div className="view">
       <div className="scroll">
         <AppHeader
-          nimiState={nimiState}
+          mikanState={mikanState}
           badge={badge}
           onSearch={onSearch}
           onTomorrow={onTomorrow}

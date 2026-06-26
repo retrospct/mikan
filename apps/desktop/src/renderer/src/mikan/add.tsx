@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NimiMark, Dots } from './mark'
+import { MikanMark, Dots } from './mark'
 import { VoiceRecorder } from './voice'
 import { data } from './api'
 import { captureFiles, kindOfFile } from './capture-file'
@@ -52,7 +52,7 @@ export function AddSheet({
           <>
             <div className="sheet-hd">
               <div className="sheet-hd-l">
-                <NimiMark state="idle" size={28} />
+                <MikanMark state="idle" size={28} />
                 <div>
                   <div className="sheet-ttl">Add to {brand.productName}</div>
                   <div className="sheet-sub">Feed me something — or jot a to-do</div>
@@ -366,7 +366,7 @@ function FeedPane({
   if (phase === 'indexing') {
     return (
       <div className="add-stage">
-        <NimiMark state="gathering" size={66} />
+        <MikanMark state="gathering" size={66} />
         <div className="add-stage-t">
           Reading it in
           <Dots />
@@ -384,7 +384,7 @@ function FeedPane({
     <>
       <div className="sheet-body">
         <div className="add-done-head">
-          <NimiMark state={failed ? 'idle' : 'done'} fill={9} size={30} />
+          <MikanMark state={failed ? 'idle' : 'done'} fill={9} size={30} />
           <div>
             {failed ? (
               <>
@@ -528,7 +528,7 @@ function TodoPane({
   if (phase === 'ranking') {
     return (
       <div className="add-stage">
-        <NimiMark state="thinking" size={66} />
+        <MikanMark state="thinking" size={66} />
         <div className="add-stage-t">
           Sizing it up
           <Dots />
@@ -540,7 +540,7 @@ function TodoPane({
   if (phase === 'done') {
     return (
       <div className="add-stage">
-        <NimiMark state="done" fill={9} size={66} />
+        <MikanMark state="done" fill={9} size={66} />
         <div className="add-stage-t">
           {landedToday ? 'Added to today' : 'Added to your backlog'}
         </div>

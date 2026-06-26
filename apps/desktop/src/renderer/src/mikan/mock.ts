@@ -16,11 +16,11 @@ import type {
   Task,
   UncoveredTodo
 } from '@mikan/contract/views'
-import { CAP_REACHED, type CaptureResult, type NimiApi, type Todo } from '@mikan/contract/ipc'
+import { CAP_REACHED, type CaptureResult, type MikanApi, type Todo } from '@mikan/contract/ipc'
 
-type MockApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui' | 'update'>
+type MockApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui' | 'update'>
 
-// The day's focus cap (mirrors NimiApp's CAP) — lets the mock raise CAP_REACHED
+// The day's focus cap (mirrors MikanApp's CAP) — lets the mock raise CAP_REACHED
 // so the add-todo → backlog fallback is exercisable in the browser.
 const CAP = 5
 

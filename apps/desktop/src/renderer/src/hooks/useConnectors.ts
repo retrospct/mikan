@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ConnectorsState, ConnectorId } from '@mikan/contract/ipc'
-import { isElectron } from '../nimi/api'
+import { isElectron } from '../mikan/api'
 
 const EMPTY: ConnectorsState = {
   configured: false,

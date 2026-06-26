@@ -4,7 +4,7 @@
 // reached from the header gear. It's the home for account-level controls that
 // used to crowd the Today header:
 //   - Account: who you're signed in as + Sign out (the front-door login is the
-//     gate in NimiApp; the header no longer carries an auth control).
+//     gate in MikanApp; the header no longer carries an auth control).
 //   - Sync: the cloud-replica toggle + per-device encryption / recovery key.
 //   - Connections: the Gmail + Google Calendar connectors (self-contained).
 //   - Updates: current version + check / restart-to-update.

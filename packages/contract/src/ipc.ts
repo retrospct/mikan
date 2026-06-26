@@ -257,7 +257,7 @@ export interface ConnectorsApi {
   onChanged: (cb: (state: ConnectorsState) => void) => () => void
 }
 
-export interface NimiApi {
+export interface MikanApi {
   pipeline: PipelineApi
   todos: TodoApi
   auth: AuthApi

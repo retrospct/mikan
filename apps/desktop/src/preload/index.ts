@@ -4,13 +4,13 @@ import {
   type AuthState,
   type ConnectorId,
   type ConnectorsState,
-  type NimiApi,
+  type MikanApi,
   type UpdateStatus
 } from '@mikan/contract/ipc'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 
 // Custom APIs for renderer — the only data surface the renderer can reach.
-const api: NimiApi = {
+const api: MikanApi = {
   pipeline: {
     captureText: (text: string, name?: string) =>
       ipcRenderer.invoke(IPC.pipelineCaptureText, text, name),

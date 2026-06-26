@@ -8,23 +8,23 @@
 // `window.api`-may-be-undefined reality in exactly one place.
 import { createContext } from 'react'
 import type { Memory } from '@mikan/contract/views'
-import type { NimiApi } from '@mikan/contract/ipc'
+import type { MikanApi } from '@mikan/contract/ipc'
 import { makeMockApi } from './mock'
 
 /** The slice of the contract the UI actually drives (auth is handled separately). */
-type DataApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui'>
+type DataApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui'>
 
-// `Window.api` types as non-optional `NimiApi` in the renderer (the preload's
+// `Window.api` types as non-optional `MikanApi` in the renderer (the preload's
 // ambient d.ts flows in via tsconfig.web.json), but at runtime it is undefined
 // outside Electron — so probe it honestly through an optional view.
 export const isElectron =
   typeof window !== 'undefined' && Boolean((window as { api?: unknown }).api)
 
-export const data: DataApi = isElectron ? (window.api as NimiApi) : makeMockApi()
+export const data: DataApi = isElectron ? (window.api as MikanApi) : makeMockApi()
 
 /**
  * The archive (`pipeline.archive()`) projected to an id→Memory lookup, provided
- * by NimiApp. Components read it with `useContext` instead of prop-drilling so a
+ * by MikanApp. Components read it with `useContext` instead of prop-drilling so a
  * task's `ctx`/`pinned` ids resolve to display rows. The invariant (every ctx id
  * is in the archive — see docs/INTEGRATION.md) means these lookups resolve.
  */

@@ -75,6 +75,15 @@ The E2E reads ground truth back through `window.api.pipeline.archive()` (the app
 connection — a separate SQLite reader hits WAL-visibility races). It launches with
 `--user-data-dir=<tmp>` for an isolated throwaway DB.
 
+> **Logto-gate gotcha (cloud agents with secrets):** `electron-vite build` inlines
+> `MAIN_VITE_*` env at build time. When `MAIN_VITE_LOGTO_ENDPOINT` + `MAIN_VITE_LOGTO_APP_ID`
+> are present (they're injected as Cloud Agent secrets here), the **built** app boots behind
+> the Logto sign-in gate, so `.nav` never appears and every `_electron` spec times out in
+> `launchBuiltApp` (`waiting for locator('.nav')`). `pnpm dev` is unaffected. To run the E2E
+> tier / a built-app smoke in this environment, build with those vars unset, e.g.
+> `env -u MAIN_VITE_LOGTO_ENDPOINT -u MAIN_VITE_LOGTO_APP_ID -u MAIN_VITE_LOGTO_RESOURCE pnpm --filter @nimi/desktop build`
+> then run `test:e2e` (also with them unset). All 7 specs pass once unconfigured.
+
 ### Sync + encryption-at-rest tests (#10)
 
 Opt-in Turso sync with mandatory field encryption. Full procedure:

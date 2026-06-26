@@ -18,7 +18,7 @@ DB) and **ROADMAP #10** (cloud offload). Read those first for the server side.
 
 When Logto is configured, the **entire app sits behind a full-screen sign-in
 screen**. This is a deliberate product choice ("force a login gate") that
-coexists with Nimi's local-first design — see the offline rules below so it never
+coexists with Mikan's local-first design — see the offline rules below so it never
 becomes a lock-out.
 
 ### Behavior matrix

@@ -83,7 +83,7 @@ tool (items 2–4) before GA.
   pending:** confirm the assistant should share the product name vs. carry its own.
 - **Mobile app identity wiring.** `apps/mobile` imports `@nimi/brand` (login screen
   reads `brand.productName`/`brand.tagline`), but the Expo app identity is **not yet
-  wired to it**: `app.json` is still static (`name: Nimi`, `scheme: nimi`,
+  wired to it**: `app.json` is still static (`name: Mikan`, `scheme: nimi`,
   `bundleIdentifier cool.jlee.nimi`). When mobile graduates, align `app.json` (or a
   dynamic `app.config.js`) with `identity.mikan` — name/scheme `mikan`, bundleId
   `dev.retro.mikan` — mirroring the desktop wiring.

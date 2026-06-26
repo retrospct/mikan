@@ -94,9 +94,9 @@ pnpm --filter @nimi/desktop build:mac    # → apps/desktop/dist/nimi-<ver>.dmg
 pnpm --filter @nimi/desktop build:win    # → dist/nimi-<ver>-setup.exe (build ON Windows)
 ```
 
-Unsigned: macOS → right-click **Open** (or `xattr -dr com.apple.quarantine /Applications/Nimi.app`);
+Unsigned: macOS → right-click **Open** (or `xattr -dr com.apple.quarantine /Applications/Mikan.app`);
 Windows SmartScreen → **More info → Run anyway**. Packaged userData/DB: macOS
-`~/Library/Application Support/Nimi/neeme.db`, Windows `%APPDATA%\Nimi\neeme.db`.
+`~/Library/Application Support/Mikan/neeme.db`, Windows `%APPDATA%\Mikan\neeme.db`.
 
 > The preload **must** stay bundled (not externalized) — sandboxed preloads can't
 > `require()` npm modules, so `@electron-toolkit/preload` is in `electron.vite.config.ts`'s

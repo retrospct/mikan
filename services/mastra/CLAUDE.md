@@ -6,7 +6,7 @@ Phase 0 spike: Mastra agent + Inngest durable pipeline on Vercel. Read the root 
 
 Two spikes in one service:
 
-1. **Mastra agent** (`src/agents/nimi-agent.ts`) — the Nimi AI agent with tool calls (search memories, add todo). Uses Anthropic via the **Vercel AI Gateway** (AI SDK v6 `gateway` provider; model resolution centralized in `src/model.ts`). Runs locally with `pnpm dev` (`mastra dev`).
+1. **Mastra agent** (`src/agents/nimi-agent.ts`) — the Mikan AI agent with tool calls (search memories, add todo). Uses Anthropic via the **Vercel AI Gateway** (AI SDK v6 `gateway` provider; model resolution centralized in `src/model.ts`). Runs locally with `pnpm dev` (`mastra dev`).
 
 2. **Inngest pipeline** (`src/inngest/functions/ingest-pipeline.ts`) — durable multi-step ingestion (extract → chunk → brief via `step.ai.infer()`). Runs locally with `pnpm inngest:dev` alongside `pnpm dev`.
 
@@ -20,7 +20,7 @@ pnpm dev            # starts Mastra dev server + playground at http://localhost:
 pnpm inngest:dev    # in a second terminal — Inngest dev server at http://localhost:8288
 ```
 
-Visit http://localhost:4111 to chat with the Nimi agent in the Mastra playground.
+Visit http://localhost:4111 to chat with the Mikan agent in the Mastra playground.
 Visit http://localhost:8288 to inspect Inngest function runs.
 
 ## Vercel deployment
@@ -41,7 +41,7 @@ Set these env vars in the Vercel project:
 src/
   mastra.ts                          ← Mastra instance (entry point for mastra build)
   model.ts                           ← AI Gateway model resolution (shared by agent + pipeline)
-  agents/nimi-agent.ts               ← Nimi agent: instructions + model + tools
+  agents/nimi-agent.ts               ← Mikan agent: instructions + model + tools
   tools/search-memories.ts           ← mock tool (Phase 1: real libSQL cosine search)
   tools/add-todo.ts                  ← mock tool (Phase 1: real Turso insert)
   inngest/client.ts                  ← Inngest client singleton

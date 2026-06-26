@@ -1,0 +1,20 @@
+stateDiagram-v2
+    [*] --> Off
+    Off --> On: One-time opt-in (Settings)
+    On --> Off: Turn it off anytime
+
+    state On {
+        [*] --> Ready
+        Ready --> Degraded: Offline or signed out
+        Degraded --> Ready: Back online + signed in
+    }
+
+    note right of Off
+        Overlay = local search only.
+        Nothing leaves the device.
+    end note
+    note right of On
+        Persistent "cloud mode" indicator.
+        "What was sent" is always inspectable.
+        No per-action prompts.
+    end note

@@ -1,0 +1,20 @@
+flowchart LR
+    q["Your question"]
+
+    subgraph device["🖥️ Your device"]
+        store[("Local store<br/>memories + chunks")]
+        search["On-device retrieval"]
+        threads[("Ask Nimi threads")]
+        approve["Approval before any write"]
+    end
+
+    subgraph cloud["☁️ Cloud — opt-in, reasoning only"]
+        agent["Nimi-agent (Claude)"]
+    end
+
+    q --> search
+    store --> search
+    search -->|"ONLY query + top-K snippets cross"| agent
+    agent -->|"answer (streamed)"| threads
+    agent -.->|"proposes a to-do"| approve
+    approve -->|"on approve, write locally"| store

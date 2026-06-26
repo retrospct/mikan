@@ -15,7 +15,7 @@ the mobile slot now scaffolded, we need to commit to three interrelated decision
 
 1. **Mobile data layer** — how does the mobile app store and retrieve captures?
 2. **Mobile AI pipeline** — who runs embedding / extraction / briefing for mobile captures?
-3. **Mobile agent layer** — how does conversational AI ("ask Nimi") work on mobile?
+3. **Mobile agent layer** — how does conversational AI ("ask Mikan") work on mobile?
 
 ### Why the original plan (thin FastAPI HTTP client) is wrong
 
@@ -104,7 +104,7 @@ iOS/Android app (apps/mobile)
   ├─ capture → fire memory/ingest ──► Inngest (services/mastra on Vercel)│
   │                                    extract → chunk → brief → libSQL  │
   │                                                                       │
-  └─ ask Nimi → POST /api/mastra ──► Mastra agent (services/mastra)      │
+  └─ ask Mikan → POST /api/mastra ──► Mastra agent (services/mastra)      │
                                       search-memories ──────────────────►│
                                       add-todo ───────────────────────── │
                                                                           ▼

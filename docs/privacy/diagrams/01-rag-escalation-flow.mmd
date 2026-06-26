@@ -1,0 +1,21 @@
+sequenceDiagram
+    actor You
+    participant Overlay as Ask Nimi overlay
+    participant Local as On-device store (libSQL)
+    participant Agent as Nimi-agent (cloud)
+
+    You->>Overlay: Type a query
+    Overlay->>Local: Instant local search (default)
+    Local-->>Overlay: Matching memories
+    Note over Overlay,Local: If Ask Nimi is OFF, it stops here — pure local search
+
+    You->>Overlay: Escalate to "Ask Nimi" (opt-in + signed in)
+    Overlay->>Local: Retrieve top-K relevant snippets
+    Local-->>Overlay: Top-K snippets (plaintext, on device)
+    Overlay->>Agent: query + top-K snippets + session token
+    Note right of Agent: Reasoning only.<br/>Never opens your store.
+    Agent-->>Overlay: Streamed answer
+    Agent-->>Overlay: Proposes "add a to-do" (tool call)
+    Overlay->>You: Show the proposed to-do for approval
+    You->>Overlay: Approve
+    Overlay->>Local: Write the to-do locally

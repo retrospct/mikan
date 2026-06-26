@@ -131,7 +131,7 @@ turborepo). Key differences from a from-scratch approach are called out in each 
 
    **t3-turbo divergence — `tooling/typescript`.** t3-turbo has a dedicated `tooling/typescript`
    package (`@acme/tsconfig`) with `base.json` containing strict shared compiler options (`ES2022`,
-   `moduleResolution: Bundler`, `noUncheckedIndexedAccess`, etc.). Nimi doesn't have this yet —
+   `moduleResolution: Bundler`, `noUncheckedIndexedAccess`, etc.). Mikan doesn't have this yet —
    configs are per-app. Not blocking for the mobile scaffold, but flagged as a future improvement
    (a `tooling/tsconfig` package would let both `apps/desktop` and `apps/mobile` share strictness
    settings without duplication).

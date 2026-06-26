@@ -26,7 +26,7 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
   bars only); "stop" pastes a canned transcript from `ui-stubs.ts:nextTranscript()`
   (`add.tsx:152`, `feed.tsx:351`). Wire to real mic capture → `captureFile` →
   ASR pipeline (the backend ASR seam already exists). **high**
-- [ ] **Task chat ("Ask Nimi") is scripted.** `task.tsx:599` `CHAT_REPLIES` +
+- [ ] **Task chat ("Ask Mikan") is scripted.** `task.tsx:599` `CHAT_REPLIES` +
   `task.tsx:647` fallback. No backend chat channel exists yet — needs a contract
   addition or should be hidden until one lands. **high**
 - [ ] **Task draft is hardcoded.** `task.tsx:340 tryDraft()` injects a two-paragraph
@@ -94,7 +94,7 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
   `NimiApp.tsx`) that presents sign-in as a first-class flow, with the lock chip in
   the header reduced to identity/sign-out only.
 - **Decision needed (product):** is login **required** (a gate the app sits behind)
-  or **optional**? Nimi is local-first and fully usable offline today, so a hard
+  or **optional**? Mikan is local-first and fully usable offline today, so a hard
   gate conflicts with that. Recommended model: app works locally without login;
   **login is what unlocks sync** (per-user Turso DB via the broker, ADR 0008), so
   the login screen is reachable from Settings and from any "turn on sync" CTA.

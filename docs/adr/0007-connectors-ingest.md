@@ -7,7 +7,7 @@
 
 ## Problem
 
-Nimi captures context manually (typed notes, drag-dropped files). "Automatic capture" means pulling existing email + calendar data into the on-device pipeline without asking the user to re-paste it. We need an OAuth grant to read Gmail + Google Calendar, a sync engine that fetches deltas, and idempotent ingest into the existing capture pipeline.
+Mikan captures context manually (typed notes, drag-dropped files). "Automatic capture" means pulling existing email + calendar data into the on-device pipeline without asking the user to re-paste it. We need an OAuth grant to read Gmail + Google Calendar, a sync engine that fetches deltas, and idempotent ingest into the existing capture pipeline.
 
 ## Options considered
 

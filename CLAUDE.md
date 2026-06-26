@@ -1,6 +1,6 @@
 # nimi — agent guide (monorepo root)
 
-Nimi is an all-TypeScript, **on-device-first** personal-memory desktop app (Electron):
+Mikan is an all-TypeScript, **on-device-first** personal-memory desktop app (Electron):
 capture multi-modal input → surface it (semantic search + a daily focus list) to get
 things done. This repo is the product. (The Python `neeme` repo is legacy.)
 

@@ -38,7 +38,7 @@ even though Expo hasn't started.
 The original "defer until Expo" call (option A) weighed tooling-overhead vs later-churn and
 missed the decisive factor: the migration is a repo-wide `git mv src → apps/desktop/src` that
 rewrites nearly **every path**, so it conflicts with **every open branch**. Done amid parallel
-agent work it's a merge nightmare — the same one the Neeme→Nimi rename would have been mid-flight.
+agent work it's a merge nightmare — the same one the Neeme→Mikan rename would have been mid-flight.
 Done **now** (0 open PRs, single worktree) it's a clean one-shot reshuffle. The quiet window is
 worth far more than a few weeks of "premature" workspace tooling. (`nimi` is already at the
 would-be root name, so this is a pure structural reshuffle, not a re-identity.)

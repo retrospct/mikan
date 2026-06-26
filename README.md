@@ -31,7 +31,7 @@ nimi is **local-first**: your data lives on your device, not in the cloud.
 - **Data layer** — `apps/desktop/src/main/db` uses **Drizzle ORM** over **libSQL** (a SQLite fork), as a plain on-device `file:` database in Electron's `userData` dir. libSQL is deliberate: the same driver later enables **Turso embedded-replica sync** without rewriting the data layer.
 - **IPC seam** — `packages/contract/src/ipc.ts` defines the typed contract (channel names + types) shared by all three processes. The renderer calls `window.api.memory.*`, which routes through preload → `ipcMain.handle` → `apps/desktop/src/main/services` → Drizzle.
 
-## API client (the Nimi HTTP backend)
+## API client (the Mikan HTTP backend)
 
 Remote services (capture, search, todos) are served by the **FastAPI backend** in the sibling [`neeme`](https://github.com/retrospct/neeme) repo (the backend + mobile app). The desktop app talks to it through a **typed client generated from the backend's OpenAPI spec** with [`@hey-api/openapi-ts`](https://heyapi.dev/) — so client types can't drift from the server.
 

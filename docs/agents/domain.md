@@ -9,12 +9,12 @@ codebase. This repo is **single-context**.
 - **`docs/adr/`** — read the ADRs that touch the area you're about to work in. The current set
   covers sync/processing (0001), auth (0002), the all-TS on-device pipeline (0003), AI drafting
   (0004), image/audio extraction (0005), monorepo structure (0006), connectors ingest (0007),
-  and the sync auth-token broker (0008).
+  the sync auth-token broker (0008), the mobile RN + Turso offline-sync + cloud-AI pipeline
+  (0009), the shadcn/Base-UI + Phosphor component foundation (0010), and the desktop "Ask Mikan"
+  cloud-reasoning + on-device-tool agent architecture (0011).
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence or suggest
-creating them upfront. (`CONTEXT.md` does not exist yet — the `/domain-modeling` skill, reached
-via `/grill-with-docs` and `/improve-codebase-architecture`, creates it lazily when terms
-actually get resolved.) Note that the monorepo's narrower guides — root `CLAUDE.md`,
+creating them upfront. Note that the monorepo's narrower guides — root `CLAUDE.md`,
 `apps/desktop/CLAUDE.md`, `docs/INTEGRATION.md`, `docs/SECURITY.md` — already carry a lot of the
 shared vocabulary in the meantime.
 
@@ -24,11 +24,11 @@ Single-context repo:
 
 ```
 /
-├── CONTEXT.md          ← (not created yet)
+├── CONTEXT.md          ← domain glossary / ubiquitous language
 ├── docs/adr/
 │   ├── 0001-sync-and-processing-architecture.md
 │   ├── 0002-authentication.md
-│   └── … through 0008-sync-auth-token-broker.md
+│   └── … through 0011-desktop-ask-mikan-architecture.md
 ├── apps/desktop/
 └── packages/contract/
 ```

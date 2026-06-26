@@ -9,11 +9,11 @@
 
 "Wire real, plain" left every AI-generated field `null`: `Task.brief`/`draft`/`note`, the
 `gathering→drafted` status, `BacklogItem.conf`, the per-context "why" strings, feed-inferred
-`UncoveredTodo`s, and "Ask Nimi" chat. This ADR decides **what generates that text.**
+`UncoveredTodo`s, and "Ask Mikan" chat. This ADR decides **what generates that text.**
 
 The decision is shipping-first. On-device LLM is appealing (latency, privacy, 0003's spine)
 but it's the _slowest possible start_ — native addon, multi-GB model, packaging, device
-variance — and the goal right now is to **get Nimi into people's hands.** So: cloud now,
+variance — and the goal right now is to **get Mikan into people's hands.** So: cloud now,
 local as a curiosity spike later.
 
 ## Options considered
@@ -35,7 +35,7 @@ later with zero caller changes — so choosing cloud now forecloses nothing.
 
 **Build a `Drafter` seam and ship the cloud impl (BYO-key, default Claude).**
 
-- Wire `brief`/`draft`/Ask-Nimi through it; opt-in, with a clear "this sends the relevant
+- Wire `brief`/`draft`/Ask-Mikan through it; opt-in, with a clear "this sends the relevant
   memories to <provider>" consent.
 - The projection layer (`src/main/services/project.ts`) already isolates every AI-gap field,
   so the UI degrades gracefully when AI is off or unkeyed.

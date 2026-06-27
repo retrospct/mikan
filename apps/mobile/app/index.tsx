@@ -27,7 +27,7 @@ export default function Index(): ReactElement | null {
         await bootstrapDb(token)
         if (!cancelled) setTarget('/(tabs)/feed')
       } catch (e) {
-        console.warn('[nimi/db] startup bootstrap failed:', e)
+        console.warn('[mikan/db] startup bootstrap failed:', e)
         // A broker auth rejection (401) means the token is bad — drop it and re-auth.
         // Any other failure (network down, Turso error) sends to login so the user can
         // explicitly re-authenticate; the feed with a closed DB is a dead end.

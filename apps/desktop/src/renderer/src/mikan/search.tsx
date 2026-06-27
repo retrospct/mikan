@@ -1,9 +1,9 @@
-// search.tsx — "Dig deeper": a universal search across everything you've fed Nimi.
+// search.tsx — "Dig deeper": a universal search across everything you've fed Mikan.
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NimiMark, NimiSay, Dots } from './mark'
+import { MikanMark, MikanSay, Dots } from './mark'
 import { data, MemoryContext } from './api'
 import { SEARCH_SUGGEST } from './ui-stubs'
 
@@ -28,7 +28,7 @@ export function SearchOverlay({
     inputRef.current && inputRef.current.focus()
   }, [])
 
-  // a beat of "Nimi is searching" when the query settles. We debounce the input
+  // a beat of "Mikan is searching" when the query settles. We debounce the input
   // into `settledQ` — the only setState lives inside the timeout, so it never fires
   // synchronously in the effect body — and derive `thinking` from the gap.
   useEffect(() => {
@@ -87,7 +87,7 @@ export function SearchOverlay({
 
       {contextTitle && (
         <div className="search-scope">
-          <NimiMark state={thinking ? 'thinking' : 'idle'} size={18} />
+          <MikanMark state={thinking ? 'thinking' : 'idle'} size={18} />
           <span>
             Looking across your memory for <b>“{contextTitle}”</b>
           </span>
@@ -106,10 +106,10 @@ export function SearchOverlay({
         )}
         <div className="search-meta">
           {thinking ? (
-            <NimiSay state="thinking" size={18}>
+            <MikanSay state="thinking" size={18}>
               Searching
               <Dots />
-            </NimiSay>
+            </MikanSay>
           ) : q ? (
             `${results.length} result${results.length === 1 ? '' : 's'} in your memory`
           ) : (
@@ -160,7 +160,7 @@ export function SearchOverlay({
 
         {!thinking && q && results.length === 0 && (
           <div className="search-empty">
-            <NimiMark state="idle" size={30} />
+            <MikanMark state="idle" size={30} />
             <div className="search-empty-t">Nothing on that yet</div>
             <div className="search-empty-s">
               Try fewer words — or feed me more and it&apos;ll be here next time.

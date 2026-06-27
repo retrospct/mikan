@@ -14,9 +14,9 @@
  */
 import * as SecureStore from 'expo-secure-store'
 
-const STORE_KEY = 'nimi_sync_encryption_key'
-const SYNC_URL_KEY = 'nimi_sync_url'
-const SYNC_AUTH_KEY = 'nimi_sync_auth_token'
+const STORE_KEY = 'mikan_sync_encryption_key'
+const SYNC_URL_KEY = 'mikan_sync_url'
+const SYNC_AUTH_KEY = 'mikan_sync_auth_token'
 const KEY_HEX_RE = /^[0-9a-f]{64}$/i
 
 /** Retrieve the stored key (normalized lowercase), or null if not set. */

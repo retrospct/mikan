@@ -71,7 +71,7 @@ Why each directive is safe to keep tight:
   subsets (e.g. cyrillic) as `data:` URIs; the larger subsets are same-origin asset
   files. `data:` fonts cannot load remote content, so this stays offline-first.
 - **`connect-src 'self'`** — the renderer talks to the worker over IPC, not HTTP. The
-  legacy FastAPI HTTP client (`ApiStatus` / `@nimi/contract/api`) is not mounted in the app.
+  legacy FastAPI HTTP client (`ApiStatus` / `@mikan/contract/api`) is not mounted in the app.
 
 **Dev exception.** `electron-vite dev` needs `style-src 'unsafe-inline'` (Vite injects
 `<style>` tags for HMR) and `connect-src http://localhost:8000` (the optional FastAPI

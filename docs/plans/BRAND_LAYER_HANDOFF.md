@@ -128,7 +128,7 @@ them.**
 ## Non-negotiable rules
 1. Nothing user-facing hardcodes the product name or a hex color. Identity from
    the brand config; color from tokens/utilities that resolve to brand vars.
-2. The brand is resolved **statically** — `@nimi/brand` exports Mikan directly.
+2. The brand is resolved **statically** — `@mikan/brand` exports Mikan directly.
 3. `identity.json` is the single source of truth for build-identity fields
    (productName, appId, icon) — both the TS config and electron-builder read it.
 4. Internal namespace (mneme/nimi/neeme) stays untouched. Brand lives only at

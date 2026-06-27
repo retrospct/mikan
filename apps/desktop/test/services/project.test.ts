@@ -6,7 +6,7 @@ import {
   toTask,
   toBacklogItem
 } from '../../src/main/services/project'
-import type { Item, Todo, ContextEntry } from '@nimi/contract/ipc'
+import type { Item, Todo, ContextEntry } from '@mikan/contract/ipc'
 import type { TaskDraft } from '../../src/main/pipeline/draft'
 
 // ── factories ─────────────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ function makeDraft(overrides: Partial<TaskDraft> = {}): TaskDraft {
     brief: 'Here is a brief',
     draft: ['Step 1', 'Step 2'],
     draftNote: 'draft note',
-    note: 'Nimi note',
+    note: 'Mikan note',
     noteKind: 'ready',
     status: 'drafted',
     conf: 0.85,
@@ -330,7 +330,7 @@ describe('toTask', () => {
     const task = toTask(makeTodo(), [], makeDraft())
     expect(task.draft).toEqual(['Step 1', 'Step 2'])
     expect(task.brief).toBe('Here is a brief')
-    expect(task.note).toBe('Nimi note')
+    expect(task.note).toBe('Mikan note')
     expect(task.noteKind).toBe('ready')
   })
 

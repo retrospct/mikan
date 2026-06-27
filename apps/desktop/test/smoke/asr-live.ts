@@ -10,12 +10,12 @@
  * authorization. A bare CLI process crashes without an app bundle. Verify it manually
  * by running the Electron app and capturing a voice memo.
  *
- * Run: NEEME_USER_DATA=/tmp/nimi-smoke-asr pnpm --filter @nimi/desktop exec tsx test/smoke/asr-live.ts
+ * Run: NEEME_USER_DATA=/tmp/mikan-smoke-asr pnpm --filter @mikan/desktop exec tsx test/smoke/asr-live.ts
  */
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-process.env.NEEME_USER_DATA ??= '/tmp/nimi-smoke-asr'
+process.env.NEEME_USER_DATA ??= '/tmp/mikan-smoke-asr'
 process.env.NEEME_EMBEDDER ??= 'hash'
 process.env.NEEME_EXTRACTOR = 'portable' // force Whisper, not mac-speech
 

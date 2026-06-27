@@ -8,7 +8,7 @@
  */
 import { createHash, randomBytes } from 'node:crypto'
 import { jwtVerify, type JWTPayload, type JWTVerifyGetKey } from 'jose'
-import type { AuthClaims } from '@nimi/contract/ipc'
+import type { AuthClaims } from '@mikan/contract/ipc'
 
 /** A verification key: a resolver (prod JWKS) or a concrete key (tests). */
 type VerifyKey = JWTVerifyGetKey | CryptoKey | Uint8Array

@@ -4,7 +4,7 @@
 
 - **`packages/contract/src/views.ts`** — the view model: `Memory`, `Task`, `BacklogItem`, `FedItem`, `MatchHit`.
 - **`packages/contract/src/ipc.ts`** — the `window.api.*` surface (`NimiApi`) + channels.
-- Import from the workspace package: `import type { Task, Memory } from '@nimi/contract/views'`.
+- Import from the workspace package: `import type { Task, Memory } from '@mikan/contract/views'`.
 
 ## "Wire real, plain"
 

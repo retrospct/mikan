@@ -5,19 +5,19 @@ import { defineConfig } from 'vitest/config'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 /**
- * Vitest config for @nimi/desktop worker/service tests.
+ * Vitest config for @mikan/desktop worker/service tests.
  *
  * Runs in plain Node (no Electron). Tests live under test/ and import directly
  * from src/main/ — the hash embedder + NullDrafter + a temp libSQL DB created
  * by test/setup.ts before any module is loaded.
  *
- * @nimi/contract/* is consumed from .ts source via a prefix alias, mirroring
+ * @mikan/contract/* is consumed from .ts source via a prefix alias, mirroring
  * tsconfig.node.json paths.
  */
 export default defineConfig({
   resolve: {
     alias: {
-      '@nimi/contract': resolve(__dirname, '../../packages/contract/src')
+      '@mikan/contract': resolve(__dirname, '../../packages/contract/src')
     }
   },
   test: {

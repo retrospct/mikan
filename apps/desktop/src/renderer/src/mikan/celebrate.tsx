@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import type { CSSProperties, JSX } from 'react'
 import { NIcon } from './icons'
-import { NimiMark } from './mark'
+import { MikanMark } from './mark'
 
 interface ConfPiece {
   x: number
@@ -69,7 +69,7 @@ export function AllDone({
             </span>
           ))}
           <span className="win-big">
-            <NimiMark state="happy" fill={9} size={86} />
+            <MikanMark state="happy" fill={9} size={86} />
           </span>
           {conf.map((c, i) => (
             <span

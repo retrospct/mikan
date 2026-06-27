@@ -12,8 +12,8 @@ One-paragraph description of what the feature does and what "working" looks like
 
 | Tier | Command | Needs secret? | Needs display? | Covers |
 |---|---|---|---|---|
-| **1 — Static** | `pnpm typecheck && pnpm --filter @nimi/desktop build` | No | No | Types, build |
-| **2 — E2E smoke** | `xvfb-run -a pnpm --filter @nimi/desktop test:e2e` | No | Xvfb | Deterministic `_electron` assertions |
+| **1 — Static** | `pnpm typecheck && pnpm --filter @mikan/desktop build` | No | No | Types, build |
+| **2 — E2E smoke** | `xvfb-run -a pnpm --filter @mikan/desktop test:e2e` | No | Xvfb | Deterministic `_electron` assertions |
 | **3 — GUI/visual** | This runbook (§ below) | <key or "No"> | Yes | Judgement + artifacts |
 
 Tiers 1–2 are the automated half (run by `.github/workflows/e2e-smoke.yml` on every

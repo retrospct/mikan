@@ -108,7 +108,7 @@ export const todoContext = sqliteTable('todo_context', {
   contentType: text('content_type'),
   excerpt: text('excerpt'),
   state: text('state').notNull().default('surfaced'), // surfaced | pinned | dismissed
-  /** AI-gap: why Nimi kept this beside the task. Populated by the drafter; null otherwise. */
+  /** AI-gap: why Mikan kept this beside the task. Populated by the drafter; null otherwise. */
   why: text('why'),
   firstSurfacedAt: integer('first_surfaced_at', { mode: 'timestamp' })
     .notNull()

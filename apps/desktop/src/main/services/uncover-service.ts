@@ -3,7 +3,7 @@ import { client } from '../db'
 import { drafter, type UncoverInput } from '../pipeline/draft'
 import { pipelineService } from './pipeline-service'
 import { relativeWhen, toUncoveredTodo } from './project'
-import type { UncoveredTodo } from '@nimi/contract/views'
+import type { UncoveredTodo } from '@mikan/contract/views'
 
 /**
  * Uncover service — infers candidate to-dos from the recent capture feed via the

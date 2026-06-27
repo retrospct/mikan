@@ -6,7 +6,7 @@ check items off (`- [x]`) as they land, and keep the code pointers current.
 
 > Lane note: these are all renderer-side. Where a fix needs a contract change
 > (e.g. an explicit "add to backlog" mutator), call it out and land the
-> `@nimi/contract` half first.
+> `@mikan/contract` half first.
 
 ---
 

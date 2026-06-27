@@ -1,6 +1,6 @@
-// NimiApp.tsx — the Nimi desktop surface: state, navigation, screens.
+// MikanApp.tsx — the Mikan desktop surface: state, navigation, screens.
 //
-// Ported from the design bundle's nimi-app.jsx. Two deliberate changes from the
+// Ported from the design bundle's mikan-app.jsx. Two deliberate changes from the
 // prototype, per the implementation brief:
 //   1. The desktop fills the real Electron window — the prototype's simulated macOS
 //      menu bar + tray popover are dropped (the OS provides real chrome; real
@@ -8,16 +8,16 @@
 //      is a single centred column on the matcha wallpaper, "the same size as mobile".
 //   2. The design-time TweaksPanel (a variation explorer) is dropped. Its chosen
 //      defaults — dark / matcha / stack / cozy / ambient-on — are applied to <html>.
-//      Accent (primary color) is now user-configurable in Settings (nimi/theme.ts);
+//      Accent (primary color) is now user-configurable in Settings (mikan/theme.ts);
 //      the header's "Plan tomorrow" button still triggers the new-day ritual.
 //   3. The prototype's menu-bar/tray search + badge live on the header here: the
 //      "waiting" badge sits on the header mark, and global search replaces the (then
 //      meaningless) "On device" pill.
 //
-// Data comes from the `data` seam (apps/.../nimi/api.ts): the real `window.api`
+// Data comes from the `data` seam (apps/.../mikan/api.ts): the real `window.api`
 // in Electron, an in-memory mock in the browser preview. AI-only fields come back
 // null until the drafting layer lands (docs/INTEGRATION.md).
-import type { BacklogItem, Memory, Task } from '@nimi/contract/views'
+import type { BacklogItem, Memory, Task } from '@mikan/contract/views'
 import type { JSX } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
@@ -27,19 +27,19 @@ import { AuthGate, AuthSplash } from './auth-gate'
 import { AllDone } from './celebrate'
 import { FeedView } from './feed'
 import { NIcon } from './icons'
-import { Dots, NimiMark } from './mark'
-import './nimi.css'
+import { Dots, MikanMark } from './mark'
+import './mikan.css'
 import { PlanRitual } from './plan'
 import { SearchOverlay } from './search'
 import { SettingsView } from './settings'
 import { TaskDetail } from './task'
 import { BottomNav, TodayView } from './today'
-import type { NimiMarkState } from './types'
+import type { MikanMarkState } from './types'
 
 const CAP = 5
 
 // The product defaults the design landed on (formerly the TweaksPanel defaults).
-// Accent (primary color) is user-configurable in Settings; see nimi/theme.ts.
+// Accent (primary color) is user-configurable in Settings; see mikan/theme.ts.
 const TWEAKS = {
   theme: 'dark',
   todayLayout: 'stack',
@@ -55,7 +55,7 @@ function LoadingView(): JSX.Element {
     <div className="view">
       <div className="scroll">
         <div className="add-stage">
-          <NimiMark state="thinking" size={66} />
+          <MikanMark state="thinking" size={66} />
           <div className="add-stage-t">
             Waking up
             <Dots />
@@ -73,7 +73,7 @@ function ErrorView({ onRetry }: { onRetry: () => void }): JSX.Element {
     <div className="view">
       <div className="scroll">
         <div className="add-stage">
-          <NimiMark state="idle" size={66} />
+          <MikanMark state="idle" size={66} />
           <div className="add-stage-t">Couldn&apos;t reach your memory</div>
           <div className="add-stage-s">The on-device worker didn&apos;t respond just now.</div>
           <button className="btn primary" style={{ marginTop: '6px' }} onClick={onRetry}>
@@ -85,7 +85,7 @@ function ErrorView({ onRetry }: { onRetry: () => void }): JSX.Element {
   )
 }
 
-export default function NimiApp(): JSX.Element {
+export default function MikanApp(): JSX.Element {
   // Auth gate: when Logto is configured, the whole app sits behind a sign-in
   // screen. `ready` guards against flashing the gate before a cached session is
   // restored; when Logto is unconfigured (dev/CI) the gate never shows.
@@ -98,7 +98,7 @@ export default function NimiApp(): JSX.Element {
   const [overlay, setOverlay] = useState<'add' | 'plan' | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
-  const [headState, setHeadState] = useState<NimiMarkState>('idle')
+  const [headState, setHeadState] = useState<MikanMarkState>('idle')
   const [planned, setPlanned] = useState(true) // a returning day is already planned
   const [yesterday, setYesterday] = useState<Task[]>([]) // leftovers to carry over
   const [showWin, setShowWin] = useState(false)
@@ -113,7 +113,7 @@ export default function NimiApp(): JSX.Element {
     el.setAttribute('data-theme', TWEAKS.theme)
     el.setAttribute('data-density', TWEAKS.density)
     el.setAttribute('data-ambient', TWEAKS.ambient ? 'on' : 'off')
-    // Colour comes from the active brand (@nimi/brand); BrandProvider applies the
+    // Colour comes from the active brand (@mikan/brand); BrandProvider applies the
     // brand tokens and re-applies them when data-theme flips above.
   }, [])
 
@@ -356,7 +356,7 @@ export default function NimiApp(): JSX.Element {
                     tasks={tasks}
                     cap={CAP}
                     layout={TWEAKS.todayLayout}
-                    nimiState={headState}
+                    mikanState={headState}
                     planned={planned}
                     carriedCount={carriedCount}
                     backlogCount={backlog.length}
@@ -380,7 +380,7 @@ export default function NimiApp(): JSX.Element {
                     onAddTodo={addTodo}
                     onAdd={() => setOverlay('add')}
                     onRecordingChange={setFeedRecording}
-                    nimiState={headState}
+                    mikanState={headState}
                     badge={waiting}
                     onSearch={openGlobalSearch}
                     onTomorrow={beginNewDay}

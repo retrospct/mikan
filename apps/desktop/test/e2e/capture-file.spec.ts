@@ -8,8 +8,8 @@
  * the worker (not optimistic UI state), and is the one connection guaranteed to
  * see the worker's writes (a separate SQLite reader hits WAL-visibility races).
  *
- * Prereq:  pnpm --filter @nimi/desktop build   (produces out/main/index.js)
- * Run:     pnpm --filter @nimi/desktop test:e2e
+ * Prereq:  pnpm --filter @mikan/desktop build   (produces out/main/index.js)
+ * Run:     pnpm --filter @mikan/desktop test:e2e
  */
 import { test, expect, type ElectronApplication, type Page } from '@playwright/test'
 import { join } from 'node:path'
@@ -57,7 +57,7 @@ async function gotoFeed(): Promise<void> {
 }
 
 test.beforeAll(async () => {
-  const launched = await launchBuiltApp('nimi-e2e-')
+  const launched = await launchBuiltApp('mikan-e2e-')
   app = launched.app
   page = launched.page
   cleanupUserDataDir = launched.cleanupUserDataDir

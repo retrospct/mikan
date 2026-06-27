@@ -92,7 +92,7 @@ Paste field + "Save key", a masked status ("Key set ✓ / not set"), and a clear
 
 ## Verification
 
-1. `pnpm --filter @nimi/mobile typecheck` stays green.
+1. `pnpm --filter @mikan/mobile typecheck` stays green.
 2. **Interop parity script** — `apps/mobile/scripts/crypto-parity.ts` (run with `tsx`): with a fixed 64-hex key, (a) decrypt a desktop-`crypto.ts`-produced `enc:` string using the mobile codec, and (b) encrypt with mobile and decrypt with desktop `crypto.ts`. Both must round-trip. This proves byte parity in Node **before** any device build.
 3. **V7 live E2E**: reveal key on desktop → paste in mobile Settings → enable desktop Cloud sync → capture a note on each device → confirm the other shows readable plaintext (not `enc:…`), per the runbook style in `docs/agent-sync/HANDOFF-mobile-rn-turso.md`.
 

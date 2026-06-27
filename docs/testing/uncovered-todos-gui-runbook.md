@@ -13,7 +13,7 @@ Run these tiers in order. Stop if an earlier tier fails.
 | Tier | Command | Needs secret? | Needs display? | Covers |
 |---|---|---|---|---|
 | **1 — Static** | `pnpm typecheck && pnpm build` | No | No | Types, build integrity |
-| **2 — Service tests** | `pnpm --filter @nimi/desktop test` | No | No | NullDrafter path, cache write/hit/invalidation, pipeline, todos |
+| **2 — Service tests** | `pnpm --filter @mikan/desktop test` | No | No | NullDrafter path, cache write/hit/invalidation, pipeline, todos |
 | **3 — GUI test** | This runbook (§4–§7) | `NEEME_ANTHROPIC_KEY` | Yes | CloudDrafter inference, UI rendering, Backlog button, meta-cache |
 
 Tiers 1 and 2 run in any CI environment without secrets and without a display. Tier 3 is the

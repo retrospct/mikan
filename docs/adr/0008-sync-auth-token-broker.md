@@ -53,7 +53,7 @@ DB-scoped token the broker mints.
 
 - Main calls the broker with `await auth.getAccessToken()`, caches `{ syncUrl, authToken }` in
   Electron `safeStorage` (like the Logto refresh token), and **pushes it to the worker** over a
-  new `@nimi/contract` channel — the same shape as `call(IPC.connectorsIngest, [provider, token])`.
+  new `@mikan/contract` channel — the same shape as `call(IPC.connectorsIngest, [provider, token])`.
 - The worker builds the embedded replica with that token. On `401`/expiry it asks main to refresh
   (broadcast pattern like `auth.onChange`).
 - **The renderer never sees any token** — only scoped `window.api.*` methods cross the
@@ -132,8 +132,8 @@ the documented spike fallback.
 2. [x] ~~Scaffold `services/token-broker`~~ **Done** — Hono + Vercel function implemented in
        `services/token-broker`; JWKS-verify Logto → Platform-API provision-or-lookup → mint
        DB-scoped token → `{ syncUrl, authToken, expiresAt }`.
-3. [x] ~~Add the `@nimi/contract` sync-token channel; main caches in `safeStorage` and pushes to the
-       worker.~~ **Done** — `BrokerTokenResponse` in `@nimi/contract/ipc`; main caches token in
+3. [x] ~~Add the `@mikan/contract` sync-token channel; main caches in `safeStorage` and pushes to the
+       worker.~~ **Done** — `BrokerTokenResponse` in `@mikan/contract/ipc`; main caches token in
        `safeStorage` and injects into worker env at boot; refresh before expiry.
 4. [ ] Per-user DB **lifecycle**: provisioning naming (`neeme-<subhash>`) is implemented in the
        broker. **Teardown on account delete** is deferred — needs a delete-account flow first.

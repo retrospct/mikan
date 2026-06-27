@@ -20,9 +20,9 @@ todos:
     content: 'Write draft-service integration tests: regenerate upsert with NullDrafter, inputsHash dedup no-op, read'
   - id: docs-verify
     status: completed
-    content: 'Update ROADMAP #7 + add run-tests note to CLAUDE.md/AGENTS.md; run pnpm --filter @nimi/desktop test, typecheck, lint; fix eslint test glob if needed'
+    content: 'Update ROADMAP #7 + add run-tests note to CLAUDE.md/AGENTS.md; run pnpm --filter @mikan/desktop test, typecheck, lint; fix eslint test glob if needed'
 name: worker service vitest
-overview: 'Add a vitest harness to @nimi/desktop and write unit + integration tests that guard the worker''s pipeline and todo logic (capture/search, cap-5 + latch, plan/carry-over, context pool, projection, AI-gap degradation), using the hash embedder and a temp libSQL DB so tests run with no Electron, no model, and no network.'
+overview: 'Add a vitest harness to @mikan/desktop and write unit + integration tests that guard the worker''s pipeline and todo logic (capture/search, cap-5 + latch, plan/carry-over, context pool, projection, AI-gap degradation), using the hash embedder and a temp libSQL DB so tests run with no Electron, no model, and no network.'
 isProject: false
 ---
 # Worker-service tests (vitest) — ROADMAP #7
@@ -41,7 +41,7 @@ Solution: a vitest **setup file** (runs before each test file's own imports are 
 ## Harness setup
 
 - Add `vitest` (latest) to `devDependencies` in [`apps/desktop/package.json`](apps/desktop/package.json); add script `"test": "vitest run"` (and `"test:watch": "vitest"`).
-- New [`apps/desktop/vitest.config.ts`](apps/desktop/vitest.config.ts): `test.environment = 'node'`, `test.setupFiles = ['./test/setup.ts']`, `test.include = ['test/**/*.test.ts']`, `globals: true`. `@nimi/contract/*` resolves through the package's `exports` map to `.ts` source (vite transforms it); add a `resolve.alias` to `packages/contract/src/*` only if resolution fails.
+- New [`apps/desktop/vitest.config.ts`](apps/desktop/vitest.config.ts): `test.environment = 'node'`, `test.setupFiles = ['./test/setup.ts']`, `test.include = ['test/**/*.test.ts']`, `globals: true`. `@mikan/contract/*` resolves through the package's `exports` map to `.ts` source (vite transforms it); add a `resolve.alias` to `packages/contract/src/*` only if resolution fails.
 - New [`apps/desktop/test/setup.ts`](apps/desktop/test/setup.ts): set the three env vars to a fresh temp dir before tests; helper to clear tables between tests.
 - Place all tests under `apps/desktop/test/` (NOT under `src/main/**`) so they stay out of the electron-vite build (explicit entries in [`electron.vite.config.ts`](apps/desktop/electron.vite.config.ts)) and out of the app `tsconfig.node.json` `include`.
 - Root [`package.json`](package.json): add `"test": "turbo run test"`. [`turbo.json`](turbo.json): add a `test` task (`dependsOn: ["^build"]`, no persistent). `NEEME_*` is already in `globalEnv`.
@@ -67,11 +67,11 @@ Context hits rely on the lexical hash embedder, so tests use captured text that 
 
 ## Docs
 
-- Mark ROADMAP #7 as in-progress/shipped in [`docs/ROADMAP.md`](docs/ROADMAP.md) and add a one-line "run tests" note (`pnpm --filter @nimi/desktop test`) to [`apps/desktop/CLAUDE.md`](apps/desktop/CLAUDE.md) / `AGENTS.md` verify section.
+- Mark ROADMAP #7 as in-progress/shipped in [`docs/ROADMAP.md`](docs/ROADMAP.md) and add a one-line "run tests" note (`pnpm --filter @mikan/desktop test`) to [`apps/desktop/CLAUDE.md`](apps/desktop/CLAUDE.md) / `AGENTS.md` verify section.
 
 ## Verify
 
-- `pnpm --filter @nimi/desktop test` green.
+- `pnpm --filter @mikan/desktop test` green.
 - `pnpm typecheck` + `pnpm lint` still green for app code (tests live outside `src/main`, so they don't enter the node/web typecheck; lint config may need a glob for `test/**` — confirm and add if eslint flags it).
 
 ## Risks / notes

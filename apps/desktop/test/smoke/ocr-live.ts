@@ -10,12 +10,12 @@
  * and does not need an Electron context; the portable tesseract path is what this
  * headless smoke covers.
  *
- * Run: NEEME_USER_DATA=/tmp/nimi-smoke-ocr pnpm --filter @nimi/desktop exec tsx test/smoke/ocr-live.ts
+ * Run: NEEME_USER_DATA=/tmp/mikan-smoke-ocr pnpm --filter @mikan/desktop exec tsx test/smoke/ocr-live.ts
  */
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-process.env.NEEME_USER_DATA ??= '/tmp/nimi-smoke-ocr'
+process.env.NEEME_USER_DATA ??= '/tmp/mikan-smoke-ocr'
 process.env.NEEME_EMBEDDER ??= 'hash'
 process.env.NEEME_EXTRACTOR = 'portable' // force tesseract, not mac-vision
 

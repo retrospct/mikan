@@ -2,7 +2,7 @@
  * View-model contract — the shapes the **UI renders**, and therefore the shapes
  * the backend's `window.api.*` returns. Lifted verbatim from the design's
  * `renderer/src/neeme/data.ts` so the UI can swap mock data for `window.api.*`
- * with a mechanical import change (`from './data'` → `from '@nimi/contract/views'`).
+ * with a mechanical import change (`from './data'` → `from '@mikan/contract/views'`).
  *
  * Keep this free of Node/Electron/Drizzle imports (the renderer imports it).
  *
@@ -47,13 +47,13 @@ export interface Memory {
 // ── tasks (a daily-focus todo + its context pool, projected) ─────────────────
 
 /**
- * `gathering`/`drafted` are **AI-gap** states (Nimi is still pulling context, or
+ * `gathering`/`drafted` are **AI-gap** states (Mikan is still pulling context, or
  * has written a draft). Until the AI layer lands the backend only emits the two
  * structural states: `gathered` (open, context surfaced) and `done`.
  */
 export type TaskStatus = 'gathering' | 'gathered' | 'drafted' | 'done'
 
-/** AI-gap: the kind of note Nimi leaves beside a task. Not emitted yet. */
+/** AI-gap: the kind of note Mikan leaves beside a task. Not emitted yet. */
 export type NoteKind = 'ready' | 'ask' | 'wait' | 'gathered' | 'done'
 
 export interface Task {
@@ -72,11 +72,11 @@ export interface Task {
   draftNote: string | null
   /** AI-gap: not emitted yet. */
   noteKind?: NoteKind
-  /** AI-gap: Nimi's voice note beside the task. `null` until then. */
+  /** AI-gap: Mikan's voice note beside the task. `null` until then. */
   note?: string | null
   /** Relevance per `ctx` id (0..1, higher = closer). Real — from search. */
   relMap?: Record<string, number>
-  /** AI-gap: per-ctx-id reason string ("why Nimi kept this beside the task"). Real when the
+  /** AI-gap: per-ctx-id reason string ("why Mikan kept this beside the task"). Real when the
    *  drafter is configured; `null`/absent otherwise. Mirrors `relMap`. */
   whyMap?: Record<string, string>
   /** UI hint: just-added (the backend doesn't set this). */
@@ -99,13 +99,13 @@ export interface BacklogItem {
   /** Structural: the user's own note on the todo (`''` if none). */
   hint: string
   ctx: string[]
-  /** AI-gap: confidence Nimi can cover this. `null` until the AI layer lands. */
+  /** AI-gap: confidence Mikan can cover this. `null` until the AI layer lands. */
   conf?: number | null
   fresh?: boolean
 }
 
 /**
- * AI-gap: a todo Nimi *infers* from the feed (not user-entered). Emitted by
+ * AI-gap: a todo Mikan *infers* from the feed (not user-entered). Emitted by
  * `pipeline.uncoverTodos()` when the drafter is configured (`NEEME_ANTHROPIC_KEY`);
  * `window.api` returns `[]` otherwise so the UI degrades to no suggestions.
  */

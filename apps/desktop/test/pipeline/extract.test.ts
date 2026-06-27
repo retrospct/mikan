@@ -69,7 +69,7 @@ describe('detectContentType', () => {
 
 describe('extract', () => {
   it('decodes UTF-8 text bytes and returns extracted status', async () => {
-    const text = 'Hello world from nimi'
+    const text = 'Hello world from mikan'
     const bytes = new TextEncoder().encode(text)
     const result = await extract('text', bytes)
     expect(result.text).toBe(text)

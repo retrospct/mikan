@@ -10,26 +10,40 @@
 
 Structural data is **served for real** from the on-device pipeline. **AI-generated fields come back `null`/empty** until the drafting layer lands. The UI degrades gracefully — no brief, no draft, neutral status.
 
-## Swap map: `data.ts` mock → `window.api.*`
+## Current renderer wiring
 
-| UI today (mock in `data.ts`) | Call instead                                               | Returns               |
-| ---------------------------- | ---------------------------------------------------------- | --------------------- |
-| `MEMORIES` (archive lookup)  | `await window.api.pipeline.archive()`                      | `Memory[]`            |
-| `FED_RECENT`                 | `await window.api.pipeline.feed()`                         | `FedItem[]`           |
-| `uncoverTodos()` (stub)      | `await window.api.pipeline.uncoverTodos()`                 | `UncoveredTodo[]`     |
-| `matchTask(text)`            | `await window.api.pipeline.search(text)`                   | `MatchHit[]`          |
-| `SEED_TASKS`                 | `await window.api.todos.today()`                           | `Task[]`              |
-| `BACKLOG`                    | `await window.api.todos.backlog()`                         | `BacklogItem[]`       |
-| add a task                   | `window.api.todos.add(title, notes?)`                      | `Task`                |
-| complete / reopen            | `window.api.todos.{complete,reopen}(id)`                   | `Task \| null`        |
-| plan the day                 | `window.api.todos.plan(keep[], day?)`                      | `Task[]`              |
-| pull from backlog            | `window.api.todos.schedule(id, day?)`                      | `Task \| null`        |
-| pin / dismiss context        | `window.api.todos.{pinContext,dismissContext}(id, itemId)` | `Task \| null`        |
-| "search more" context        | `window.api.todos.searchMoreContext(id)`                   | `Task \| null`        |
-| capture a note               | `window.api.pipeline.captureText(text, name?)`             | `{ memory, created }` |
-| capture a file               | `window.api.pipeline.captureFile(bytes, name, mime?)`      | `{ memory, created }` |
+Renderer components import `data` from `apps/desktop/src/renderer/src/nimi/api.ts`.
+In Electron, that seam is the real preload bridge (`window.api`). In a plain Vite
+browser preview, where no preload exists, `api.ts` falls back to `mock.ts` so the UI
+can still be exercised without Electron.
 
-`MEMORIES` is a `Record<id, Memory>`; `archive()` returns a `Memory[]`. Build the lookup with `Object.fromEntries(archive.map((m) => [m.id, m]))`.
+Remaining renderer stubs are not the main data seam. They are feature-specific UI
+affordances: voice transcription (`ui-stubs.nextTranscript()`), the Feed voice quick
+demo (`feedOne('voice')`), task draft CTA fallback (`tryDraft()`), task chat replies,
+and static suggestion chips. Track them in `docs/agent-sync/UX-PUNCHLIST.md`.
+
+## Contract map: renderer call → `window.api.*`
+
+| Renderer need                      | Call                                                       | Returns               |
+| ---------------------------------- | ---------------------------------------------------------- | --------------------- |
+| Archive lookup for `MemoryContext` | `await window.api.pipeline.archive()`                      | `Memory[]`            |
+| Recent feed rows                   | `await window.api.pipeline.feed()`                         | `FedItem[]`           |
+| Inferred to-dos from recent feed   | `await window.api.pipeline.uncoverTodos()`                 | `UncoveredTodo[]`     |
+| Global search                      | `await window.api.pipeline.search(text)`                   | `MatchHit[]`          |
+| Today's tasks                      | `await window.api.todos.today()`                           | `Task[]`              |
+| Backlog                            | `await window.api.todos.backlog()`                         | `BacklogItem[]`       |
+| Add a task                         | `window.api.todos.add(title, notes?)`                      | `Task`                |
+| Complete / reopen                  | `window.api.todos.{complete,reopen}(id)`                   | `Task \| null`        |
+| Plan the day                       | `window.api.todos.plan(keep[], day?)`                      | `Task[]`              |
+| Pull from backlog                  | `window.api.todos.schedule(id, day?)`                      | `Task \| null`        |
+| Pin / dismiss context              | `window.api.todos.{pinContext,dismissContext}(id, itemId)` | `Task \| null`        |
+| "Search more" context              | `window.api.todos.searchMoreContext(id)`                   | `Task \| null`        |
+| Capture a note                     | `window.api.pipeline.captureText(text, name?)`             | `{ memory, created }` |
+| Capture a file                     | `window.api.pipeline.captureFile(bytes, name, mime?)`      | `{ memory, created }` |
+
+`archive()` returns a `Memory[]`. `NimiApp` builds the `MemoryContext` lookup with
+`Object.fromEntries(archive.map((m) => [m.id, m]))`, so task detail screens can resolve
+`Task.ctx` / `Task.pinned` ids without prop-drilling the whole archive.
 
 The mutators return the **updated `Task`**, so drop the result straight back into state instead of refetching `today()`.
 
@@ -41,7 +55,7 @@ The mutators return the **updated `Task`**, so drop the result straight back int
 
 - `Task.brief`, `Task.draft`, `Task.draftNote`, `Task.note`, `Task.noteKind`, and the `draftFor`/`draftType`/`draftIcon`/`useLabel`/`useNote`/`useDone` detail fields — all populated by the `Drafter` seam (`apps/desktop/src/main/pipeline/draft.ts`) and persisted in the `todo_ai` table.
 - `Task.status` advances to `'gathering'` while the draft runs and `'drafted'` once it lands (still `'done'` when the todo is done).
-- `Task.whyMap` — per-context reason strings; read as `task.whyMap?.[id]` in the renderer (replaces the mock `whyOf()` from `data.ts` — a #2 follow-up).
+- `Task.whyMap` — per-context reason strings; read as `task.whyMap?.[id]` in the renderer.
 - `BacklogItem.conf` — populated by the drafter even for backlog items (search-backed context).
 - `pipeline.uncoverTodos()` — `UncoveredTodo[]` inferred from the recent feed by `Drafter.uncover()` (`apps/desktop/src/main/services/uncover-service.ts`). Cached in the `meta` table keyed by an inputs-hash of the feed window, so it re-calls the API only when the feed changes. `[]` without a key. Surfaced in the Feed tab.
 
@@ -62,21 +76,21 @@ and `'extracted'` to `done`; `'pending'` stays as pending until extraction compl
 
 **Env knobs:**
 
-| Var | Effect |
-|-----|--------|
-| `NEEME_EXTRACTOR=off` | Skip OCR/ASR entirely — image/audio stay `pending` forever |
-| `NEEME_EXTRACTOR=portable` | Force tesseract.js/Whisper even on macOS |
-| `NEEME_OCR_LANG` | Tesseract language code (default `eng`) |
-| `NEEME_WHISPER_MODEL` | Whisper model (default `Xenova/whisper-tiny`) |
+| Var                        | Effect                                                     |
+| -------------------------- | ---------------------------------------------------------- |
+| `NEEME_EXTRACTOR=off`      | Skip OCR/ASR entirely — image/audio stay `pending` forever |
+| `NEEME_EXTRACTOR=portable` | Force tesseract.js/Whisper even on macOS                   |
+| `NEEME_OCR_LANG`           | Tesseract language code (default `eng`)                    |
+| `NEEME_WHISPER_MODEL`      | Whisper model (default `Xenova/whisper-tiny`)              |
 
 ## Cloud sync status (`window.api.sync`)
 
 Opt-in Turso sync (ROADMAP #10) exposes a small status surface on `window.api`:
 
-| Call | Returns | Notes |
-|------|---------|-------|
-| `await window.api.sync.getStatus()` | `SyncStatus` | `{ enabled, lastSyncAt, syncing, error }` |
-| `await window.api.sync.now()` | `void` | trigger an immediate sync; no-op when disabled |
+| Call                                | Returns      | Notes                                          |
+| ----------------------------------- | ------------ | ---------------------------------------------- |
+| `await window.api.sync.getStatus()` | `SyncStatus` | `{ enabled, lastSyncAt, syncing, error }`      |
+| `await window.api.sync.now()`       | `void`       | trigger an immediate sync; no-op when disabled |
 
 `SyncStatus.error` is set when sync is refused or fails — notably when `NEEME_SYNC=on`
 but no valid `NEEME_SYNC_ENCRYPTION_KEY` is present (`enabled:false` + an error message).

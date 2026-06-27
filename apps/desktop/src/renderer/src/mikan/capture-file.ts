@@ -1,7 +1,7 @@
 // capture-file.ts — shared helper: File → Uint8Array → captureFile IPC.
 // Used by both the feed maw dropzone and the add-sheet attach buttons.
-import type { CaptureResult } from '@nimi/contract/ipc'
-import type { MemoryKind } from '@nimi/contract/views'
+import type { CaptureResult } from '@mikan/contract/ipc'
+import type { MemoryKind } from '@mikan/contract/views'
 import { data } from './api'
 
 const EXT_KIND: Record<string, MemoryKind> = {

@@ -1,5 +1,5 @@
 {
-  "name": "@nimi/contract",
+  "name": "@mikan/contract",
   "version": "1.5.0",
   "description": "The nimi backend⇄UI contract: IPC channels, view-model types, and the shared HTTP API client. Consumed from source by the desktop app (and a future RN/Expo app).",
   "private": true,

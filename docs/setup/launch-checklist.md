@@ -62,7 +62,7 @@ it and retire the old project
   and a real support inbox. Keep this separate from the `send.getmikan.com` sending
   reputation.
 - **Marketing site `getmikan.com`** (separate PR, after the brand layer lands): a
-  small site — suggested `apps/web` consuming `@nimi/brand`, Astro on
+  small site — suggested `apps/web` consuming `@mikan/brand`, Astro on
   Vercel. Serves the homepage + `/terms` + `/privacy`, and is the target for Logto's
   **unknown-session redirect URL**. Unblocks: Google consent links, Logto terms/privacy links + the
   registration "agree to terms" checkbox. Set Logto "agree to terms" =

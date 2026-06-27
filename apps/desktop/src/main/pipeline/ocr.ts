@@ -75,7 +75,7 @@ export class TesseractOcr implements Ocr {
           quality: number
         }) => Promise<ArrayBuffer>
         const jpegAb = await convert({ buffer: heicBytes, format: 'JPEG', quality: 0.9 })
-        tempPath = join(tmpdir(), `nimi-ocr-${randomUUID()}.jpg`)
+        tempPath = join(tmpdir(), `mikan-ocr-${randomUUID()}.jpg`)
         writeFileSync(tempPath, Buffer.from(jpegAb))
         recognizePath = tempPath
       }

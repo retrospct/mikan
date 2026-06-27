@@ -9,8 +9,8 @@
  *   worker → parent : { id, ok: true, value } | { id, ok: false, error }
  *   worker → parent : { ready: true }  (once the schema is up)  | { fatal }
  */
-import { IPC } from '@nimi/contract/ipc'
-import type { ConnectorId, SyncStatus } from '@nimi/contract/ipc'
+import { IPC } from '@mikan/contract/ipc'
+import type { ConnectorId, SyncStatus } from '@mikan/contract/ipc'
 import { initDb, syncNow, reimportPreSyncBackup } from '../db'
 import { getSyncConfig } from '../db/sync-config'
 import { pipelineService } from '../services/pipeline-service'

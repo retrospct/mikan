@@ -9,7 +9,7 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 import { initDb } from '../../src/main/db/index'
 import { todoService } from '../../src/main/services/todo-service'
 import { pipelineService } from '../../src/main/services/pipeline-service'
-import { CAP_REACHED } from '@nimi/contract/ipc'
+import { CAP_REACHED } from '@mikan/contract/ipc'
 import { clearTables } from '../helpers'
 
 const TODAY = new Date().toISOString().slice(0, 10)

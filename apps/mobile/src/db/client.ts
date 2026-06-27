@@ -33,7 +33,7 @@ export async function openDb(opts: {
   authToken: string
 }) {
   const db = await connect({
-    path: 'nimi.db',
+    path: 'mikan.db',
     url: opts.syncUrl,
     authToken: opts.authToken,
     // remoteEncryption is intentionally absent: the shared content key encrypts

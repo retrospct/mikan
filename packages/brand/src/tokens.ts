@@ -16,5 +16,5 @@ export type RadiusToken = keyof typeof radius
 export type FontSizeToken = keyof typeof fontSize
 
 // Re-export the colour token shape here so consumers can pull the whole token
-// contract from `@nimi/brand/tokens` without reaching into types.
+// contract from `@mikan/brand/tokens` without reaching into types.
 export type { ColorToken, ColorTokens } from './types'

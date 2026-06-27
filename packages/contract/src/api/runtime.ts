@@ -2,7 +2,7 @@ import { client } from './generated/client.gen'
 import { buildClientConfig, setClientOptions } from './client-config'
 
 /**
- * Live-client configuration for the generated Nimi API client.
+ * Live-client configuration for the generated Mikan API client.
  *
  * The actual config seam (`createClientConfig`, base URL + auth state) lives in
  * `client-config.ts`, which the generated client imports at module-eval time.

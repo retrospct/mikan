@@ -14,19 +14,19 @@ todos:
     content: 'Instrument on-device performance + reliability on BOTH surfaces so the local-vs-cloud go/no-go is data-driven, not a vibe. Capture per device-tier: embed latency (cold model load + per-chunk), search latency at 1k/10k/100k chunks, index throughput, native-module load-failure rate (onnxruntime-node on desktop OS/arch matrix; op-sqlite + executorch on the EAS/device matrix), model-download success rate, memory/footprint, and (mobile) battery/thermal under bulk indexing + iOS background-suspension behavior. Define explicit p95 thresholds on the lowest device tier we commit to support — those thresholds are the trigger to reach into the cloud pocket.'
   - id: extract-pipeline-pkg
     status: pending
-    content: 'Extract the platform-neutral pipeline orchestration from apps/desktop/src/main into a new packages/pipeline (@nimi/pipeline), consumed from .ts source like @nimi/contract. Move the orchestration of capture → chunk → embed → index → search (the logic in services/pipeline-service.ts) behind explicit seams: Embedder (already exists in pipeline/embed.ts), a new VectorStore/Db seam (currently raw libSQL SQL inline in pipeline-service.ts), a BlobStore seam (currently pipeline/raw-store.ts uses node fs), and the existing Extractor seams (pipeline/ocr.ts, pipeline/asr.ts). Keep @nimi/contract free of runtime deps; pipeline package holds runtime logic with platform deps injected. Preserve a swappable cloud seam at each stage (CloudEmbedder, cloud offload for heavy extraction) even though only local adapters ship — the cloud path stays "in the pocket."'
+    content: 'Extract the platform-neutral pipeline orchestration from apps/desktop/src/main into a new packages/pipeline (@mikan/pipeline), consumed from .ts source like @mikan/contract. Move the orchestration of capture → chunk → embed → index → search (the logic in services/pipeline-service.ts) behind explicit seams: Embedder (already exists in pipeline/embed.ts), a new VectorStore/Db seam (currently raw libSQL SQL inline in pipeline-service.ts), a BlobStore seam (currently pipeline/raw-store.ts uses node fs), and the existing Extractor seams (pipeline/ocr.ts, pipeline/asr.ts). Keep @mikan/contract free of runtime deps; pipeline package holds runtime logic with platform deps injected. Preserve a swappable cloud seam at each stage (CloudEmbedder, cloud offload for heavy extraction) even though only local adapters ship — the cloud path stays "in the pocket."'
   - id: desktop-adapter
     status: pending
-    content: 'Refactor apps/desktop to consume @nimi/pipeline via desktop adapters (the existing @libsql/client store, onnxruntime-node/transformers.js embedder, node-fs blob store). This is a behavior-preserving refactor — the existing vitest suite (158 tests, NEEME_EMBEDDER=hash) and the e2e/smoke tiers must stay green with no functional change. Land this BEFORE mobile adapters so the seams are proven on the platform that already works.'
+    content: 'Refactor apps/desktop to consume @mikan/pipeline via desktop adapters (the existing @libsql/client store, onnxruntime-node/transformers.js embedder, node-fs blob store). This is a behavior-preserving refactor — the existing vitest suite (158 tests, NEEME_EMBEDDER=hash) and the e2e/smoke tiers must stay green with no functional change. Land this BEFORE mobile adapters so the seams are proven on the platform that already works.'
   - id: mobile-adapters
     status: pending
-    content: 'Implement the mobile adapters behind @nimi/pipeline seams: op-sqlite VectorStore (libsql native vector or sqlite-vec vec0, per Spike A), executorch Embedder (useTextEmbeddings ALL_MINILM_L6_V2, per Spike B), and an expo-file-system BlobStore (content-hash original-object store, the RN analog of pipeline/raw-store.ts). Requires an Expo dev-client / EAS build (op-sqlite + executorch are native modules — no Expo Go), which #14 already needs for Logto. Reuse @nimi/contract/views projection (the analog of services/project.ts) so mobile renders the same view-models.'
+    content: 'Implement the mobile adapters behind @mikan/pipeline seams: op-sqlite VectorStore (libsql native vector or sqlite-vec vec0, per Spike A), executorch Embedder (useTextEmbeddings ALL_MINILM_L6_V2, per Spike B), and an expo-file-system BlobStore (content-hash original-object store, the RN analog of pipeline/raw-store.ts). Requires an Expo dev-client / EAS build (op-sqlite + executorch are native modules — no Expo Go), which #14 already needs for Logto. Reuse @mikan/contract/views projection (the analog of services/project.ts) so mobile renders the same view-models.'
   - id: raw-blob-offload
     status: pending
     content: 'Close the original-object gap (applies to BOTH surfaces). Today original captured bytes live ONLY in the local content-hash blob store (pipeline/raw-store.ts → userData/raw/<shard>/<sha256>), written plaintext, NOT encrypted, NOT synced, and NOT in MIGRATABLE_TABLES — so a cloud migration carries an item''s text + todos but leaves its source file behind, and a second device never sees originals. Design encryption-at-rest for raw blobs (mirroring the items.text key story) and a blob offload/sync path (client-encrypted object storage keyed by the same sha256) so the original object travels with the record. Sequence behind the DB-row migration that already exists in db/migrate.ts.'
   - id: mobile-ui-localfirst
     status: pending
-    content: 'Rewire the apps/mobile Feed + capture screens to read/write the LOCAL pipeline first (capture-a-note → local index → local semantic search), demoting @nimi/contract/api (neeme FastAPI) from "only data path" to an optional sync/offload path. Mirror the desktop renderer seam pattern (apps/desktop/src/renderer/src/nimi/api.ts) so the same view-model surface backs both local and remote.'
+    content: 'Rewire the apps/mobile Feed + capture screens to read/write the LOCAL pipeline first (capture-a-note → local index → local semantic search), demoting @mikan/contract/api (neeme FastAPI) from "only data path" to an optional sync/offload path. Mirror the desktop renderer seam pattern (apps/desktop/src/renderer/src/nimi/api.ts) so the same view-model surface backs both local and remote.'
   - id: sync-convergence
     status: pending
     content: 'Converge with ROADMAP #10: use op-sqlite openSync (Turso embedded replicas) as the mobile sync transport — the same libSQL embedded-replica model desktop already builds in apps/desktop/src/main/db/index.ts. Reconcile the encryption-at-rest + content-encryption story (op-sqlite supports local encryption + offline writes) with the desktop sync seam, and decide the cross-device vector strategy from Spike B (ship shared vectors vs re-embed on each device, since the vector index is a rebuildable artifact derived from items.text).'
@@ -58,7 +58,7 @@ stack are environment-bound and were the reason mobile was scoped remote-only:
    + `onnxruntime-node` target Node/browser, **not** React Native.
 2. **The process model.** The `utilityProcess` worker and `window.api.*` IPC
    ([`apps/desktop/src/main/**`](../../apps/desktop/src/main)) are Electron constructs with no RN
-   equivalent — `@nimi/contract/ipc` has "no runtime meaning" on RN.
+   equivalent — `@mikan/contract/ipc` has "no runtime meaning" on RN.
 
 Both now have mature RN answers (verified current as of 2026-06):
 
@@ -83,11 +83,11 @@ hashes bytes to the node filesystem, and [`pipeline/embed.ts`](../../apps/deskto
 imports `onnxruntime-node`. The capture/index/search *logic* is platform-neutral; its *dependencies*
 are not.
 
-**Proposal: extract a `packages/pipeline` (`@nimi/pipeline`)** consumed from `.ts` source (same model
-as `@nimi/contract`), parameterized over four seams:
+**Proposal: extract a `packages/pipeline` (`@mikan/pipeline`)** consumed from `.ts` source (same model
+as `@mikan/contract`), parameterized over four seams:
 
 ```
-@nimi/pipeline  (platform-neutral orchestration: capture → chunk → embed → index → search)
+@mikan/pipeline  (platform-neutral orchestration: capture → chunk → embed → index → search)
   ├─ Embedder      seam — EXISTS today in pipeline/embed.ts (interface is already clean)
   ├─ VectorStore   seam — NEW; hides the vector SQL (libSQL-native vs sqlite-vec vec0)
   ├─ BlobStore     seam — NEW; content-hash raw store (node fs ↔ expo-file-system)
@@ -97,15 +97,15 @@ apps/desktop adapters:  @libsql/client + onnxruntime-node + node fs   (already w
 apps/mobile  adapters:  op-sqlite      + executorch       + expo-file-system
 ```
 
-`@nimi/contract` stays exactly as-is — pure types + the HTTP client, **no runtime/native deps**.
-`@nimi/pipeline` is where runtime logic with injected platform deps lives. The view-model projection
+`@mikan/contract` stays exactly as-is — pure types + the HTTP client, **no runtime/native deps**.
+`@mikan/pipeline` is where runtime logic with injected platform deps lives. The view-model projection
 ([`services/project.ts`](../../apps/desktop/src/main/services/project.ts)) is reused so both apps emit
-the same `@nimi/contract/views` shapes.
+the same `@mikan/contract/views` shapes.
 
 ### Why extract-then-port (not port-then-extract)
 
-The desktop refactor (consume `@nimi/pipeline` via desktop adapters) is **behavior-preserving** and
-guarded by the existing test suite — `pnpm --filter @nimi/desktop test` (158 tests, `NEEME_EMBEDDER=hash`)
+The desktop refactor (consume `@mikan/pipeline` via desktop adapters) is **behavior-preserving** and
+guarded by the existing test suite — `pnpm --filter @mikan/desktop test` (158 tests, `NEEME_EMBEDDER=hash`)
 plus the smoke/e2e tiers. Proving the seams on the platform that already works de-risks the whole
 effort before any RN code exists. If the desktop refactor can't stay green, the seam boundaries are
 wrong and we learn it cheaply.
@@ -145,7 +145,7 @@ cloud later is a config swap, not a rewrite. The proof-of-pattern already exists
 **This only holds under two conditions:**
 
 1. **Seams stay swappable across both surfaces** — which is exactly why the orchestration is extracted
-   into the shared `@nimi/pipeline` (else desktop and mobile drift into two divergent cloud
+   into the shared `@mikan/pipeline` (else desktop and mobile drift into two divergent cloud
    integrations).
 2. **We instrument, so the go/no-go is measured** (see the `instrumentation` todo). The trigger to pull
    cloud from the pocket is a p95 above a UX threshold **on the lowest device tier we commit to
@@ -189,7 +189,7 @@ the desktop sync-on case** and generalizes cleanly:
 
 - **Raw blobs don't migrate** (the original-object gap above) — DB rows go, source files stay behind.
 - **The migrate logic is desktop-only** (`@libsql/client`); the mobile op-sqlite equivalent should live
-  behind the same `@nimi/pipeline` store seam, not be re-implemented.
+  behind the same `@mikan/pipeline` store seam, not be re-implemented.
 - **Key custody is undecided** — account-derived vs passphrase vs OS keychain vs recovery flow
   (ADR 0001/0008 cover the token/auth side, not key management). Lose the key = lose the data, by
   design.
@@ -203,7 +203,7 @@ the desktop sync-on case** and generalizes cleanly:
     parity question (libSQL-native vs `vec0`).
   - **B. Embeddings** — executorch `useTextEmbeddings(ALL_MINILM_L6_V2)`; measure latency/size **and**
     cross-check vector similarity against desktop's transformers.js export for identical input.
-- **Phase 2 — Extract `@nimi/pipeline` + desktop adapter.** Hoist seams, refactor desktop to consume
+- **Phase 2 — Extract `@mikan/pipeline` + desktop adapter.** Hoist seams, refactor desktop to consume
   them, keep all tests green. No functional change.
 - **Phase 3 — Mobile adapters.** op-sqlite VectorStore, executorch Embedder, expo-file-system
   BlobStore. Requires an Expo dev-client / EAS build (native modules; #14 already needs this for Logto).
@@ -250,7 +250,7 @@ strict dependency chain — worth surfacing to whoever owns the roadmap sequenci
 
 ## Decisions for a human
 
-- **Shared package vs duplication.** Extract `@nimi/pipeline` (recommended — single source of truth,
+- **Shared package vs duplication.** Extract `@mikan/pipeline` (recommended — single source of truth,
   desktop tests guard the seams) or accept a parallel mobile reimplementation (faster to start, drifts
   over time)?
 - **executorch vs alternatives.** `react-native-executorch` is the cleanest fit (hook + the exact
@@ -269,7 +269,7 @@ strict dependency chain — worth surfacing to whoever owns the roadmap sequenci
   iOS device; the available vector API (native vs `vec0`) is recorded.
 - **Spike B:** executorch `ALL_MINILM_L6_V2` embeds on-device; latency/size measured; cosine gap vs
   desktop's export quantified with a go/no-go on shared-vector sync.
-- **Phase 2:** `pnpm --filter @nimi/desktop test` + smoke/e2e stay green after the `@nimi/pipeline`
+- **Phase 2:** `pnpm --filter @mikan/desktop test` + smoke/e2e stay green after the `@mikan/pipeline`
   extraction (zero behavior change).
 - **First mobile slice:** capture a note on the phone, embed + index locally, and get a relevant
   semantic-search hit **fully offline (airplane mode)**; after sync, the same item appears on desktop.

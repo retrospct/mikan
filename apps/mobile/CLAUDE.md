@@ -1,4 +1,4 @@
-# @nimi/mobile — agent guide
+# @mikan/mobile — agent guide
 
 React Native / Expo companion app. Read the **root `CLAUDE.md`** first.
 Architecture decision: **[ADR 0009](../../docs/adr/0009-mobile-rn-turso-cloud-pipeline.md)** —
@@ -7,7 +7,7 @@ mobile is offline-first via Turso embedded-replica, not a thin FastAPI HTTP clie
 ## Pattern
 
 Scaffolded after [t3-turbo](https://github.com/t3-oss/t3-turbo): Expo managed workflow,
-expo-router (file-based), `@nimi/contract` as the shared types layer.
+expo-router (file-based), `@mikan/contract` as the shared types layer.
 
 ## Key files
 
@@ -25,10 +25,10 @@ apps/mobile/
       client.ts         ← openDb() via @tursodatabase/sync-react-native
       index.ts          ← getDb() singleton accessor
     utils/
-      api.ts            ← initApiClient(): configures @nimi/contract/api (FastAPI client, optional)
+      api.ts            ← initApiClient(): configures @mikan/contract/api (FastAPI client, optional)
       auth.ts           ← SecureStore token persistence + token-store hydration
   metro.config.js       ← getDefaultConfig + unstable_enablePackageExports + FileStore
-  tsconfig.json         ← extends expo/tsconfig.base + @nimi/contract/* path alias
+  tsconfig.json         ← extends expo/tsconfig.base + @mikan/contract/* path alias
 ```
 
 ## Data path
@@ -41,7 +41,7 @@ push to cloud. The desktop picks them up on its next sync.
 **Schema:** `src/db/schema.ts` mirrors the desktop `items`/`todos`/`chunks` tables.
 No projection layer needed — same shape on both ends.
 
-**Note:** `@nimi/contract/api` (FastAPI HTTP client) is still wired but unused for the primary
+**Note:** `@mikan/contract/api` (FastAPI HTTP client) is still wired but unused for the primary
 data flow. It remains available for future server-side search features. See ADR 0009.
 
 ## Env vars
@@ -63,7 +63,7 @@ npx expo run:ios   # builds dev client + opens on simulator/device
 ## Metro + pnpm gotcha
 
 Expo SDK 52+ `getDefaultConfig` auto-detects the workspace root.
-`unstable_enablePackageExports: true` is required for `@nimi/contract`'s subpath
+`unstable_enablePackageExports: true` is required for `@mikan/contract`'s subpath
 exports (`./views`, `./api`, `./ipc`, etc.) — t3-turbo doesn't need this because
 `@acme/api` uses a single `.` export.
 

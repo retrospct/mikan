@@ -19,10 +19,10 @@ beforeEach(async () => {
 
 describe('pipelineService.captureText', () => {
   it('captures text and returns created:true on first call', async () => {
-    const result = await pipelineService.captureText('Hello nimi world', 'note.md')
+    const result = await pipelineService.captureText('Hello mikan world', 'note.md')
     expect(result.created).toBe(true)
     expect(result.memory.id).toBeTruthy()
-    expect(result.memory.title).toBe('Hello nimi world')
+    expect(result.memory.title).toBe('Hello mikan world')
   })
 
   it('returns created:false (idempotent) for identical content', async () => {

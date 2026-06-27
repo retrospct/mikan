@@ -1,4 +1,4 @@
-// tray-window.ts — Nimi as a frameless, tray-anchored menu-bar utility.
+// tray-window.ts — Mikan as a frameless, tray-anchored menu-bar utility.
 //
 // Owns the single app window + the tray icon + the global toggle hotkey, keeping
 // src/main/index.ts a thin router. Behavior:
@@ -13,7 +13,7 @@ import { app, BrowserWindow, Tray, Menu, globalShortcut, screen, nativeImage } f
 import type { MenuItem, MenuItemConstructorOptions } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
-import { brand } from '@nimi/brand'
+import { brand } from '@mikan/brand'
 import trayIconAsset from '../../../resources/trayTemplate.png?asset'
 import appIcon from '../../../resources/icon.png?asset'
 
@@ -168,7 +168,7 @@ export function initTrayWindow(): void {
       click: (mi: MenuItem) => setPinned(mi.checked)
     }
   ]
-  // Opt-in: hide the Dock icon (macOS) so Nimi is a pure menu-bar utility. Default
+  // Opt-in: hide the Dock icon (macOS) so Mikan is a pure menu-bar utility. Default
   // off — the Dock stays unless you choose this, and the tray icon + hotkey always
   // summon the window, so it can't get "lost".
   if (process.platform === 'darwin') {

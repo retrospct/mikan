@@ -2,8 +2,8 @@
 import { useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
-import { NimiMark } from './mark'
-import type { BacklogItem, Task } from '@nimi/contract/views'
+import { MikanMark } from './mark'
+import type { BacklogItem, Task } from '@mikan/contract/views'
 
 export function PlanRitual({
   tasks,
@@ -21,7 +21,7 @@ export function PlanRitual({
   /** Signed-in display name, or null in a local/unconfigured build. */
   userName: string | null
   onClose: () => void
-  // hand up the kept task ids + chosen backlog ids; NimiApp drives plan()+schedule()
+  // hand up the kept task ids + chosen backlog ids; MikanApp drives plan()+schedule()
   onApply: (keep: string[], add: string[]) => void
 }): JSX.Element {
   const pool = backlog
@@ -55,7 +55,7 @@ export function PlanRitual({
 
       <div className="plan-body">
         <div className="plan-intro">
-          <NimiMark state="idle" size={56} />
+          <MikanMark state="idle" size={56} />
           <div className="plan-intro-h">
             {fresh
               ? userName

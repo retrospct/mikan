@@ -21,7 +21,7 @@ const mockSafeStorage = {
   decryptString: vi.fn((b: Buffer) => b.toString('utf8'))
 }
 const mockApp = {
-  getPath: vi.fn(() => '/tmp/nimi-test-broker')
+  getPath: vi.fn(() => '/tmp/mikan-test-broker')
 }
 
 vi.mock('electron', () => ({
@@ -43,7 +43,7 @@ vi.mock('node:fs/promises', () => ({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-import type { BrokerTokenResponse } from '@nimi/contract/ipc'
+import type { BrokerTokenResponse } from '@mikan/contract/ipc'
 
 function freshToken(overrides: Partial<BrokerTokenResponse> = {}): BrokerTokenResponse {
   return {

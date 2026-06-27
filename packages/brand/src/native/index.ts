@@ -1,4 +1,4 @@
-// React Native adapter SEAM. Imported via `@nimi/brand/native`. Contains NO DOM
+// React Native adapter SEAM. Imported via `@mikan/brand/native`. Contains NO DOM
 // and NO Tailwind — just flattens the active brand+mode tokens into a plain JS
 // object RN styles can consume (StyleSheet, and later Unistyles, the recorded
 // future RN styling layer). RN uses the `srgb` value today; wide-gamut (DisplayP3)

@@ -8,7 +8,7 @@
  *   capture → content-hash store → extract (pdf/text) → chunk → embed → index →
  *   search, plus idempotency and the image→pending contract.
  *
- * Run:  pnpm --filter @nimi/desktop test:smoke
+ * Run:  pnpm --filter @mikan/desktop test:smoke
  */
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -16,7 +16,7 @@ import { join } from 'node:path'
 
 // Must be set BEFORE importing the data layer (db/index.ts resolves the DB path
 // and embed.ts picks the embedder at module-init).
-process.env.NEEME_USER_DATA ??= mkdtempSync(join(tmpdir(), 'nimi-smoke-'))
+process.env.NEEME_USER_DATA ??= mkdtempSync(join(tmpdir(), 'mikan-smoke-'))
 process.env.NEEME_EMBEDDER ??= 'hash' // deterministic, offline — no model download
 process.env.NEEME_EXTRACTOR = 'off' // no background OCR/ASR → image stays `pending`
 

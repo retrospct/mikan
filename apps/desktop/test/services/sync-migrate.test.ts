@@ -167,7 +167,7 @@ describe('migrateUserData', () => {
   beforeEach(async () => {
     savedKey = process.env[KEY_ENV]
     process.env[KEY_ENV] = VALID_KEY // migration only runs with sync on (key required)
-    dir = mkdtempSync(join(tmpdir(), 'nimi-migrate-'))
+    dir = mkdtempSync(join(tmpdir(), 'mikan-migrate-'))
     src = await makeDb(join(dir, 'src.db'))
     dest = await makeDb(join(dir, 'dest.db'))
   })

@@ -7,7 +7,7 @@ import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { useConnectors } from '../hooks/useConnectors'
 import { relativeTime } from './time'
-import type { ConnectorId } from '@nimi/contract/ipc'
+import type { ConnectorId } from '@mikan/contract/ipc'
 
 interface ProviderRowProps {
   id: ConnectorId

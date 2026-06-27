@@ -1,4 +1,4 @@
-# @nimi/desktop — agent guide
+# @mikan/desktop — agent guide
 
 The Electron desktop app. Read the **root `CLAUDE.md`** first (the shared spine:
 coordination, security invariants, the contract, verify steps). This file adds the
@@ -19,29 +19,29 @@ apps/desktop/
     preload/     ← the contextBridge surface (window.api.*)
     renderer/    ← the React UI (src/renderer/src), index.html, Tailwind
   electron.vite.config.ts   ← three builds (main+worker / preload / renderer)
-  electron-builder.config.cjs ← packaging (macOS now, Windows later), appId dev.retro.mikan from @nimi/brand identity.json
+  electron-builder.config.cjs ← packaging (macOS now, Windows later), appId dev.retro.mikan from @mikan/brand identity.json
   tsconfig.node.json / tsconfig.web.json
 ```
 
 ## Consuming the contract
 
-Import the shared types/client from the **`@nimi/contract`** workspace package — never with
+Import the shared types/client from the **`@mikan/contract`** workspace package — never with
 a relative path into `packages/`:
 
 ```ts
-import { IPC, type NimiApi } from '@nimi/contract/ipc'
-import type { Task, Memory } from '@nimi/contract/views'
-import { getHealth } from '@nimi/contract/api'
+import { IPC, type MikanApi } from '@mikan/contract/ipc'
+import type { Task, Memory } from '@mikan/contract/views'
+import { getHealth } from '@mikan/contract/api'
 ```
 
-`@nimi/contract` is bundled **from .ts source**: `electron.vite.config.ts` passes
-`externalizeDepsPlugin({ exclude: ['@nimi/contract'] })` so it's compiled into the bundles
-(not externalized like native deps), and the tsconfigs map `@nimi/contract/*` via `paths`.
+`@mikan/contract` is bundled **from .ts source**: `electron.vite.config.ts` passes
+`externalizeDepsPlugin({ exclude: ['@mikan/contract'] })` so it's compiled into the bundles
+(not externalized like native deps), and the tsconfigs map `@mikan/contract/*` via `paths`.
 If you change the contract, edit it in `packages/contract` and update `docs/INTEGRATION.md`.
 
 ## Build/dev notes
 
-- `pnpm --filter @nimi/desktop dev` (or `pnpm dev` from root via turbo). `electron-vite dev`
+- `pnpm --filter @mikan/desktop dev` (or `pnpm dev` from root via turbo). `electron-vite dev`
   is interactive/persistent.
 - Two main-process entries build into `out/main`: `index.js` (app) and `worker.js` (the
   utilityProcess, forked at runtime via `join(__dirname, 'worker.js')`).
@@ -55,8 +55,8 @@ If you change the contract, edit it in `packages/contract` and update `docs/INTE
 Worker-service tests live under `test/` and run in plain Node (no Electron):
 
 ```bash
-pnpm --filter @nimi/desktop test        # run once
-pnpm --filter @nimi/desktop test:watch  # watch mode
+pnpm --filter @mikan/desktop test        # run once
+pnpm --filter @mikan/desktop test:watch  # watch mode
 ```
 
 Tests use `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off` + a per-file temp libSQL DB

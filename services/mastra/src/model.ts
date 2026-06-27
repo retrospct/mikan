@@ -22,5 +22,5 @@ export const AGENT_MODEL_SLUG = 'anthropic/claude-sonnet-4.6'
 // pipeline's Haiku 4.5.
 export const PIPELINE_ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001'
 
-// The Nimi agent's LanguageModel, routed through the gateway.
+// The Mikan agent's LanguageModel, routed through the gateway.
 export const agentModel = gateway(AGENT_MODEL_SLUG)

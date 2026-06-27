@@ -1,5 +1,5 @@
 {
-  "name": "@nimi/token-broker",
+  "name": "@mikan/token-broker",
   "version": "1.5.0",
   "description": "Logto → Turso token broker: JWKS-verify the Logto access token and mint a short-lived, DB-scoped Turso token for the user's personal embedded replica.",
   "private": true,

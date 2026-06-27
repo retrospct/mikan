@@ -3,7 +3,7 @@
 **Status:** Accepted **and implemented** (2026-06-01) — migrated to a **pnpm-workspace +
 turborepo** monorepo in the quiet window (0 open PRs, pre-agent-ramp), _ahead_ of Expo.
 Supersedes the original "defer until Expo starts" timing (see Decision). Layout shipped:
-`apps/desktop` + `packages/contract` (`@nimi/contract`); see ROADMAP "Shipped".
+`apps/desktop` + `packages/contract` (`@mikan/contract`); see ROADMAP "Shipped".
 **Date:** 2026-06-01
 **Context owners:** jlee (+ Claude)
 **Related:** corrects the timing in [[0003-all-typescript-on-device-pipeline]] (which pencilled in a turborepo "now"); gates roadmap #14 (RN/Expo)
@@ -80,7 +80,7 @@ The `git mv` is the easy part; the config rewiring is where it bites. Rough orde
    `apps/desktop/`.
 3. **Lift `src/shared` → `packages/contract`** (own `package.json` + `tsconfig`), make it a
    workspace dep of desktop, and repoint the `@shared` alias (electron-vite renderer + tsconfig
-   `paths`) at the package (`@nimi/contract`).
+   `paths`) at the package (`@mikan/contract`).
 4. **electron-vite:** the multi-entry `input` (main + worker `index.ts`) paths are now relative
    to `apps/desktop`; confirm the worker fork path (`out/main/worker.js`) still resolves at runtime.
 5. **tsconfig project references** between `desktop` and `contract` (composite).

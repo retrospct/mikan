@@ -1,6 +1,6 @@
-import type { SyncSettings, SyncStatus } from '@nimi/contract/ipc'
+import type { SyncSettings, SyncStatus } from '@mikan/contract/ipc'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { isElectron } from '../nimi/api'
+import { isElectron } from '../mikan/api'
 
 const DEFAULT: SyncStatus = {
   enabled: false,
@@ -18,7 +18,7 @@ const NOOP = (): void => {}
 /**
  * Bridges the renderer to the worker's Turso sync status (window.api.sync).
  * Polls `getStatus` on an interval — paused when the document is hidden to avoid
- * needless IPC when the window is minimised. Outside Electron (browser preview)
+ * needless IPC when the window is mimikansed. Outside Electron (browser preview)
  * returns a static disabled state + stable no-op, mirroring the useConnectors pattern.
  */
 export function useSync(): { status: SyncStatus; syncNow: () => void } {

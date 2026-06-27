@@ -20,7 +20,7 @@ the mobile slot now scaffolded, we need to commit to three interrelated decision
 ### Why the original plan (thin FastAPI HTTP client) is wrong
 
 The original `mobile-rn-expo.plan.md` planned to drive the mobile UI entirely from the
-`@nimi/contract/api` hey-api client pointed at the `neeme` FastAPI. Three facts killed it:
+`@mikan/contract/api` hey-api client pointed at the `neeme` FastAPI. Three facts killed it:
 
 | Constraint | Why it matters |
 |---|---|
@@ -123,7 +123,7 @@ iOS/Android app (apps/mobile)
 ## Consequences
 
 ### Positive
-- Mobile reuses the broker, the Turso schema, and `@nimi/contract` view-model types already built for desktop.
+- Mobile reuses the broker, the Turso schema, and `@mikan/contract` view-model types already built for desktop.
 - Offline-first: the app reads and writes without a network connection.
 - Desktop and mobile stay in sync via the same Turso DB — captures made on either surface appear on the other.
 - The Inngest + Mastra services are independently deployable; they don't couple to the Electron binary.

@@ -67,7 +67,7 @@ jobs:
         if: ${{ env.EXPO_TOKEN != '' }}
         run: pnpm install --frozen-lockfile
 
-      - uses: expo/expo-github-action@v8
+      - uses: expo/expo-github-action@v9
         if: ${{ env.EXPO_TOKEN != '' }}
         with:
           eas-version: latest

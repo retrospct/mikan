@@ -4,6 +4,10 @@ Issues and PRDs for this repo live in **Linear**, not in GitHub Issues. Skills t
 create, read, or move work items (`to-issues`, `triage`, `to-prd`, `qa`) operate against
 Linear.
 
+**Default target:** the **`retrospct`** team (key `RETRO` → issue ids like `RETRO-123`),
+**`Mikan`** project (<https://linear.app/retrospct/project/mikan-722e3699ff26>). Skills should
+create work items there without re-asking unless the user says otherwise.
+
 ## How to operate Linear
 
 Use the **Linear MCP** (the `productivity:linear` integration). Its tools are namespaced
@@ -15,9 +19,9 @@ instead of falling back to another tracker.
 
 Typical operations (use the MCP tool whose schema matches; don't guess channel names):
 
-- **Create an issue**: create a Linear issue with a title and a markdown description. Set
-  the team/project if the skill knows it; otherwise let it default and note which team you used.
-- **Read an issue**: fetch the issue by its identifier (e.g. `NIM-123`) including comments,
+- **Create an issue**: create a Linear issue with a title and a markdown description in the
+  default team/project above (`retrospct` / `Mikan`) unless the skill knows a better target.
+- **Read an issue**: fetch the issue by its identifier (e.g. `RETRO-123`) including comments,
   labels, and current workflow state.
 - **List / search issues**: list open issues filtered by label or workflow state.
 - **Comment**: add a comment to the issue.
@@ -26,7 +30,7 @@ Typical operations (use the MCP tool whose schema matches; don't guess channel n
 - **Move state / close**: move the issue through its workflow state; "close" means moving it
   to a Done/Canceled state, not deleting it.
 
-Identifiers are Linear keys like `NIM-123`, not bare integers — when a skill references a
+Identifiers are Linear keys like `RETRO-123`, not bare integers — when a skill references a
 ticket number, resolve it as a Linear identifier.
 
 ## Pull requests as a triage surface

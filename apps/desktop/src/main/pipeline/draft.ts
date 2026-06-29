@@ -380,7 +380,7 @@ export class CloudDrafter implements Drafter {
  * Mirrors `embedder` in `embed.ts`.
  */
 export const drafter: Drafter =
-  process.env.NEEME_DRAFTER === 'off' || !process.env.NEEME_ANTHROPIC_KEY
+  process.env.NEEME_DRAFTER?.trim() === 'off' || !process.env.NEEME_ANTHROPIC_KEY
     ? new NullDrafter()
     : new CloudDrafter(
         process.env.NEEME_ANTHROPIC_KEY,

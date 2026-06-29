@@ -3,7 +3,7 @@
  * Requires NEEME_USER_DATA + NEEME_EMBEDDER=hash (set by test/setup.ts).
  */
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
-import { initDb, client } from '../../src/main/db/index'
+import { initDb, client, vecClient } from '../../src/main/db/index'
 import { pipelineService } from '../../src/main/services/pipeline-service'
 import { clearTables } from '../helpers'
 
@@ -195,13 +195,13 @@ describe('pipelineService.syncEmbedder', () => {
     await pipelineService.captureText('sync embedder idempotency test', 'doc.md')
     await pipelineService.syncEmbedder()
 
-    // Count chunks after first sync
-    const before = await client.execute('SELECT COUNT(*) AS n FROM chunks')
+    // Count chunks after first sync (chunks live in neeme-vec.db via vecClient)
+    const before = await vecClient.execute('SELECT COUNT(*) AS n FROM chunks')
     const countBefore = Number(before.rows[0]!.n)
 
     await pipelineService.syncEmbedder()
 
-    const after = await client.execute('SELECT COUNT(*) AS n FROM chunks')
+    const after = await vecClient.execute('SELECT COUNT(*) AS n FROM chunks')
     const countAfter = Number(after.rows[0]!.n)
 
     // No additional chunks created — reindexAll was not called

@@ -17,7 +17,7 @@
     "@mastra/deployer-vercel": "^1.2.1",
     "ai": "^6.0.209",
     "inngest": "^4.11.0",
-    "zod": "^3.25.76"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

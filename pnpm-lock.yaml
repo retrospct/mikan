@@ -261,32 +261,32 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^3.0.86
-        version: 3.0.90(zod@3.25.76)
+        version: 3.0.90(zod@4.4.3)
       '@inngest/ai':
         specifier: ^0.1.7
         version: 0.1.7
       '@mastra/core':
         specifier: ^1.46.0
-        version: 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76)
+        version: 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       '@mastra/deployer-vercel':
         specifier: ^1.2.1
-        version: 1.2.2(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)
+        version: 1.2.2(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(typescript@5.9.3)(zod@4.4.3)
       ai:
         specifier: ^6.0.209
-        version: 6.0.216(zod@3.25.76)
+        version: 6.0.216(zod@4.4.3)
       inngest:
         specifier: ^4.11.0
-        version: 4.11.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.12.27)(react@19.2.7)(typescript@5.9.3)(zod@3.25.76)
+        version: 4.11.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.12.27)(react@19.2.7)(typescript@5.9.3)(zod@4.4.3)
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.43
       mastra:
         specifier: ^1.15.1
-        version: 1.16.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)
+        version: 1.16.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(typescript@5.9.3)(zod@4.4.3)
       tsx:
         specifier: ^4.19.2
         version: 4.22.4
@@ -8625,54 +8625,54 @@ snapshots:
 
   '@adobe/css-tools@4.5.0': {}
 
-  '@ai-sdk/anthropic@3.0.90(zod@3.25.76)':
+  '@ai-sdk/anthropic@3.0.90(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.12
-      '@ai-sdk/provider-utils': 4.0.33(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 4.0.33(zod@4.4.3)
+      zod: 4.4.3
 
-  '@ai-sdk/gateway@3.0.140(zod@3.25.76)':
+  '@ai-sdk/gateway@3.0.140(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.12
-      '@ai-sdk/provider-utils': 4.0.33(zod@3.25.76)
+      '@ai-sdk/provider-utils': 4.0.33(zod@4.4.3)
       '@vercel/oidc': 3.2.0
-      zod: 3.25.76
+      zod: 4.4.3
 
-  '@ai-sdk/provider-utils@2.2.8(zod@3.25.76)':
+  '@ai-sdk/provider-utils@2.2.8(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
       nanoid: 3.3.15
       secure-json-parse: 2.7.0
-      zod: 3.25.76
+      zod: 4.4.3
 
-  '@ai-sdk/provider-utils@3.0.25(zod@3.25.76)':
+  '@ai-sdk/provider-utils@3.0.25(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 2.0.3
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.1.0
-      zod: 3.25.76
+      zod: 4.4.3
 
-  '@ai-sdk/provider-utils@4.0.27(zod@3.25.76)':
+  '@ai-sdk/provider-utils@4.0.27(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.1.0
-      zod: 3.25.76
+      zod: 4.4.3
 
-  '@ai-sdk/provider-utils@4.0.33(zod@3.25.76)':
+  '@ai-sdk/provider-utils@4.0.33(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.12
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.1.0
-      zod: 3.25.76
+      zod: 4.4.3
 
-  '@ai-sdk/provider-utils@5.0.0(zod@3.25.76)':
+  '@ai-sdk/provider-utils@5.0.0(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.0
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.0
-      zod: 3.25.76
+      zod: 4.4.3
 
   '@ai-sdk/provider@1.1.3':
     dependencies:
@@ -8694,12 +8694,12 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/ui-utils@1.2.11(zod@3.25.76)':
+  '@ai-sdk/ui-utils@1.2.11(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.4.3)
+      zod: 4.4.3
+      zod-to-json-schema: 3.25.2(zod@4.4.3)
 
   '@babel/code-frame@7.29.7':
     dependencies:
@@ -10416,24 +10416,24 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76)':
+  '@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3)':
     dependencies:
       '@a2a-js/sdk': 0.3.13(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(express@5.2.1)
-      '@ai-sdk/provider-utils-v5': '@ai-sdk/provider-utils@3.0.25(zod@3.25.76)'
-      '@ai-sdk/provider-utils-v6': '@ai-sdk/provider-utils@4.0.27(zod@3.25.76)'
-      '@ai-sdk/provider-utils-v7': '@ai-sdk/provider-utils@5.0.0(zod@3.25.76)'
+      '@ai-sdk/provider-utils-v5': '@ai-sdk/provider-utils@3.0.25(zod@4.4.3)'
+      '@ai-sdk/provider-utils-v6': '@ai-sdk/provider-utils@4.0.27(zod@4.4.3)'
+      '@ai-sdk/provider-utils-v7': '@ai-sdk/provider-utils@5.0.0(zod@4.4.3)'
       '@ai-sdk/provider-v5': '@ai-sdk/provider@2.0.3'
       '@ai-sdk/provider-v6': '@ai-sdk/provider@3.0.10'
       '@ai-sdk/provider-v7': '@ai-sdk/provider@4.0.0'
-      '@ai-sdk/ui-utils-v5': '@ai-sdk/ui-utils@1.2.11(zod@3.25.76)'
+      '@ai-sdk/ui-utils-v5': '@ai-sdk/ui-utils@1.2.11(zod@4.4.3)'
       '@isaacs/ttlcache': 2.1.5
       '@lukeed/uuid': 2.0.1
-      '@mastra/schema-compat': 1.3.1(zod@3.25.76)
-      '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
+      '@mastra/schema-compat': 1.3.1(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.29.0(zod@4.4.3)
       '@sindresorhus/slugify': 2.2.1
       '@standard-schema/spec': 1.1.0
       ajv: 8.20.0
-      chat: 4.31.0(ai@6.0.216(zod@3.25.76))(zod@3.25.76)
+      chat: 4.31.0(ai@6.0.216(zod@4.4.3))(zod@4.4.3)
       croner: 10.0.1
       dotenv: 17.4.2
       execa: 9.6.1
@@ -10450,7 +10450,7 @@ snapshots:
       tokenx: 1.3.0
       ws: 8.21.0
       xxhash-wasm: 1.1.0
-      zod: 3.25.76
+      zod: 4.4.3
     transitivePeerDependencies:
       - '@bufbuild/protobuf'
       - '@cfworker/json-schema'
@@ -10462,10 +10462,10 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@mastra/deployer-vercel@1.2.2(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)':
+  '@mastra/deployer-vercel@1.2.2(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(typescript@5.9.3)(zod@4.4.3)':
     dependencies:
-      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76)
-      '@mastra/deployer': 1.47.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)
+      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
+      '@mastra/deployer': 1.47.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(typescript@5.9.3)(zod@4.4.3)
       fs-extra: 11.3.6
     transitivePeerDependencies:
       - '@hono/node-server'
@@ -10475,14 +10475,14 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@mastra/deployer@1.47.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)':
+  '@mastra/deployer@1.47.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(typescript@5.9.3)(zod@4.4.3)':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/traverse': 7.29.7
       '@hono/node-ws': 1.3.1(@hono/node-server@1.19.14(hono@4.12.27))(hono@4.12.27)
-      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76)
-      '@mastra/server': 1.47.0(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(zod@3.25.76)
+      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
+      '@mastra/server': 1.47.0(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)
       '@optimize-lodash/rollup-plugin': 5.1.0(rollup@4.62.2)
       '@rollup/plugin-alias': 6.0.0(rollup@4.62.2)
       '@rollup/plugin-commonjs': 29.0.2(rollup@4.62.2)
@@ -10513,27 +10513,27 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@mastra/loggers@1.2.0(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))':
+  '@mastra/loggers@1.2.0(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))':
     dependencies:
-      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76)
+      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       pino: 10.3.1
       pino-pretty: 13.1.3
 
-  '@mastra/schema-compat@1.3.1(zod@3.25.76)':
+  '@mastra/schema-compat@1.3.1(zod@4.4.3)':
     dependencies:
       json-schema-to-zod: 2.8.1
-      zod: 3.25.76
+      zod: 4.4.3
       zod-from-json-schema: 0.5.3
       zod-from-json-schema-v3: zod-from-json-schema@0.0.5
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
+      zod-to-json-schema: 3.25.2(zod@4.4.3)
 
-  '@mastra/server@1.47.0(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(zod@3.25.76)':
+  '@mastra/server@1.47.0(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
-      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76)
+      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
       hono: 4.12.27
-      zod: 3.25.76
+      zod: 4.4.3
 
-  '@modelcontextprotocol/sdk@1.29.0(zod@3.25.76)':
+  '@modelcontextprotocol/sdk@1.29.0(zod@4.4.3)':
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.27)
       ajv: 8.20.0
@@ -10550,8 +10550,8 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
+      zod: 4.4.3
+      zod-to-json-schema: 3.25.2(zod@4.4.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -11680,7 +11680,9 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
+      - bufferutil
       - supports-color
+      - utf-8-validate
 
   '@react-native/normalize-colors@0.74.89':
     optional: true
@@ -12378,13 +12380,13 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@6.0.216(zod@3.25.76):
+  ai@6.0.216(zod@4.4.3):
     dependencies:
-      '@ai-sdk/gateway': 3.0.140(zod@3.25.76)
+      '@ai-sdk/gateway': 3.0.140(zod@4.4.3)
       '@ai-sdk/provider': 3.0.12
-      '@ai-sdk/provider-utils': 4.0.33(zod@3.25.76)
+      '@ai-sdk/provider-utils': 4.0.33(zod@4.4.3)
       '@opentelemetry/api': 1.9.1
-      zod: 3.25.76
+      zod: 4.4.3
 
   ajv-formats@3.0.1(ajv@8.20.0):
     optionalDependencies:
@@ -13056,7 +13058,7 @@ snapshots:
 
   character-entities@2.0.2: {}
 
-  chat@4.31.0(ai@6.0.216(zod@3.25.76))(zod@3.25.76):
+  chat@4.31.0(ai@6.0.216(zod@4.4.3))(zod@4.4.3):
     dependencies:
       '@workflow/serde': 4.1.0-beta.2
       mdast-util-to-string: 4.0.0
@@ -13066,8 +13068,8 @@ snapshots:
       remend: 1.3.0
       unified: 11.0.5
     optionalDependencies:
-      ai: 6.0.216(zod@3.25.76)
-      zod: 3.25.76
+      ai: 6.0.216(zod@4.4.3)
+      zod: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -14906,7 +14908,7 @@ snapshots:
       css-in-js-utils: 3.1.0
     optional: true
 
-  inngest@4.11.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.12.27)(react@19.2.7)(typescript@5.9.3)(zod@3.25.76):
+  inngest@4.11.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.12.27)(react@19.2.7)(typescript@5.9.3)(zod@4.4.3):
     dependencies:
       '@bufbuild/protobuf': 2.12.1
       '@inngest/ai': 0.1.7
@@ -14931,7 +14933,7 @@ snapshots:
       serialize-error-cjs: 0.1.4
       temporal-polyfill: 0.2.5
       ulid: 2.4.0
-      zod: 3.25.76
+      zod: 4.4.3
     optionalDependencies:
       express: 5.2.1
       hono: 4.12.27
@@ -15414,15 +15416,15 @@ snapshots:
 
   marky@1.3.0: {}
 
-  mastra@1.16.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76):
+  mastra@1.16.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(typescript@5.9.3)(zod@4.4.3):
     dependencies:
       '@babel/parser': 7.29.7
       '@babel/types': 7.29.7
       '@clack/prompts': 1.6.0
       '@expo/devcert': 1.2.1
-      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76)
-      '@mastra/deployer': 1.47.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)
-      '@mastra/loggers': 1.2.0(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@3.25.76))(express@5.2.1)(zod@3.25.76))
+      '@mastra/core': 1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3)
+      '@mastra/deployer': 1.47.0(@hono/node-server@1.19.14(hono@4.12.27))(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))(typescript@5.9.3)(zod@4.4.3)
+      '@mastra/loggers': 1.2.0(@mastra/core@1.47.0(@bufbuild/protobuf@2.12.1)(@grpc/grpc-js@1.14.4)(ai@6.0.216(zod@4.4.3))(express@5.2.1)(zod@4.4.3))
       archiver: 8.0.0
       commander: 14.0.3
       dotenv: 17.4.2
@@ -18244,9 +18246,9 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
-  zod-to-json-schema@3.25.2(zod@3.25.76):
+  zod-to-json-schema@3.25.2(zod@4.4.3):
     dependencies:
-      zod: 3.25.76
+      zod: 4.4.3
 
   zod-validation-error@4.0.2(zod@4.4.3):
     dependencies:

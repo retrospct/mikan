@@ -4,6 +4,9 @@
   "description": "mikan — a privacy-first, local-first personal memory app (monorepo root)",
   "private": true,
   "packageManager": "pnpm@10.26.0",
+  "engines": {
+    "node": ">=24"
+  },
   "author": "jlee",
   "scripts": {
     "dev": "turbo run dev --filter=@mikan/desktop... --filter=@mikan/mastra...",

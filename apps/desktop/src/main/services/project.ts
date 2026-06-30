@@ -18,6 +18,7 @@ import type {
   MemoryKind,
   NoteKind,
   Task,
+  TaskState,
   TaskStatus,
   UncoveredTodo
 } from '@mikan/contract/views'
@@ -148,11 +149,20 @@ export function toTask(todo: Todo, context: ContextEntry[], ai?: TaskDraft): Tas
     status = 'gathered'
   }
 
+  // Canonical lifecycle (Mikan Flows). Derived from the structural `status` the
+  // projector emits today: `done`→done, a landed draft→awaiting (the approval
+  // gate), otherwise the resting `listed`. `planning`/`planned`/`working` become
+  // real once the planner + run-loop land (slices S4/S5). See docs/adr/0010.
+  const state: TaskState = done ? 'done' : status === 'drafted' ? 'awaiting' : 'listed'
+
   return {
     id: todo.id,
     title: todo.title,
     when: whenOfDay(todo.day),
     status,
+    state,
+    // No stored per-task mode yet — defaults to Plan until the mode switch lands.
+    mode: 'plan',
     done,
     ctx: context.map((c) => c.itemId),
     pinned: context.filter((c) => c.state === 'pinned').map((c) => c.itemId),

@@ -10,6 +10,26 @@
 
 Structural data is **served for real** from the on-device pipeline. **AI-generated fields come back `null`/empty** until the drafting layer lands. The UI degrades gracefully — no brief, no draft, neutral status.
 
+## Task lifecycle (Mikan Flows)
+
+The renderer redesign (`docs/plans/mikan-flows.prd.md`, model in `CONTEXT.md`) introduces a
+canonical six-state lifecycle that **supersedes `TaskStatus`**. It is rolled out **additively**
+so the build stays green — `Task.status` stays; new fields are added alongside:
+
+| Field | Type | Real / AI-gap |
+| --- | --- | --- |
+| `Task.state` | `'listed' \| 'planning' \| 'planned' \| 'working' \| 'awaiting' \| 'done'` | **Real** — derived from `status` at the projector (`toTask`) |
+| `Task.mode` | `'plan' \| 'auto'` | **Real** — defaults to `'plan'` (no stored per-task mode yet) |
+| `Task.steps` | `PlanStep[]` | **AI-gap** — `undefined` until the planner lands |
+| `Task.receipt` | `RunReceipt` | **AI-gap** — present once a run settles |
+
+Projector mapping today (`services/project.ts` → `toTask`): `done → 'done'`,
+drafted (a landed AI draft) `→ 'awaiting'` (the approval gate), otherwise `→ 'listed'`. The
+intermediate `'planning' / 'planned' / 'working'` states become real once the planner +
+run-loop land (slices S4/S5). Group-01 presentation states are **derived in the renderer**,
+not stored: `delegated = mode:auto & working`, `deferred = planning`, `in-progress = working`,
+`done = done`. Decision of record: `docs/adr/0010-task-lifecycle.md`.
+
 ## Current renderer wiring
 
 Renderer components import `data` from `apps/desktop/src/renderer/src/nimi/api.ts`.

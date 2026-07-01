@@ -10,7 +10,7 @@
 //   - Updates: current version + check / restart-to-update.
 import { useBrand } from '@mikan/brand/web'
 import { QRCodeSVG } from 'qrcode.react'
-import { useState, type JSX } from 'react'
+import { useEffect, useState, type JSX } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useSync, useSyncSettings } from '../hooks/useSync'
 import { useUpdate } from '../hooks/useUpdate'
@@ -225,18 +225,53 @@ function UpdateSection(): JSX.Element {
 
   const busy = stage === 'checking' || stage === 'downloading'
 
+  // Tracks whether the in-flight check was started by this button (vs. the
+  // automatic startup/daily-interval checks, which push the same
+  // checking→idle transition over the same channel). Only a user-initiated
+  // check that settles with nothing found gets the transient confirmation —
+  // otherwise "Up to date" would flicker with no perceptible signal.
+  const [pendingUserCheck, setPendingUserCheck] = useState(false)
+  const [prevStage, setPrevStage] = useState(stage)
+  const [justChecked, setJustChecked] = useState(false)
+
+  // Adjust state during render (not in an effect) when `stage` changes —
+  // see https://react.dev/learn/you-might-not-need-an-effect.
+  if (stage !== prevStage) {
+    setPrevStage(stage)
+    if (prevStage === 'checking' && pendingUserCheck) {
+      setPendingUserCheck(false)
+      setJustChecked(stage === 'idle')
+    }
+  }
+
+  useEffect(() => {
+    if (!justChecked) return undefined
+    const t = setTimeout(() => setJustChecked(false), 3000)
+    return () => clearTimeout(t)
+  }, [justChecked])
+
+  const onCheckNow = (): void => {
+    setJustChecked(false)
+    setPendingUserCheck(true)
+    checkNow()
+  }
+
   const statusLine =
-    stage === 'checking'
-      ? 'Checking for updates…'
-      : stage === 'available'
-        ? `Downloading ${version ?? 'update'}…`
-        : stage === 'downloading'
-          ? `Downloading${progress !== null ? ` ${progress}%` : '…'}`
-          : stage === 'ready'
-            ? `v${version} ready — restart to install`
-            : stage === 'error'
-              ? (error ?? 'Update check failed')
-              : 'Up to date'
+    stage === 'unavailable'
+      ? 'Updates run only in the packaged app.'
+      : stage === 'checking'
+        ? 'Checking for updates…'
+        : stage === 'available'
+          ? `Downloading ${version ?? 'update'}…`
+          : stage === 'downloading'
+            ? `Downloading${progress !== null ? ` ${progress}%` : '…'}`
+            : stage === 'ready'
+              ? `v${version} ready — restart to install`
+              : stage === 'error'
+                ? (error ?? 'Update check failed')
+                : justChecked
+                  ? 'Up to date · checked just now'
+                  : 'Up to date'
 
   return (
     <section className="settings-section">
@@ -245,7 +280,9 @@ function UpdateSection(): JSX.Element {
         <div className="settings-row-main">
           <div className="settings-row-ttl">{brand.productName}</div>
           <div className="settings-row-sub">
-            {stage === 'error' ? statusLine : `v${__APP_VERSION__} — ${statusLine}`}
+            {stage === 'error' || stage === 'unavailable'
+              ? statusLine
+              : `v${__APP_VERSION__} — ${statusLine}`}
           </div>
         </div>
         {stage === 'ready' ? (
@@ -253,7 +290,7 @@ function UpdateSection(): JSX.Element {
             Restart to update
           </button>
         ) : (
-          <button className="settings-btn" disabled={busy} onClick={checkNow}>
+          <button className="settings-btn" disabled={busy} onClick={onCheckNow}>
             {stage === 'checking' ? 'Checking…' : 'Check for updates'}
           </button>
         )}

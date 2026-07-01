@@ -14,6 +14,8 @@ import type {
   Memory,
   MemoryKind,
   Task,
+  TaskState,
+  TaskStatus,
   UncoveredTodo
 } from '@mikan/contract/views'
 import { CAP_REACHED, type CaptureResult, type MikanApi, type Todo } from '@mikan/contract/ipc'
@@ -23,6 +25,13 @@ type MockApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui' | 'update'>
 // The day's focus cap (mirrors MikanApp's CAP) — lets the mock raise CAP_REACHED
 // so the add-todo → backlog fallback is exercisable in the browser.
 const CAP = 5
+
+// Mirrors the real projector's `toTask` (services/project.ts): `state` is always
+// derived fresh from `status`/`done`, never hand-set, so the mock behaves like
+// the app once GrowingCard reads `Task.state` (Today/Stack, S2).
+function deriveState(status: TaskStatus, done: boolean): TaskState {
+  return done ? 'done' : status === 'drafted' ? 'awaiting' : 'listed'
+}
 
 // ── the memory archive (what you've "fed" Mikan) ────────────────────────────
 export const MEMORIES: Record<string, Memory> = {
@@ -450,7 +459,11 @@ function matchTask(text: string): MatchHit[] {
 
 // ── the mock window.api: shared mutable state behind the real surface ────────
 export function makeMockApi(): MockApi {
-  let tasks: Task[] = SEED_TASKS.map((t) => ({ ...t, relMap: REL[t.id] ?? {} }))
+  let tasks: Task[] = SEED_TASKS.map((t) => ({
+    ...t,
+    relMap: REL[t.id] ?? {},
+    state: deriveState(t.status, t.done)
+  }))
   let backlog: BacklogItem[] = BACKLOG.map((b) => ({ ...b }))
   let feed: FedItem[] = FED_RECENT.map((f) => ({ ...f }))
 
@@ -542,6 +555,7 @@ export function makeMockApi(): MockApi {
           title,
           when: 'today',
           status: 'gathered',
+          state: deriveState('gathered', false),
           done: false,
           ctx: ctxIds,
           pinned: [],
@@ -565,6 +579,7 @@ export function makeMockApi(): MockApi {
         if (!t) return null
         t.done = true
         t.status = 'done'
+        t.state = deriveState(t.status, t.done)
         return clone(t)
       },
       reopen: async (id: string): Promise<Task | null> => {
@@ -572,6 +587,7 @@ export function makeMockApi(): MockApi {
         if (!t) return null
         t.done = false
         t.status = 'gathered'
+        t.state = deriveState(t.status, t.done)
         return clone(t)
       },
       plan: async (keep: string[]): Promise<Task[]> => {
@@ -602,6 +618,7 @@ export function makeMockApi(): MockApi {
           title: b.title,
           when: 'today',
           status: 'gathered',
+          state: deriveState('gathered', false),
           done: false,
           ctx: [...(b.ctx ?? [])],
           pinned: [],

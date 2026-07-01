@@ -609,12 +609,54 @@ html[data-ambient='off'] .nm[data-state='idle'] .nm-dot.q {
   border-color: transparent;
   color: #0a0a0b;
 }
+/* status-carrying: the checkbox ring reads task.state, not just done/not-done.
+   listed/planning/planned/working share the resting look until S4/S5 give them
+   their own visual mechanism; awaiting gets an accent ring — it needs a look. */
+.task-check[data-state='awaiting'] {
+  border-color: var(--accent-line);
+}
 .task-main {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 7px;
+}
+/* the growing-card nests inside the task's own card chrome here (Today/Stack) —
+   flatten its standalone border/background/shadow so we don't double them up. */
+.task-main .gcard {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: inherit;
+}
+.task-main .gcard:hover {
+  border-color: transparent;
+  transform: none;
+}
+.task-main .gcard-hd {
+  padding: 0;
+}
+/* mode badge — plan is the quiet default; auto is "alive", gets the accent */
+.mode-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.mode-badge.auto {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
 }
 .task-num {
   font-family: var(--mono);

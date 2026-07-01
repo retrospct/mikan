@@ -4,6 +4,7 @@ import type { Task } from '@mikan/contract/views'
 import type { JSX } from 'react'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { MemoryContext } from './api'
+import { GrowingCard } from './growing-card'
 import { kindIcon } from './iconKind'
 import { NIcon } from './icons'
 import { MikanMark, MikanNote } from './mark'
@@ -173,6 +174,7 @@ function TaskCard({
         <button
           className="task-check"
           aria-label="Complete"
+          data-state={task.state ?? 'listed'}
           onClick={(e) => {
             e.stopPropagation()
             onToggle(task.id)
@@ -182,11 +184,12 @@ function TaskCard({
           {pop && <span className="check-burst" />}
         </button>
         <div className="task-main">
-          <div className="task-title">{task.title}</div>
-          {task.done ? (
-            <MikanNote kind="done">Done — nice work.</MikanNote>
-          ) : (
+          <GrowingCard task={task} />
+          {!task.done && (
             <>
+              <span className={'mode-badge' + (task.mode === 'auto' ? ' auto' : '')}>
+                {task.mode === 'auto' ? 'Auto' : 'Plan'}
+              </span>
               {task.note && <MikanNote kind={task.noteKind || 'gathered'}>{task.note}</MikanNote>}
               <div className="ctx-strip">
                 {ctxN > 0 && <CtxThumbs memIds={task.ctx} />}
@@ -267,6 +270,7 @@ export function TodayView({
   const brand = useBrand()
   const filled = tasks.length
   const open = Math.max(0, cap - filled)
+  const done = tasks.filter((t) => t.done).length
   const left = tasks.filter((t) => !t.done).length
 
   if (!planned) {
@@ -320,10 +324,10 @@ export function TodayView({
         )}
         <div className="today-top">
           <span className="today-cap">
-            Today · <b>{left}</b> of {cap}
+            <b>{done}</b> done · <b>{left}</b> left
           </span>
           <button className="today-link" onClick={onPlan}>
-            Plan
+            Plan my day
           </button>
         </div>
         <div className={'list casc'} data-layout={layout}>

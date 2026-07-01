@@ -1,7 +1,7 @@
 # ADR 0010 — Canonical task lifecycle supersedes `TaskStatus`
 
-**Status:** Accepted (2026-06-30) — rolling out **additively**; `TaskState` lands in
-`@mikan/contract` first (slice S0), renderer slices migrate onto it, then `TaskStatus` retires.
+**Status:** Implemented (2026-07-01) — `TaskState` landed in `@mikan/contract` (S0), renderer
+slices migrated onto it (S1–S5), `TaskStatus` retired and `state`/`mode` flipped to required (S6).
 **Date:** 2026-06-30
 **Context owners:** jlee (+ Claude)
 **Related:** implements the *Mikan Flows* design (`CONTEXT.md`, `docs/plans/mikan-flows.prd.md`);
@@ -61,8 +61,8 @@ Legend: ✅ strong · ⚠️ caveats · ❌ poor
 
 - **+** One contract truth for the lifecycle; growing-card and Auto mode render the same `state`.
 - **+** Each renderer slice migrates independently; CI stays green between slices.
-- **−** Transient redundancy: `status` and `state` coexist until S6. Mitigation: `state` is the
-  only field new code reads; `status` is frozen (no new writers).
-- **Follow-through:** when `steps`/`receipt`/`mode` gain real backing (planner, run-loop, a stored
-  per-task mode), update `docs/INTEGRATION.md`'s real-vs-AI-gap table and flip the optional
-  `state`/`mode` to required once all consumers set them.
+- **−** Transient redundancy: `status` and `state` coexisted until S6 (mitigated — `status` was
+  frozen with no new writers, then removed).
+- **Resolved (S6):** `steps`/`receipt`/`mode` gained real backing (S4's plan-review UI, S5's run
+  loop); `docs/INTEGRATION.md`'s real-vs-AI-gap table is updated; `Task.state`/`Task.mode` are
+  required and `TaskStatus` is deleted from `@mikan/contract`.

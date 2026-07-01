@@ -20,7 +20,6 @@ import type {
   RunReceipt,
   Task,
   TaskState,
-  TaskStatus,
   UncoveredTodo
 } from '@mikan/contract/views'
 import type { TaskDraft, UncoveredDraft } from '../pipeline/draft'
@@ -149,20 +148,13 @@ export function toTask(
   }
 
   const done = todo.status === 'done'
-  let status: TaskStatus
-  if (done) {
-    status = 'done'
-  } else if (ai?.status === 'drafted') {
-    status = 'drafted'
-  } else {
-    status = 'gathered'
-  }
+  const drafted = !done && ai?.status === 'drafted'
 
-  // Canonical lifecycle (Mikan Flows). Derived from the structural `status` the
-  // projector emits today: `done`→done, a landed draft→awaiting (the approval
-  // gate), otherwise the resting `listed`. `planned` stays unmapped — there is
-  // still no persisted multi-step plan (S4-scope). See docs/adr/0010.
-  const derivedState: TaskState = done ? 'done' : status === 'drafted' ? 'awaiting' : 'listed'
+  // Canonical lifecycle (Mikan Flows): `done`→done, a landed draft→awaiting
+  // (the approval gate), otherwise the resting `listed`. `planned` stays
+  // unmapped — there is still no persisted multi-step plan (S4-scope). See
+  // docs/adr/0010.
+  const derivedState: TaskState = done ? 'done' : drafted ? 'awaiting' : 'listed'
   // A todo_run row is a real signal from todos.run() (Group 03) — it overrides
   // the derivation above whenever it holds a non-resting state. A 'listed' row
   // (never run, or reverted by pause()) carries no receipt — receipt presence
@@ -182,7 +174,6 @@ export function toTask(
     id: todo.id,
     title: todo.title,
     when: whenOfDay(todo.day),
-    status,
     state,
     mode: todo.mode,
     receipt,

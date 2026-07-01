@@ -629,7 +629,7 @@ export function TaskDetail({
       setAutoBusy(false)
       if (!t) return
       if (t.draft) setDraft(t.draft)
-      onUpdate && onUpdate(task.id, { state: t.state, receipt: t.receipt, status: t.status })
+      onUpdate && onUpdate(task.id, { state: t.state, receipt: t.receipt })
     })
   }
   const approveAuto = (): void => {

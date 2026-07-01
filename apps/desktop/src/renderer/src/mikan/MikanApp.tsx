@@ -331,7 +331,7 @@ export default function MikanApp(): JSX.Element {
 
   // things waiting on you: drafts ready to act + freshly-uncovered backlog to-dos
   const waiting =
-    tasks.filter((x) => !x.done && x.status === 'drafted').length +
+    tasks.filter((x) => !x.done && x.state === 'awaiting').length +
     backlog.filter((b) => b.fresh).length
 
   // Mirror the waiting count onto the tray/Dock badge. The mock no-ops; only the

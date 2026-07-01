@@ -277,26 +277,26 @@ describe('toMatchHits', () => {
 // ── toTask ────────────────────────────────────────────────────────────────────
 
 describe('toTask', () => {
-  it('status is "done" for a done todo regardless of AI', () => {
+  it('state is "done" for a done todo regardless of AI', () => {
     const task = toTask(makeTodo({ status: 'done' }), [], makeDraft())
-    expect(task.status).toBe('done')
+    expect(task.state).toBe('done')
     expect(task.done).toBe(true)
   })
 
-  it('status is "drafted" when todo is open and AI status is drafted', () => {
+  it('state is "awaiting" when todo is open and AI status is drafted', () => {
     const task = toTask(makeTodo(), [], makeDraft({ status: 'drafted' }))
-    expect(task.status).toBe('drafted')
+    expect(task.state).toBe('awaiting')
     expect(task.done).toBe(false)
   })
 
-  it('status is "gathered" when todo is open and no AI', () => {
+  it('state is "listed" when todo is open and no AI', () => {
     const task = toTask(makeTodo(), [])
-    expect(task.status).toBe('gathered')
+    expect(task.state).toBe('listed')
   })
 
-  it('status is "gathered" when todo is open and AI status is gathered', () => {
+  it('state is "listed" when todo is open and AI status is gathered', () => {
     const task = toTask(makeTodo(), [], makeDraft({ status: 'gathered' }))
-    expect(task.status).toBe('gathered')
+    expect(task.state).toBe('listed')
   })
 
   it('populates relMap from context entries', () => {

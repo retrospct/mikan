@@ -12,23 +12,26 @@ Structural data is **served for real** from the on-device pipeline. **AI-generat
 
 ## Task lifecycle (Mikan Flows)
 
-The renderer redesign (`docs/plans/mikan-flows.prd.md`, model in `CONTEXT.md`) introduces a
-canonical six-state lifecycle that **supersedes `TaskStatus`**. It is rolled out **additively**
-so the build stays green — `Task.status` stays; new fields are added alongside:
+The renderer redesign (`docs/plans/mikan-flows.prd.md`, model in `CONTEXT.md`) is a canonical
+six-state lifecycle, `Task.state` + `Task.mode` — the sole source of truth. The old, coarser
+`TaskStatus` (`gathering|gathered|drafted|done`) has been **retired**: `Task.state`/`Task.mode`
+are required on every `Task` (S0–S6, `docs/adr/0010-task-lifecycle.md`).
 
 | Field | Type | Real / AI-gap |
 | --- | --- | --- |
-| `Task.state` | `'listed' \| 'planning' \| 'planned' \| 'working' \| 'awaiting' \| 'done'` | **Real** — derived from `status`, overridden by a persisted run row when one exists (`toTask`) |
+| `Task.state` | `'listed' \| 'planning' \| 'planned' \| 'working' \| 'awaiting' \| 'done'` | **Real** — derived at the projector, overridden by a persisted run row when one exists (`toTask`) |
 | `Task.mode` | `'plan' \| 'auto'` | **Real** — persisted per-task (`todos.mode` column); toggle via `todos.setMode(id, mode)` (S5) |
-| `Task.steps` | `PlanStep[]` | **AI-gap** — `undefined` until the planner lands (S4) |
+| `Task.steps` | `PlanStep[]` | **AI-gap** — `undefined` until the planner lands (S4+) |
 | `Task.receipt` | `RunReceipt` | **Real when the drafter is configured** — populated by `todos.run()`/`todos.approve()` (S5, backed by the `todo_run` table); `undefined` otherwise (no-op) |
 
-Projector mapping today (`services/project.ts` → `toTask`): `done → 'done'`, drafted (a landed
-AI draft) `→ 'awaiting'` (the approval gate), otherwise `→ 'listed'` — **unless** a `todo_run`
-row exists and its `state` isn't `'listed'`, in which case the run row's `state` wins (it's a
-real signal from `todos.run()`, not a derivation). `'planned'` stays unmapped — there is still
-no persisted multi-step plan (S4-scope); `run()` (S5) goes straight from `listed` to
-`working`/`awaiting`/`done` around a single gather-and-draft step, not a step sequence. Group-01
+Projector mapping today (`services/project.ts` → `toTask`): `done → 'done'`, a landed AI draft
+`→ 'awaiting'` (the approval gate), otherwise `→ 'listed'` — **unless** a `todo_run` row exists
+and its `state` isn't `'listed'`, in which case the run row's `state` wins (it's a real signal
+from `todos.run()`, not a derivation). `'planning'`/`'planned'` stay unreachable from the real
+backend — there is still no persisted multi-step plan (S4+ scope); `run()` (S5) goes straight
+from `listed` to `working`/`awaiting`/`done` around a single gather-and-draft step, not a step
+sequence. (The browser-preview mock shows `planning`/`planned`/`working` on its demo seed tasks
+so all six render states are exercisable without a live backend — see `mikan/mock.ts`.) Group-01
 presentation states are **derived in the renderer**, not stored: `delegated = mode:auto &
 working`, `deferred = planning`, `in-progress = working`, `done = done`. Decision of record:
 `docs/adr/0010-task-lifecycle.md`.

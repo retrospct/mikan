@@ -14,7 +14,7 @@ See **`CLAUDE.md`** for the full shared spine (architecture, contract, verify st
 
 ### Verify (no runtime)
 
-From repo root: `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output).
+From repo root: `pnpm typecheck` (green), `pnpm build` (green), `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output); `pnpm lint` over the whole workspace also currently reports pre-existing `services/**` errors, so it exits non-zero — only your changed files need to be clean.
 
 > **Lint after build gotcha:** `pnpm build` writes the gitignored, regenerable
 > `services/mastra/.mastra/` bundles (multi-MB `.mjs`). They are **not** in
@@ -24,7 +24,7 @@ From repo root: `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm test`. Pre-ex
 > *before* building, or `rm -rf services/mastra/.mastra` first; a clean `pnpm lint`
 > then finishes in ~6 s and reports only the pre-existing debt (exit 1).
 
-`pnpm test` fans out to `@mikan/desktop` vitest: 158 tests in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
+`pnpm test` fans out to `@mikan/desktop` vitest: 269 tests, all passing, in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
 
 ### Run the desktop app
 

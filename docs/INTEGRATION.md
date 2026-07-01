@@ -18,17 +18,26 @@ so the build stays green — `Task.status` stays; new fields are added alongside
 
 | Field | Type | Real / AI-gap |
 | --- | --- | --- |
-| `Task.state` | `'listed' \| 'planning' \| 'planned' \| 'working' \| 'awaiting' \| 'done'` | **Real** — derived from `status` at the projector (`toTask`) |
-| `Task.mode` | `'plan' \| 'auto'` | **Real** — defaults to `'plan'` (no stored per-task mode yet) |
-| `Task.steps` | `PlanStep[]` | **AI-gap** — `undefined` until the planner lands |
-| `Task.receipt` | `RunReceipt` | **AI-gap** — present once a run settles |
+| `Task.state` | `'listed' \| 'planning' \| 'planned' \| 'working' \| 'awaiting' \| 'done'` | **Real** — derived from `status`, overridden by a persisted run row when one exists (`toTask`) |
+| `Task.mode` | `'plan' \| 'auto'` | **Real** — persisted per-task (`todos.mode` column); toggle via `todos.setMode(id, mode)` (S5) |
+| `Task.steps` | `PlanStep[]` | **AI-gap** — `undefined` until the planner lands (S4) |
+| `Task.receipt` | `RunReceipt` | **Real when the drafter is configured** — populated by `todos.run()`/`todos.approve()` (S5, backed by the `todo_run` table); `undefined` otherwise (no-op) |
 
-Projector mapping today (`services/project.ts` → `toTask`): `done → 'done'`,
-drafted (a landed AI draft) `→ 'awaiting'` (the approval gate), otherwise `→ 'listed'`. The
-intermediate `'planning' / 'planned' / 'working'` states become real once the planner +
-run-loop land (slices S4/S5). Group-01 presentation states are **derived in the renderer**,
-not stored: `delegated = mode:auto & working`, `deferred = planning`, `in-progress = working`,
-`done = done`. Decision of record: `docs/adr/0010-task-lifecycle.md`.
+Projector mapping today (`services/project.ts` → `toTask`): `done → 'done'`, drafted (a landed
+AI draft) `→ 'awaiting'` (the approval gate), otherwise `→ 'listed'` — **unless** a `todo_run`
+row exists and its `state` isn't `'listed'`, in which case the run row's `state` wins (it's a
+real signal from `todos.run()`, not a derivation). `'planned'` stays unmapped — there is still
+no persisted multi-step plan (S4-scope); `run()` (S5) goes straight from `listed` to
+`working`/`awaiting`/`done` around a single gather-and-draft step, not a step sequence. Group-01
+presentation states are **derived in the renderer**, not stored: `delegated = mode:auto &
+working`, `deferred = planning`, `in-progress = working`, `done = done`. Decision of record:
+`docs/adr/0010-task-lifecycle.md`.
+
+**`RunReceipt.sentAnything` is always `false`** — there is no outbound "send"/action-taking
+integration anywhere in this codebase yet (connectors only *ingest*); this is a structural gap,
+not a placeholder to read as evidence of a real send capability. Likewise, `todos.pause()` is a
+blunt abort of the in-flight run, not a mid-run "steer" — redirecting an active run via chat
+input is out of scope until a real step-by-step execution engine (S4+) exists.
 
 ## Current renderer wiring
 
@@ -58,6 +67,10 @@ and static suggestion chips. Track them in `docs/agent-sync/UX-PUNCHLIST.md`.
 | Pull from backlog                  | `window.api.todos.schedule(id, day?)`                      | `Task \| null`        |
 | Pin / dismiss context              | `window.api.todos.{pinContext,dismissContext}(id, itemId)` | `Task \| null`        |
 | "Search more" context              | `window.api.todos.searchMoreContext(id)`                   | `Task \| null`        |
+| Set a task's mode (Group 03)       | `window.api.todos.setMode(id, mode)`                       | `Task \| null`        |
+| Run a task on device (Group 03)    | `window.api.todos.run(id)`                                 | `Task \| null`        |
+| Approve an awaiting run (Group 03) | `window.api.todos.approve(id)`                             | `Task \| null`        |
+| Pause an in-flight run (Group 03)  | `window.api.todos.pause(id)`                               | `Task \| null`        |
 | Capture a note                     | `window.api.pipeline.captureText(text, name?)`             | `{ memory, created }` |
 | Capture a file                     | `window.api.pipeline.captureFile(bytes, name, mime?)`      | `{ memory, created }` |
 

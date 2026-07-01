@@ -6,7 +6,8 @@
  * tokens with todo titles so the hash embedder surfaces them as context.
  */
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
-import { initDb } from '../../src/main/db/index'
+import { initDb, db } from '../../src/main/db/index'
+import { todoRun } from '../../src/main/db/schema'
 import { todoService } from '../../src/main/services/todo-service'
 import { pipelineService } from '../../src/main/services/pipeline-service'
 import { CAP_REACHED } from '@mikan/contract/ipc'
@@ -378,5 +379,101 @@ describe('todoService.schedule — re-surfaces context', () => {
     expect(scheduled).not.toBeNull()
     // surfaceContext should have run, giving the task a non-empty pool.
     expect(scheduled!.ctx.length).toBeGreaterThan(0)
+  })
+})
+
+// ── Group 03 — Auto mode run loop ─────────────────────────────────────────────
+// NEEME_DRAFTER=off is forced globally (test/setup.ts), so run() exercises the
+// documented "unconfigured → no-op" path here. The "configured → real run"
+// path (awaiting/done settlement, the abort revert) needs a live drafter and
+// is covered by the manual pnpm dev smoke test instead (no Electron/API key in CI).
+
+describe('todoService.setMode', () => {
+  it('defaults to "plan" for a new todo', async () => {
+    const t = await todoService.add('Mode default check')
+    expect(t.mode).toBe('plan')
+  })
+
+  it('persists a mode change and round-trips through today()', async () => {
+    const t = await todoService.add('Toggle me')
+    const updated = await todoService.setMode(t.id, 'auto')
+    expect(updated!.mode).toBe('auto')
+
+    const tasks = await todoService.today()
+    expect(tasks.find((x) => x.id === t.id)!.mode).toBe('auto')
+  })
+
+  it('returns null for a non-existent id', async () => {
+    expect(await todoService.setMode('no-such-id', 'auto')).toBeNull()
+  })
+})
+
+describe('todoService.run — drafter unconfigured (NEEME_DRAFTER=off)', () => {
+  it('is a documented no-op: task unchanged, no receipt, no todo_run row', async () => {
+    const t = await todoService.add('Auto run me')
+    await todoService.setMode(t.id, 'auto')
+
+    const ran = await todoService.run(t.id)
+    expect(ran).not.toBeNull()
+    expect(ran!.state).toBe('listed')
+    expect(ran!.receipt).toBeUndefined()
+
+    const rows = await db.select().from(todoRun)
+    expect(rows).toHaveLength(0)
+  })
+
+  it('returns null for a non-existent id', async () => {
+    expect(await todoService.run('no-such-id')).toBeNull()
+  })
+})
+
+describe('todoService.approve', () => {
+  it('no-ops (returns the task unchanged) when nothing is awaiting', async () => {
+    const t = await todoService.add('Nothing awaiting')
+    const result = await todoService.approve(t.id)
+    expect(result).not.toBeNull()
+    expect(result!.state).toBe('listed')
+  })
+
+  it('settles an awaiting run to done and keeps the receipt', async () => {
+    const t = await todoService.add('Seeded awaiting run')
+    // NEEME_DRAFTER=off never naturally produces an awaiting run — seed the
+    // todo_run row directly to exercise the approve() transition.
+    await db.insert(todoRun).values({
+      todoId: t.id,
+      state: 'awaiting',
+      ranOnDevice: true,
+      durationMs: 500,
+      touched: JSON.stringify(['m1']),
+      sentAnything: false
+    })
+
+    const approved = await todoService.approve(t.id)
+    expect(approved!.state).toBe('done')
+    expect(approved!.receipt).toEqual({
+      ranOnDevice: true,
+      durationMs: 500,
+      touched: ['m1'],
+      sentAnything: false
+    })
+    // approve() is orthogonal to complete() — the todo's own done flag is untouched.
+    expect(approved!.done).toBe(false)
+  })
+
+  it('returns null for a non-existent id', async () => {
+    expect(await todoService.approve('no-such-id')).toBeNull()
+  })
+})
+
+describe('todoService.pause', () => {
+  it('no-ops when nothing is running for this task', async () => {
+    const t = await todoService.add('Nothing running')
+    const result = await todoService.pause(t.id)
+    expect(result).not.toBeNull()
+    expect(result!.state).toBe('listed')
+  })
+
+  it('returns null for a non-existent id', async () => {
+    expect(await todoService.pause('no-such-id')).toBeNull()
   })
 })

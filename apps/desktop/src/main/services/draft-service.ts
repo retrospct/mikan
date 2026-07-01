@@ -129,8 +129,12 @@ export const draftService = {
    *
    * For backlog items (pool is empty, todo.day is null) we run a search to
    * build context for a meaningful `conf` score.
+   *
+   * `signal` (Group 03 `pause()`) aborts the in-flight drafter call; an
+   * `AbortError` propagates to the caller uncaught — regenerate() does not
+   * persist anything for an aborted run.
    */
-  async regenerate(todo: Todo, pool: ContextEntry[]): Promise<void> {
+  async regenerate(todo: Todo, pool: ContextEntry[], signal?: AbortSignal): Promise<void> {
     let input: DraftInput
 
     if (pool.length === 0 && todo.day === null) {
@@ -160,7 +164,7 @@ export const draftService = {
     const existing = await readAiRow(todo.id)
     if (existing && existing.inputsHash === hash) return // nothing changed
 
-    const result = await drafter.draft(input)
+    const result = await drafter.draft(input, signal)
     await upsertAiRow(todo.id, result, hash)
     if (Object.keys(result.why).length > 0) {
       await persistWhyStrings(todo.id, result.why)

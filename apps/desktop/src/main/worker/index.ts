@@ -11,6 +11,7 @@
  */
 import { IPC } from '@mikan/contract/ipc'
 import type { ConnectorId, SyncStatus } from '@mikan/contract/ipc'
+import type { TaskMode } from '@mikan/contract/views'
 import { initDb, syncNow, reimportPreSyncBackup } from '../db'
 import { getSyncConfig } from '../db/sync-config'
 import { pipelineService } from '../services/pipeline-service'
@@ -46,7 +47,13 @@ async function runSyncNow(): Promise<void> {
   try {
     await syncNow()
     const durationMs = Date.now() - t0
-    syncState = { ...syncState, syncing: false, lastSyncAt: t0 + durationMs, lastSyncDurationMs: durationMs, error: null }
+    syncState = {
+      ...syncState,
+      syncing: false,
+      lastSyncAt: t0 + durationMs,
+      lastSyncDurationMs: durationMs,
+      error: null
+    }
     console.log(`[sync] synced in ${durationMs}ms`)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
@@ -80,6 +87,10 @@ const handlers: Record<string, Handler> = {
   [IPC.todoContextPin]: ([id, itemId]) => todoService.pinContext(id as string, itemId as string),
   [IPC.todoContextDismiss]: ([id, itemId]) =>
     todoService.dismissContext(id as string, itemId as string),
+  [IPC.todoSetMode]: ([id, mode]) => todoService.setMode(id as string, mode as TaskMode),
+  [IPC.todoRun]: ([id]) => todoService.run(id as string),
+  [IPC.todoApprove]: ([id]) => todoService.approve(id as string),
+  [IPC.todoPause]: ([id]) => todoService.pause(id as string),
 
   // Connector sync: main passes a fresh access token; worker fetches + ingests.
   [IPC.connectorsIngest]: ([provider, accessToken]) =>

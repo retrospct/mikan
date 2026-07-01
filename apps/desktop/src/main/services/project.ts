@@ -17,12 +17,14 @@ import type {
   Memory,
   MemoryKind,
   NoteKind,
+  RunReceipt,
   Task,
   TaskState,
   TaskStatus,
   UncoveredTodo
 } from '@mikan/contract/views'
 import type { TaskDraft, UncoveredDraft } from '../pipeline/draft'
+import type { TodoRunRow } from '../db/schema'
 
 const DAY_MS = 86_400_000
 
@@ -126,12 +128,19 @@ function whenOfDay(day: string | null): string {
 /**
  * Project a todo + its (already non-dismissed, pinned-first, score-sorted) context
  * pool into a `Task`. When `ai` is provided, AI-generated fields are populated;
- * otherwise they degrade gracefully to null.
+ * otherwise they degrade gracefully to null. When `run` (a `todo_run` row) is
+ * provided and its state isn't `'listed'`, it's a real signal from `todos.run()`
+ * that overrides the derived `state` below, and populates `receipt`.
  *
  * Invariant for the UI: every `ctx` id also appears in `pipeline.archive()` (both
  * come from the `items` table), so `MEMORIES[id]` always resolves.
  */
-export function toTask(todo: Todo, context: ContextEntry[], ai?: TaskDraft): Task {
+export function toTask(
+  todo: Todo,
+  context: ContextEntry[],
+  ai?: TaskDraft,
+  run?: TodoRunRow
+): Task {
   const relMap: Record<string, number> = {}
   const whyMap: Record<string, string> = {}
   for (const c of context) {
@@ -151,9 +160,23 @@ export function toTask(todo: Todo, context: ContextEntry[], ai?: TaskDraft): Tas
 
   // Canonical lifecycle (Mikan Flows). Derived from the structural `status` the
   // projector emits today: `done`→done, a landed draft→awaiting (the approval
-  // gate), otherwise the resting `listed`. `planning`/`planned`/`working` become
-  // real once the planner + run-loop land (slices S4/S5). See docs/adr/0010.
-  const state: TaskState = done ? 'done' : status === 'drafted' ? 'awaiting' : 'listed'
+  // gate), otherwise the resting `listed`. `planned` stays unmapped — there is
+  // still no persisted multi-step plan (S4-scope). See docs/adr/0010.
+  const derivedState: TaskState = done ? 'done' : status === 'drafted' ? 'awaiting' : 'listed'
+  // A todo_run row is a real signal from todos.run() (Group 03) — it overrides
+  // the derivation above whenever it holds a non-resting state. A 'listed' row
+  // (never run, or reverted by pause()) carries no receipt — receipt presence
+  // means "a run settled", not "a row exists".
+  const settledRun = run && run.state !== 'listed' ? run : undefined
+  const state: TaskState = settledRun ? (settledRun.state as TaskState) : derivedState
+  const receipt: RunReceipt | undefined = settledRun
+    ? {
+        ranOnDevice: settledRun.ranOnDevice,
+        durationMs: settledRun.durationMs,
+        touched: settledRun.touched ? (JSON.parse(settledRun.touched) as string[]) : [],
+        sentAnything: settledRun.sentAnything
+      }
+    : undefined
 
   return {
     id: todo.id,
@@ -161,8 +184,8 @@ export function toTask(todo: Todo, context: ContextEntry[], ai?: TaskDraft): Tas
     when: whenOfDay(todo.day),
     status,
     state,
-    // No stored per-task mode yet — defaults to Plan until the mode switch lands.
-    mode: 'plan',
+    mode: todo.mode,
+    receipt,
     done,
     ctx: context.map((c) => c.itemId),
     pinned: context.filter((c) => c.state === 'pinned').map((c) => c.itemId),

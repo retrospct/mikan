@@ -9,7 +9,7 @@ import { client, resetVecChunks } from '../src/main/db/index'
 export async function clearTables(): Promise<void> {
   // Delete in dependency order (FKs may or may not be enforced, but order is safe).
   await client.executeMultiple(
-    'DELETE FROM todo_ai; DELETE FROM todo_context; DELETE FROM todos; DELETE FROM items; DELETE FROM meta; DELETE FROM connector_state;'
+    'DELETE FROM todo_run; DELETE FROM todo_ai; DELETE FROM todo_context; DELETE FROM todos; DELETE FROM items; DELETE FROM meta; DELETE FROM connector_state;'
   )
   // chunks lives in neeme-vec.db (vecClient) since commit 00b72eb (#86). A plain
   // DELETE leaves the libsql_vector_idx shadow tables inconsistent; drop+recreate

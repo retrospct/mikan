@@ -99,16 +99,35 @@ export function StepRow({ step }: { step: PlanStep }): JSX.Element {
 export function GrowingCard({
   task,
   onOpen,
-  onSaveSkill
+  onSaveSkill,
+  onRun,
+  onApprove,
+  onPause,
+  busy
 }: {
   task: Task
   onOpen?: () => void
   /** "Save as a skill" — offered on a good run (complete state only). */
   onSaveSkill?: () => void
+  /** Group 03: kick off an Auto-mode run from the resting (collapsed) state. */
+  onRun?: () => void
+  /** Group 03: close the approval gate — "nothing sent yet" until this fires. */
+  onApprove?: () => void
+  /** Group 03: cancel an in-flight Auto-mode run ("steer anytime · pause"). */
+  onPause?: () => void
+  /**
+   * Local optimistic "running" flag for a real in-flight `run()` call. The run
+   * loop is a single synchronous request-response (no mid-flight push), so
+   * `task.state` never actually passes through `'working'` for a real run —
+   * the caller tracks this instead so the card still shows a running/pause
+   * state between the click and the settled response.
+   */
+  busy?: boolean
 }): JSX.Element {
-  const renderState = renderStateFor(task)
+  const renderState = busy ? 'reasoning' : renderStateFor(task)
   const steps = task.steps
   const runningStep = steps?.find((s) => s.status === 'running')
+  const auto = task.mode === 'auto'
 
   return (
     <div
@@ -126,6 +145,18 @@ export function GrowingCard({
       </div>
 
       <div className="gcard-body">
+        {renderState === 'collapsed' && auto && onRun && (
+          <button
+            className="gcard-run"
+            onClick={(e) => {
+              e.stopPropagation()
+              onRun()
+            }}
+          >
+            <NIcon name="bolt" size={13} /> Run this on device
+          </button>
+        )}
+
         {renderState === 'searching' && (
           <div className="gcard-searching">
             <MikanSay state="thinking" size={18}>
@@ -150,6 +181,17 @@ export function GrowingCard({
                 </MikanSay>
               </div>
             )}
+            {auto && onPause && (
+              <button
+                className="btn btn-sm ghost gcard-pause"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPause()
+                }}
+              >
+                Pause
+              </button>
+            )}
           </div>
         )}
 
@@ -160,7 +202,13 @@ export function GrowingCard({
               <button className="btn btn-sm" onClick={(e) => e.stopPropagation()}>
                 Iterate
               </button>
-              <button className="btn primary btn-sm" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="btn primary btn-sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onApprove?.()
+                }}
+              >
                 Approve
               </button>
             </div>

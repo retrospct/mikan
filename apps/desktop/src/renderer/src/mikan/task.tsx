@@ -448,6 +448,79 @@ function RefineChips({
   )
 }
 
+// Group 03 auto mode, at the workspace zoom level: the same run/awaiting/receipt
+// states the Today-list growing card renders (growing-card.tsx), replacing the
+// plan-mode "want me to take a crack at it?" CTA for an auto-mode task. Presentational
+// only — TaskDetail owns the actual todos.run/approve/pause calls so it can also
+// sync the local `draft` state when a run lands one (see runAuto below).
+function AutoRunPanel({
+  task,
+  busy,
+  onRun,
+  onApprove,
+  onPause
+}: {
+  task: Task
+  busy: boolean
+  onRun: () => void
+  onApprove: () => void
+  onPause: () => void
+}): JSX.Element {
+  const state = task.state ?? 'listed'
+
+  if (state === 'awaiting') {
+    return (
+      <div className="auto-gate">
+        <MikanMark state="idle" size={26} />
+        <div className="auto-gate-tx">Ready for your OK — nothing sent yet.</div>
+        <button className="btn btn-sm primary" onClick={onApprove}>
+          Approve
+        </button>
+      </div>
+    )
+  }
+  if (state === 'working' || busy) {
+    return (
+      <div className="auto-run">
+        <MikanMark state="drafting" size={26} />
+        <div className="auto-run-tx">
+          Running
+          <Dots />
+        </div>
+        <button className="btn btn-sm ghost" onClick={onPause}>
+          Pause
+        </button>
+      </div>
+    )
+  }
+  if (task.receipt) {
+    const r = task.receipt
+    return (
+      <div className="auto-receipt">
+        <MikanMark state="done" size={26} />
+        <div className="auto-receipt-tx">
+          Ran on device
+          {r.durationMs != null ? ` · ${(r.durationMs / 1000).toFixed(1)}s` : ''}
+          {r.touched.length > 0 ? ` · touched ${r.touched.length}` : ''} ·{' '}
+          {r.sentAnything ? 'sent' : 'nothing sent'}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <button className="draft draft-cta" onClick={onRun}>
+      <MikanMark state="idle" size={30} />
+      <div className="draft-cta-main">
+        <div className="draft-cta-t">Run this on device</div>
+        <div className="draft-cta-s">I&apos;ll gather context and draft, on device</div>
+      </div>
+      <span className="draft-cta-go">
+        <NIcon name="arrowRight" size={18} />
+      </span>
+    </button>
+  )
+}
+
 export function TaskDetail({
   task,
   onBack,
@@ -544,6 +617,31 @@ export function TaskDetail({
       ])
       setDrafting(false)
     }, 1700)
+  }
+
+  // Group 03 auto mode — real run/approve/pause, wired to the same backend as
+  // GrowingCard's Today-list surface. `autoBusy` gives immediate "working"
+  // feedback for the window between clicking Run and the state/receipt landing.
+  const [autoBusy, setAutoBusy] = useState(false)
+  const runAuto = (): void => {
+    setAutoBusy(true)
+    void data.todos.run(task.id).then((t) => {
+      setAutoBusy(false)
+      if (!t) return
+      if (t.draft) setDraft(t.draft)
+      onUpdate && onUpdate(task.id, { state: t.state, receipt: t.receipt, status: t.status })
+    })
+  }
+  const approveAuto = (): void => {
+    void data.todos.approve(task.id).then((t) => {
+      if (t) onUpdate && onUpdate(task.id, { state: t.state, receipt: t.receipt })
+    })
+  }
+  const pauseAuto = (): void => {
+    void data.todos.pause(task.id).then((t) => {
+      setAutoBusy(false)
+      if (t) onUpdate && onUpdate(task.id, { state: t.state, receipt: t.receipt })
+    })
   }
 
   const keptIds = sorted.filter((id) => pinned.has(id))
@@ -752,7 +850,16 @@ export function TaskDetail({
             </div>
           </div>
         ) : (
-          !done && (
+          !done &&
+          (task.mode === 'auto' ? (
+            <AutoRunPanel
+              task={task}
+              busy={autoBusy}
+              onRun={runAuto}
+              onApprove={approveAuto}
+              onPause={pauseAuto}
+            />
+          ) : (
             <button className="draft draft-cta" onClick={tryDraft}>
               <MikanMark state="idle" size={30} />
               <div className="draft-cta-main">
@@ -763,7 +870,7 @@ export function TaskDetail({
                 <NIcon name="arrowRight" size={18} />
               </span>
             </button>
-          )
+          ))
         )}
 
         {done && (

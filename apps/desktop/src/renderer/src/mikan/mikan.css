@@ -638,11 +638,13 @@ html[data-ambient='off'] .nm[data-state='idle'] .nm-dot.q {
 .task-main .gcard-hd {
   padding: 0;
 }
-/* mode badge — plan is the quiet default; auto is "alive", gets the accent */
+/* mode badge — plan is the quiet default; auto is "alive", gets the accent.
+   A real toggle button (Group 03 auto switch), so reset the native chrome. */
 .mode-badge {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
+  border: none;
   font-family: var(--mono);
   font-size: 9px;
   letter-spacing: 0.1em;
@@ -652,6 +654,7 @@ html[data-ambient='off'] .nm[data-state='idle'] .nm-dot.q {
   color: var(--ink-3);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--hairline);
+  cursor: pointer;
 }
 .mode-badge.auto {
   color: var(--accent-ink);
@@ -3078,6 +3081,31 @@ html[data-ambient='off'] .vrec-wave span {
   color: var(--accent-ink);
 }
 
+/* Group 03 auto mode: the detail-screen run block (the list-row mode badge is
+   already styled above via .mode-badge / .mode-badge.auto) */
+.auto-gate,
+.auto-run,
+.auto-receipt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent-line);
+  border-radius: 18px;
+  margin-bottom: 16px;
+  background: linear-gradient(180deg, var(--accent-faint), transparent 46%), var(--surface-2);
+}
+.auto-gate-tx,
+.auto-run-tx,
+.auto-receipt-tx {
+  flex: 1 1 auto;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.auto-receipt {
+  background: var(--surface-2);
+}
+
 /* pool section */
 .pool-hd {
   display: flex;
@@ -5155,6 +5183,30 @@ html[data-ambient='off'] .gcard-step.status-running .gcard-step-dot {
 }
 .gcard-save:hover {
   background: var(--accent-soft);
+}
+
+/* Group 03 auto mode: the resting "run this" trigger + the in-flight pause */
+.gcard-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 15px 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-faint);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.gcard-run:hover {
+  background: var(--accent-soft);
+}
+.gcard-pause {
+  align-self: flex-start;
+  margin: 2px 0 0;
 }
 
 /* ─────────── task workspace: reasoning / sources / dock / stepper / refine (Group 02) ─────────── */

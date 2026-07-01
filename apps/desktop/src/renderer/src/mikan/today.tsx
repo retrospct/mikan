@@ -128,13 +128,21 @@ function TaskCard({
   index,
   layout,
   onOpen,
-  onToggle
+  onToggle,
+  onToggleMode,
+  onRun,
+  onApprove,
+  onPause
 }: {
   task: Task
   index: number
   layout: string
   onOpen: (id: string) => void
   onToggle: (id: string) => void
+  onToggleMode: (id: string) => void
+  onRun: (id: string) => Promise<void>
+  onApprove: (id: string) => Promise<void>
+  onPause: (id: string) => Promise<void>
 }): JSX.Element {
   const kept = (task.pinned || []).length
   const ctxN = (task.ctx || []).length
@@ -163,6 +171,12 @@ function TaskCard({
     return undefined
   }, [task.done])
 
+  // Group 03: local optimistic "running" flag for a real in-flight run() call
+  // — see GrowingCard's `busy` prop doc. Cleared via the returned promise
+  // (not a task-prop diff) since an unconfigured drafter resolves with the
+  // task UNCHANGED — a diff-based reset would never fire in that case.
+  const [running, setRunning] = useState(false)
+
   return (
     <div
       className={'task' + (task.done ? ' done-task' : '') + (pop ? ' pop' : '')}
@@ -184,12 +198,30 @@ function TaskCard({
           {pop && <span className="check-burst" />}
         </button>
         <div className="task-main">
-          <GrowingCard task={task} />
+          <GrowingCard
+            task={task}
+            busy={running}
+            onRun={() => {
+              setRunning(true)
+              void onRun(task.id).finally(() => setRunning(false))
+            }}
+            onApprove={() => onApprove(task.id)}
+            onPause={() => {
+              void onPause(task.id).finally(() => setRunning(false))
+            }}
+          />
           {!task.done && (
             <>
-              <span className={'mode-badge' + (task.mode === 'auto' ? ' auto' : '')}>
+              <button
+                className={'mode-badge' + (task.mode === 'auto' ? ' auto' : '')}
+                aria-label={task.mode === 'auto' ? 'Switch to Plan mode' : 'Switch to Auto mode'}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleMode(task.id)
+                }}
+              >
                 {task.mode === 'auto' ? 'Auto' : 'Plan'}
-              </span>
+              </button>
               {task.note && <MikanNote kind={task.noteKind || 'gathered'}>{task.note}</MikanNote>}
               <div className="ctx-strip">
                 {ctxN > 0 && <CtxThumbs memIds={task.ctx} />}
@@ -238,6 +270,10 @@ interface TodayViewProps {
   lastFed: string | null
   onOpen: (id: string) => void
   onToggle: (id: string) => void
+  onToggleMode: (id: string) => void
+  onRun: (id: string) => Promise<void>
+  onApprove: (id: string) => Promise<void>
+  onPause: (id: string) => Promise<void>
   onAdd: () => void
   onPlan: () => void
   onTomorrow: () => void
@@ -260,6 +296,10 @@ export function TodayView({
   lastFed,
   onOpen,
   onToggle,
+  onToggleMode,
+  onRun,
+  onApprove,
+  onPause,
   onPlan,
   onTomorrow,
   onSearch,
@@ -339,6 +379,10 @@ export function TodayView({
               layout={layout}
               onOpen={onOpen}
               onToggle={onToggle}
+              onToggleMode={onToggleMode}
+              onRun={onRun}
+              onApprove={onApprove}
+              onPause={onPause}
             />
           ))}
           {Array.from({ length: open }).map((_, i) => (

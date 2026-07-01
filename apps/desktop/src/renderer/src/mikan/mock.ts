@@ -14,6 +14,7 @@ import type {
   Memory,
   MemoryKind,
   Task,
+  TaskMode,
   TaskState,
   TaskStatus,
   UncoveredTodo
@@ -657,6 +658,39 @@ export function makeMockApi(): MockApi {
         if (!t) return null
         t.ctx = t.ctx.filter((x) => x !== itemId)
         t.pinned = t.pinned.filter((x) => x !== itemId)
+        return clone(t)
+      },
+      setMode: async (id: string, mode: TaskMode): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.mode = mode
+        return clone(t)
+      },
+      // Mock always behaves "configured" (no drafter to gate on) so the Auto-mode
+      // flow is exercisable in browser preview. A short delay keeps the caller's
+      // local "busy"/working display visible for a moment, mirroring the real
+      // run's transient working state without persisting an observable snapshot.
+      run: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        await new Promise((resolve) => setTimeout(resolve, 700))
+        t.state = 'awaiting'
+        t.receipt = { ranOnDevice: true, durationMs: 700, touched: [...t.ctx], sentAnything: false }
+        if (!t.draft) {
+          t.draft = ['Mock auto-run draft — wire to a live drafter to see the real thing.']
+        }
+        return clone(t)
+      },
+      approve: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.state = 'done'
+        return clone(t)
+      },
+      pause: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.state = 'listed'
         return clone(t)
       }
     },

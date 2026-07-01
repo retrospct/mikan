@@ -9,7 +9,7 @@
  * projects them to the view model (see
  * `apps/desktop/src/main/services/project.ts`).
  */
-import type { BacklogItem, FedItem, MatchHit, Memory, Task, UncoveredTodo } from './views'
+import type { BacklogItem, FedItem, MatchHit, Memory, Task, TaskMode, UncoveredTodo } from './views'
 
 export const IPC = {
   // Pipeline (on-device capture → extract → index → surface; runs in the worker)
@@ -31,6 +31,10 @@ export const IPC = {
   todoContextSearch: 'todo:context-search',
   todoContextPin: 'todo:context-pin',
   todoContextDismiss: 'todo:context-dismiss',
+  todoSetMode: 'todo:set-mode',
+  todoRun: 'todo:run',
+  todoApprove: 'todo:approve',
+  todoPause: 'todo:pause',
   // Auth (Logto OIDC flow lives in main; see src/main/auth/logto.ts)
   authLogin: 'auth:login',
   authLogout: 'auth:logout',
@@ -152,6 +156,13 @@ export interface Todo {
   /** ISO date the todo lives on; null = backlog (unscheduled). */
   day: string | null
   position: number
+  /**
+   * Persisted per-task mode (Group 03 auto switch). Defaults to 'plan'. Reuses
+   * the view model's `TaskMode` rather than a parallel worker-internal alias —
+   * unlike `status` (which the projector transforms into the richer `TaskState`),
+   * `mode` passes straight through with no transformation, so one type suffices.
+   */
+  mode: TaskMode
   createdAt: Date
   completedAt: Date | null
 }
@@ -194,6 +205,20 @@ export interface TodoApi {
   searchMoreContext: (id: string) => Promise<Task | null>
   pinContext: (id: string, itemId: string) => Promise<Task | null>
   dismissContext: (id: string, itemId: string) => Promise<Task | null>
+  /** Set a task's run mode (Group 03 auto switch, set on the list). */
+  setMode: (id: string, mode: TaskMode) => Promise<Task | null>
+  /**
+   * Run the task on device: gathers context + drafts (the current unit of
+   * AI-gap work), synchronously, to settlement — lands on `awaiting` (a draft
+   * is ready to approve) or `done` (nothing to gate on). No-op — returns the
+   * task unchanged — when the drafter is unconfigured.
+   */
+  run: (id: string) => Promise<Task | null>
+  /** Approve an awaiting run: closes the gate, settles the receipt. `receipt.sentAnything`
+   *  stays false — there is no outbound "send" integration yet. */
+  approve: (id: string) => Promise<Task | null>
+  /** Cancel an in-flight run. Reverts to `listed`; writes no receipt. No-op if nothing running. */
+  pause: (id: string) => Promise<Task | null>
 }
 
 /** Capture + surface, backed by the on-device pipeline in the worker. */

@@ -226,6 +226,16 @@ export async function initDb(): Promise<void> {
       inputs_hash TEXT NOT NULL DEFAULT '',
       updated_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
+    CREATE TABLE IF NOT EXISTS todo_run (
+      todo_id TEXT PRIMARY KEY REFERENCES todos(id) ON DELETE CASCADE,
+      state TEXT NOT NULL DEFAULT 'listed',
+      ran_on_device INTEGER NOT NULL DEFAULT 1,
+      duration_ms INTEGER,
+      touched TEXT,
+      sent_anything INTEGER NOT NULL DEFAULT 0,
+      started_at INTEGER,
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
   `)
 
   // connector_state: tracks per-provider sync cursors (Gmail historyId / Calendar syncToken).
@@ -253,6 +263,8 @@ export async function initDb(): Promise<void> {
   // missing. Backfill them before any query references them.
   await addColumnIfMissing('items', 'stored_path', 'TEXT')
   await addColumnIfMissing('todos', 'position', 'INTEGER NOT NULL DEFAULT 0')
+  // mode: the Group 03 auto switch — additive, defaults existing rows to 'plan'.
+  await addColumnIfMissing('todos', 'mode', "TEXT NOT NULL DEFAULT 'plan'")
   // todos_day_idx references position, so it's created HERE (after the backfill
   // guarantees the column exists) rather than in the executeMultiple block above —
   // otherwise the primary rejects it with "no such column: position" when mobile
@@ -331,7 +343,9 @@ export async function resetVecChunks(): Promise<void> {
  * caller wires in dynamic input.
  */
 const SQL_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/
-const SQL_COL_TYPE = /^[A-Za-z0-9_ ()]+$/
+// Allows a quoted string DEFAULT literal (e.g. "TEXT NOT NULL DEFAULT 'plan'") in addition to the
+// bare-word/paren types used elsewhere. Safe because every caller passes a hardcoded literal.
+const SQL_COL_TYPE = /^[A-Za-z0-9_ ()']+$/
 async function addColumnIfMissing(table: string, column: string, type: string): Promise<void> {
   if (!SQL_IDENT.test(table) || !SQL_IDENT.test(column) || !SQL_COL_TYPE.test(type)) {
     throw new Error(`addColumnIfMissing: unsafe identifier (${table}.${column} ${type})`)

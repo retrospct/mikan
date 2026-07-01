@@ -24,7 +24,7 @@ From repo root: `pnpm typecheck` (green), `pnpm build` (green), `pnpm lint`, `pn
 > *before* building, or `rm -rf services/mastra/.mastra` first; a clean `pnpm lint`
 > then finishes in ~6 s and reports only the pre-existing debt (exit 1).
 
-`pnpm test` fans out to `@mikan/desktop` vitest: 269 tests in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`. 2 tests in `test/services/broker-client.test.ts` currently fail (fetch-mock setup issue in the sync-token tests, unrelated to the pipeline) — the rest pass.
+`pnpm test` fans out to `@mikan/desktop` vitest: 269 tests, all passing, in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
 
 ### Run the desktop app
 

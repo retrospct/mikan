@@ -1,9 +1,11 @@
-// plan.tsx — the daily planning ritual. Keep a few, sweep the rest to the backlog.
+// plan.tsx — the daily planning ritual, and "the plan" (Group 12: Plan mode) —
+// reviewing/accepting a single task's steps before they run.
 import { useState } from 'react'
 import type { JSX } from 'react'
+import { StepRow } from './growing-card'
 import { NIcon } from './icons'
 import { MikanMark } from './mark'
-import type { BacklogItem, Task } from '@mikan/contract/views'
+import type { BacklogItem, PlanStep, StepRun, Task } from '@mikan/contract/views'
 
 export function PlanRitual({
   tasks,
@@ -163,6 +165,116 @@ export function PlanRitual({
           <NIcon name="check" size={15} /> Start the day
         </button>
       </div>
+    </div>
+  )
+}
+
+// a single step, opened for editing — same look as the read-only `StepRow`
+// (growing-card.tsx) but swaps the static run label for an auto/ask segment
+function EditableStepRow({
+  step,
+  onSetRun
+}: {
+  step: PlanStep
+  onSetRun: (run: StepRun) => void
+}): JSX.Element {
+  return (
+    <div className={'gcard-step status-' + step.status}>
+      <span className="gcard-step-ico">
+        {step.status === 'done' ? (
+          <NIcon name="check" size={11} />
+        ) : step.status === 'blocked' ? (
+          <NIcon name="close" size={10} />
+        ) : (
+          <span className="gcard-step-dot" />
+        )}
+      </span>
+      <span className="gcard-step-t">{step.title}</span>
+      {step.tool && <span className="gcard-step-tool">{step.tool}</span>}
+      <div className="plan-seg">
+        <button className={step.run === 'auto' ? 'on-auto' : ''} onClick={() => onSetRun('auto')}>
+          Auto
+        </button>
+        <button className={step.run === 'ask' ? 'on-ask' : ''} onClick={() => onSetRun('ask')}>
+          Ask
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// plan.tsx — Group 12: Plan mode. Planning is the default, not a mode you
+// start — by the time the user opens a `planned` task, the plan already
+// exists. The only decisions are: glance → accept, or open one step to flip
+// it between auto and ask.
+export function PlanReview({
+  task,
+  onBack,
+  onUpdate
+}: {
+  task: Task
+  onBack: () => void
+  onUpdate?: (id: string, patch: Partial<Task>) => void
+}): JSX.Element {
+  const [openId, setOpenId] = useState<string | null>(null)
+  const steps = task.steps
+
+  const setStepRun = (stepId: string, run: StepRun): void => {
+    onUpdate?.(task.id, {
+      steps: (steps || []).map((s) => (s.id === stepId ? { ...s, run } : s))
+    })
+    setOpenId(null)
+  }
+
+  const accept = (): void => {
+    onUpdate?.(task.id, { state: 'working' })
+    onBack()
+  }
+
+  return (
+    <div className="push">
+      <div className="push-hd">
+        <button className="push-back" aria-label="Back" onClick={onBack}>
+          <NIcon name="back" size={18} />
+        </button>
+        <div className="push-hd-main">
+          <div className="push-kicker">The plan</div>
+          <div className="push-ttl">{task.title}</div>
+        </div>
+      </div>
+
+      <div className="plan-body">
+        {!steps || steps.length === 0 ? (
+          <div className="empty-note">Mikan hasn&apos;t put together a plan for this yet.</div>
+        ) : (
+          <div className="gcard-steps">
+            {steps.map((s) =>
+              s.id === openId ? (
+                <EditableStepRow key={s.id} step={s} onSetRun={(run) => setStepRun(s.id, run)} />
+              ) : (
+                <div
+                  key={s.id}
+                  className="gcard-step-wrap editable"
+                  onClick={() => setOpenId(s.id)}
+                >
+                  <StepRow step={s} />
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </div>
+
+      {steps && steps.length > 0 && (
+        <div className="dt-foot">
+          <div className="today-cap" style={{ flex: '1 1 auto', paddingLeft: '4px' }}>
+            Glance and accept, or open a step to change how it runs.
+          </div>
+          <button className="btn primary btn-sm" style={{ padding: '0 18px' }} onClick={accept}>
+            <NIcon name="check" size={15} /> Accept the plan
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -195,6 +195,10 @@ app.whenReady().then(async () => {
     IPC.todoContextSearch,
     IPC.todoContextPin,
     IPC.todoContextDismiss,
+    IPC.todoSetMode,
+    IPC.todoRun,
+    IPC.todoApprove,
+    IPC.todoPause,
     // Sync (ROADMAP #10) — forwarded to the worker which owns the DB + sync state.
     IPC.syncGetStatus,
     IPC.syncNow

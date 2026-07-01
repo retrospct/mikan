@@ -664,19 +664,6 @@ html[data-ambient='off'] .nm[data-state='idle'] .nm-dot.q {
   color: var(--ink-3);
   letter-spacing: 0.1em;
 }
-.task-title {
-  font-size: 15.5px;
-  font-weight: 550;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  text-wrap: pretty;
-}
-.task.done-task .task-title {
-  color: var(--ink-3);
-  text-decoration: line-through;
-  text-decoration-color: var(--ink-3);
-}
 .task-when {
   font-family: var(--mono);
   font-size: 9.5px;
@@ -1027,7 +1014,7 @@ html[data-ambient='off'] .draft-badge svg {
   background: linear-gradient(120deg, var(--accent-faint), transparent 62%), var(--surface-2);
   border-color: var(--accent-line);
 }
-.task.done-task .task-title {
+.task.done-task .gcard-title {
   color: var(--ink-2);
   text-decoration: line-through;
   text-decoration-color: var(--ink-3);
@@ -4394,7 +4381,7 @@ label,
 html[data-density='compact'] .task-row {
   padding: 11px 13px;
 }
-html[data-density='compact'] .task-title {
+html[data-density='compact'] .task-main .gcard-title {
   font-size: 14.5px;
 }
 html[data-density='compact'] .list {

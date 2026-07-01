@@ -4371,7 +4371,8 @@ html[data-density='compact'] .mem {
   .nm-mote,
   .ctx-orb,
   .draft-badge svg,
-  .pool-cloud .pc {
+  .pool-cloud .pc,
+  .gcard-orb-ring {
     animation: none !important;
   }
   .view,
@@ -4380,8 +4381,10 @@ html[data-density='compact'] .mem {
   .mem,
   .sheet,
   .push,
-  .draft {
+  .draft,
+  .gcard-body {
     animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -4851,4 +4854,263 @@ html[data-density='compact'] .mem {
   font-size: 12px;
   line-height: 1.5;
   color: var(--ink-3);
+}
+
+/* ── Growing card (Group 07) ───────────────────────────────────────────────── */
+/* One stable header (avatar · title · orb) over a body that morphs through
+   collapsed → searching → running → reasoning → summary → complete, driven by
+   the `data-render` attribute. The body height is state-keyed rather than
+   measured, so it stays a plain CSS transition — tallest at reasoning. */
+.gcard {
+  position: relative;
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    transform 0.18s var(--ease-out);
+}
+.gcard:hover {
+  border-color: var(--hairline-strong);
+  transform: translateY(-2px);
+}
+.gcard-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 15px;
+}
+.gcard-avatar {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-3);
+  color: var(--ink-2);
+  border: 1px solid var(--hairline);
+}
+.gcard-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15.5px;
+  font-weight: 550;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-wrap: pretty;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the orb — one element carries the whole state machine */
+.gcard-orb {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+}
+.gcard-orb-track {
+  fill: none;
+  stroke: var(--hairline-strong);
+  stroke-width: 2;
+}
+.gcard-orb-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.35s var(--ease-out);
+}
+.gcard-orb.state-searching .gcard-orb-ring,
+.gcard-orb.state-running .gcard-orb-ring,
+.gcard-orb.state-reasoning .gcard-orb-ring {
+  animation: gcard-orb-pulse 2.4s var(--ease-out) infinite;
+}
+@keyframes gcard-orb-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+html[data-ambient='off'] .gcard-orb-ring {
+  animation: none;
+}
+.gcard-orb.done {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #0a0a0b;
+}
+
+/* morphing body — state-keyed max-height, not measured */
+.gcard-body {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 0.42s var(--ease-out),
+    opacity 0.3s var(--ease-out);
+}
+.gcard[data-render='searching'] .gcard-body {
+  max-height: 90px;
+  opacity: 1;
+}
+.gcard[data-render='running'] .gcard-body {
+  max-height: 280px;
+  opacity: 1;
+}
+.gcard[data-render='reasoning'] .gcard-body {
+  max-height: 360px;
+  opacity: 1;
+}
+.gcard[data-render='summary'] .gcard-body {
+  max-height: 170px;
+  opacity: 1;
+}
+.gcard[data-render='complete'] .gcard-body {
+  max-height: 130px;
+  opacity: 1;
+}
+
+.gcard-searching {
+  padding: 0 15px 16px;
+}
+
+.gcard-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 15px 14px;
+}
+.gcard-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.gcard-step:last-child {
+  border-bottom: none;
+}
+.gcard-step.status-done {
+  color: var(--ink);
+}
+.gcard-step-ico {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.4px solid var(--hairline-strong);
+  color: var(--ink-3);
+}
+.gcard-step.status-done .gcard-step-ico {
+  background: var(--accent);
+  border-color: transparent;
+  color: #0a0a0b;
+}
+.gcard-step.status-blocked .gcard-step-ico {
+  border-color: var(--rose);
+  color: var(--rose);
+}
+.gcard-step-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.gcard-step.status-running .gcard-step-dot {
+  background: var(--accent);
+  animation: nm-pulse 1.6s var(--ease-out) infinite;
+}
+html[data-ambient='off'] .gcard-step.status-running .gcard-step-dot {
+  animation: none;
+}
+.gcard-step-t {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcard-step-tool,
+.gcard-step-run {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.gcard-empty {
+  padding: 6px 0 2px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.gcard-reasoning {
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+}
+
+.gcard-gate {
+  padding: 0 15px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcard-gate-t {
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.gcard-gate-acts {
+  display: flex;
+  gap: 8px;
+}
+
+.gcard-complete {
+  padding: 0 15px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.gcard-receipt {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.gcard-save {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-faint);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.gcard-save:hover {
+  background: var(--accent-soft);
 }

@@ -48,9 +48,9 @@ describe('todoService.add — cap-5 rule', () => {
     expect(task.id).toBeTruthy()
   })
 
-  it('returns a task with gathered status (NullDrafter)', async () => {
+  it('returns a task in the listed state (NullDrafter)', async () => {
     const task = await todoService.add('Draft test task')
-    expect(task.status).toBe('gathered')
+    expect(task.state).toBe('listed')
     expect(task.done).toBe(false)
   })
 })
@@ -116,7 +116,7 @@ describe('todoService.complete', () => {
   it('marks a todo as done', async () => {
     const t = await todoService.add('Complete me')
     const done = await todoService.complete(t.id)
-    expect(done!.status).toBe('done')
+    expect(done!.state).toBe('done')
     expect(done!.done).toBe(true)
   })
 
@@ -131,7 +131,7 @@ describe('todoService.reopen', () => {
     const t = await todoService.add('Complete then reopen')
     await todoService.complete(t.id)
     const reopened = await todoService.reopen(t.id)
-    expect(reopened!.status).toBe('gathered')
+    expect(reopened!.state).toBe('listed')
     expect(reopened!.done).toBe(false)
   })
 })

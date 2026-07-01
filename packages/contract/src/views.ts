@@ -46,27 +46,20 @@ export interface Memory {
 
 // ── tasks (a daily-focus todo + its context pool, projected) ─────────────────
 
-/**
- * `gathering`/`drafted` are **AI-gap** states (Mikan is still pulling context, or
- * has written a draft). Until the AI layer lands the backend only emits the two
- * structural states: `gathered` (open, context surfaced) and `done`.
- */
-export type TaskStatus = 'gathering' | 'gathered' | 'drafted' | 'done'
-
 /** AI-gap: the kind of note Mikan leaves beside a task. Not emitted yet. */
 export type NoteKind = 'ready' | 'ask' | 'wait' | 'gathered' | 'done'
 
 // ── canonical task lifecycle (Mikan Flows) ───────────────────────────────────
 /**
- * The six-state lifecycle from the *Mikan Flows* design (see `CONTEXT.md`).
- * Supersedes the coarser `TaskStatus` above: it splits **planning** (decide the
- * steps) from **working** (execute them) and adds an explicit approval gate plus a
- * done/report receipt. It is task-type-agnostic, not reply-specific.
+ * The six-state lifecycle from the *Mikan Flows* design (see `CONTEXT.md`). It
+ * splits **planning** (decide the steps) from **working** (execute them) and
+ * adds an explicit approval gate plus a done/report receipt. It is
+ * task-type-agnostic, not reply-specific.
  *
- * Rolled out **additively**: `Task.status` stays for now and `Task.state` is
- * derived from it at the projector (`services/project.ts` → `toTask`); `state`
- * becomes canonical as the renderer slices migrate, then `status` retires.
- * Decision of record: `docs/adr/0010-task-lifecycle.md`.
+ * Canonical and required on every `Task` — supersedes the old, coarser
+ * `TaskStatus` (`gathering|gathered|drafted|done`), retired once every
+ * consumer migrated onto `state`/`mode`. Decision of record:
+ * `docs/adr/0010-task-lifecycle.md`.
  */
 export type TaskState =
   | 'listed' // on the list — resting todo, carries a mode badge
@@ -111,15 +104,10 @@ export interface Task {
   id: string
   title: string
   when: string
-  status: TaskStatus
-  /**
-   * Canonical lifecycle state (Mikan Flows). Derived from `status` at the
-   * projector today; supersedes `status` as renderer slices migrate. Optional
-   * during the additive rollout — treat absence as `'listed'`.
-   */
-  state?: TaskState
-  /** Per-task mode badge. Absent → treat as `'plan'`. */
-  mode?: TaskMode
+  /** Canonical lifecycle state (Mikan Flows, `docs/adr/0010-task-lifecycle.md`). */
+  state: TaskState
+  /** Per-task mode badge (Groups 03/12). */
+  mode: TaskMode
   /** AI-gap: the task's plan steps. `undefined` until the planner lands. */
   steps?: PlanStep[]
   /** AI-gap: run receipt, present once a run settles. */

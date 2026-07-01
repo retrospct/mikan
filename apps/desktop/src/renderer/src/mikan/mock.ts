@@ -217,6 +217,116 @@ const SEED_TASKS: Task[] = [
   }
 ]
 
+// ── growing-card (Group 07) reference tasks — one per render state ──────────
+// Not wired into makeMockApi: these exist purely so the growing card has a
+// living hi-fi reference across all six lifecycle states, independent of the
+// three "current renderer" seed tasks above (which predate `Task.state`).
+export const GROWING_CARD_DEMO_TASKS: Task[] = [
+  {
+    id: 'gc_listed',
+    title: 'Book the dentist follow-up',
+    when: 'today',
+    status: 'gathered',
+    state: 'listed',
+    mode: 'plan',
+    done: false,
+    ctx: [],
+    pinned: [],
+    draft: null,
+    draftNote: null
+  },
+  {
+    id: 'gc_planning',
+    title: 'Reply to Sarah about the cabin weekend',
+    when: 'today',
+    status: 'gathering',
+    state: 'planning',
+    mode: 'plan',
+    done: false,
+    ctx: ['m_cabin_note', 'm_cabin_mail'],
+    pinned: [],
+    draft: null,
+    draftNote: null
+  },
+  {
+    id: 'gc_planned',
+    title: 'Send Priya the Q3 one-pager',
+    when: 'by Friday',
+    status: 'gathered',
+    state: 'planned',
+    mode: 'plan',
+    done: false,
+    ctx: ['m_q3_mail', 'm_q3_pdf'],
+    pinned: [],
+    draft: null,
+    draftNote: null,
+    steps: [
+      {
+        id: 's1',
+        title: 'Checked your calendar',
+        run: 'auto',
+        tool: 'CALENDAR',
+        status: 'pending'
+      },
+      { id: 's2', title: 'Pulled the Q3 numbers', run: 'auto', tool: null, status: 'pending' },
+      { id: 's3', title: 'Draft the one-pager', run: 'ask', tool: null, status: 'pending' }
+    ]
+  },
+  {
+    id: 'gc_working',
+    title: "Book mom's birthday dinner",
+    when: 'this week',
+    status: 'gathering',
+    state: 'working',
+    mode: 'auto',
+    done: false,
+    ctx: ['m_rest_note', 'm_rest_shot'],
+    pinned: [],
+    draft: null,
+    draftNote: null,
+    steps: [
+      { id: 's1', title: 'Checked your calendar', run: 'auto', tool: 'CALENDAR', status: 'done' },
+      { id: 's2', title: 'Looked up nearby spots', run: 'auto', tool: 'MAPS', status: 'running' },
+      { id: 's3', title: 'Book the table', run: 'ask', tool: null, status: 'pending' }
+    ]
+  },
+  {
+    id: 'gc_awaiting',
+    title: 'Reply to Sarah about the cabin weekend',
+    when: 'today',
+    status: 'drafted',
+    state: 'awaiting',
+    mode: 'plan',
+    done: false,
+    ctx: ['m_cabin_note', 'm_cabin_mail', 'm_cabin_cal'],
+    pinned: ['m_cabin_mail'],
+    draft: ["Hey Sarah! Let's do **Apr 18–20**"],
+    draftNote: 'From her email + your calendar.',
+    steps: [
+      { id: 's1', title: 'Checked your calendar', run: 'auto', tool: 'CALENDAR', status: 'done' },
+      { id: 's2', title: 'Drafted the reply', run: 'ask', tool: null, status: 'done' }
+    ]
+  },
+  {
+    id: 'gc_done',
+    title: 'Use the United travel credit',
+    when: 'yesterday',
+    status: 'done',
+    state: 'done',
+    mode: 'auto',
+    done: true,
+    ctx: [],
+    pinned: [],
+    draft: null,
+    draftNote: null,
+    steps: [
+      { id: 's1', title: 'Checked the credit balance', run: 'auto', tool: null, status: 'done' },
+      { id: 's2', title: 'Applied it to the booking', run: 'auto', tool: null, status: 'done' }
+    ],
+    receipt: { ranOnDevice: true, durationMs: 4200, touched: ['United'], sentAnything: false }
+  }
+]
+
 // ── the daily-planning backlog ───────────────────────────────────────────────
 const BACKLOG: BacklogItem[] = [
   {

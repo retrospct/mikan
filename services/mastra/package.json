@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.86",
+    "@ai-sdk/anthropic": "^4.0.3",
     "@inngest/ai": "^0.1.7",
     "@mastra/core": "^1.46.0",
     "@mastra/deployer-vercel": "^1.2.1",

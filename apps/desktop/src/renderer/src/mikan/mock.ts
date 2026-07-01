@@ -597,6 +597,7 @@ export function makeMockApi(): MockApi {
           title: b.title,
           when: 'today',
           status: 'gathered',
+          state: deriveState('gathered', false),
           done: false,
           ctx: [...(b.ctx ?? [])],
           pinned: [],

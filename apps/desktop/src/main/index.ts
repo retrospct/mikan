@@ -315,11 +315,23 @@ app.whenReady().then(async () => {
     setupAutoUpdater()
   } else {
     // Dev-mode stubs so the renderer's update IPC calls don't throw
-    // "No handler registered" errors at startup.
-    const devStatus: UpdateStatus = { stage: 'idle', version: null, progress: null, error: null }
+    // "No handler registered" errors at startup. Reports `unavailable` (not
+    // `idle`) so the Settings row doesn't misleadingly read "Up to date" —
+    // dev never actually checks. check-now re-pushes the same status so a
+    // click always produces a visible IPC round-trip.
+    const devStatus: UpdateStatus = {
+      stage: 'unavailable',
+      version: null,
+      progress: null,
+      error: null
+    }
     ipcMain.handle(IPC.updateGetStatus, () => devStatus)
     ipcMain.handle(IPC.updateQuitAndInstall, () => {})
-    ipcMain.handle(IPC.updateCheckNow, () => {})
+    ipcMain.handle(IPC.updateCheckNow, () => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send(IPC.updateChanged, devStatus)
+      }
+    })
   }
 
   // Native app-menu "Check for Updates…" (macOS-standard, like Cursor/Slack).

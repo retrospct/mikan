@@ -269,7 +269,8 @@ export interface MikanApi {
 
 // --- Auto-updater (ROADMAP #12 — electron-updater via GitHub Releases) ----
 
-export type UpdateStage = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
+export type UpdateStage =
+  'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error' | 'unavailable'
 
 /**
  * Snapshot of the auto-updater state pushed to the renderer via `update:changed`

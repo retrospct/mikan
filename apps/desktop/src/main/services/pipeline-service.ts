@@ -1,13 +1,13 @@
 import { desc, eq, inArray, sql } from 'drizzle-orm'
-import { client, db, vecClient } from '../db'
+import { client, db, vecClient, resetVecChunks } from '../db'
 import { items, connectorState, type Item as ItemRow } from '../db/schema'
 import { chunkText } from '../pipeline/chunk'
 import { embedder } from '../pipeline/embed'
 import { detectContentType, extract, extractMedia, suffixOf } from '../pipeline/extract'
 import { putRaw } from '../pipeline/raw-store'
 import { encrypt, decrypt } from '../db/crypto'
-import type { CaptureResult, ContentType, Item, ItemStatus, SearchHit } from '@nimi/contract/ipc'
-import type { FedItem, MatchHit, Memory } from '@nimi/contract/views'
+import type { CaptureResult, ContentType, Item, ItemStatus, SearchHit } from '@mikan/contract/ipc'
+import type { FedItem, MatchHit, Memory } from '@mikan/contract/views'
 import { toFedItem, toMatchHits, toMemory } from './project'
 
 /**
@@ -70,7 +70,7 @@ async function capture(bytes: Uint8Array, name: string, mime?: string): Promise<
   if (
     (contentType === 'image' || contentType === 'audio') &&
     storedPath &&
-    process.env.NEEME_EXTRACTOR !== 'off'
+    process.env.NEEME_EXTRACTOR?.trim() !== 'off'
   ) {
     scheduleExtraction(id, storedPath, contentType, mime)
   }
@@ -315,7 +315,9 @@ export const pipelineService = {
    *  Reads and decrypts text before re-indexing so the vector space uses plaintext. */
   async reindexAll(): Promise<number> {
     const rows = await db.select().from(items)
-    await vecClient.execute('DELETE FROM chunks')
+    // DELETE FROM chunks leaves the libsql_vector_idx shadow tables inconsistent;
+    // drop+recreate is the safe reset before re-inserting all vectors.
+    await resetVecChunks()
     let n = 0
     for (const row of rows) {
       const plaintext = decrypt(row.text)
@@ -332,7 +334,7 @@ export const pipelineService = {
    * Best-effort — failure must not block the worker from starting.
    */
   async resumeMediaExtraction(): Promise<void> {
-    if (process.env.NEEME_EXTRACTOR === 'off') return
+    if (process.env.NEEME_EXTRACTOR?.trim() === 'off') return
     const pending = await db
       .select()
       .from(items)

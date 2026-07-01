@@ -7,17 +7,18 @@
 ## What's implemented
 
 - **Main process** (`apps/desktop/src/main/auth/logto.ts`): OIDC Authorization Code + PKCE in the
-  **system browser**, deep-link redirect (`mikan://callback`, from `@nimi/brand`), token exchange + refresh,
-  refresh token sealed via Electron `safeStorage`. Inert when unconfigured.
+  **system browser**, deep-link redirect (`mikan://callback`, from `@mikan/brand`), token exchange + refresh,
+  refresh token sealed in the shared `safeStorage` vault. Inert when unconfigured.
 - **IPC** (`packages/contract/src/ipc.ts`, `apps/desktop/src/preload`): `window.api.auth.{login,logout,getAccessToken,getState,onChanged}`.
-- **Renderer** (`apps/desktop/src/renderer/src/hooks/useAuth.ts` + `nimi/auth.tsx`): hydrates the API
-  client's bearer token (`packages/contract/src/api/token-store.ts` → `runtime.ts` `getToken()` seam)
-  and renders the header `AuthControl` (Sign in → identity pill → Sign out). Hidden until `configured`.
-  No CSP change needed — the renderer never calls Logto.
+- **Renderer** (`apps/desktop/src/renderer/src/hooks/useAuth.ts`,
+  `nimi/auth-gate.tsx`, `nimi/settings.tsx`): when configured, holds the app behind
+  a full-screen login gate until `getState()` reports a restored or fresh session.
+  Sign out lives in Settings → Account. No CSP change needed — the renderer never
+  calls Logto.
 
 ## To turn it on
 
-> **Deep-link scheme** (from the brand layer, `@nimi/brand`): the redirect is
+> **Deep-link scheme** (from the brand layer, `@mikan/brand`): the redirect is
 > `mikan://callback` (it replaced the old internal `neeme://`). The scheme lives in
 > `packages/brand/src/identity.json`.
 
@@ -34,7 +35,7 @@
    # MAIN_VITE_LOGTO_RESOURCE=https://api.getmikan.com
    ```
 
-4. Restart `pnpm dev`. A **Sign in** button appears once `configured` is true.
+4. Restart `pnpm dev`. Once `configured` is true, the app starts at the sign-in gate.
 
 `MAIN_VITE_*` is read at process start from `apps/desktop/.env` (electron-vite's config root) —
 not the repo-root `.env`. Put the vars there, or the button won't appear.
@@ -89,31 +90,37 @@ one Mikan sender.
 ## Test plan (the #9 acceptance)
 
 Shared: fill `apps/desktop/.env` (above), and confirm the **Logto Native app**'s Redirect URIs
-include `mikan://callback` (no trailing slash). Sign-in flow: header **Sign in** → system browser →
+include `mikan://callback` (no trailing slash). Sign-in flow: login gate → system browser →
 authenticate → redirect to `mikan://callback` → app exchanges the code (PKCE), **verifies the
-id_token against JWKS**, header shows your name/email.
+id_token against JWKS**, then renders the app with your name in Today/Plan surfaces.
 
 **Option A — dev (`pnpm dev`), try first.** On macOS the `open-url` event usually routes the
 callback home.
 
-1. `pnpm dev` → **Sign in** button visible (proves `configured`).
+1. `pnpm dev` → the sign-in gate is visible (proves `configured`).
 2. Click → system browser → sign in (email/password is fine).
-3. Back in the app: header shows your identity. In DevTools: `await window.api.auth.getState()`
+3. Back in the app: Today/Plan show your identity. In DevTools: `await window.api.auth.getState()`
    → `isAuthenticated: true`; `await window.api.auth.getAccessToken()` → a JWT.
 4. Quit + `pnpm dev` again → still signed in (silent refresh).
-5. Click the identity pill → **Sign out** → back to **Sign in**.
+5. Settings → Account → **Sign out** → back to the sign-in gate.
 
 **Option B — packaged build, the reliable deep-link path.** Use if A's redirect doesn't return
 to the app (the known dev limitation).
 
 1. Fill `apps/desktop/.env` **before** building (`MAIN_VITE_*` are baked in at build time).
-2. `pnpm --filter @nimi/desktop build:unpack` → `open apps/desktop/release/mikan/mac*/Mikan.app`
+2. `pnpm --filter @mikan/desktop build:unpack` → `open apps/desktop/release/mikan/mac*/Mikan.app`
    (output dir + `productName` come from `identity.mikan`).
 3. Same checks as A2–A5; `mikan://` is OS-registered so the callback always routes home.
 
-**Reset to a clean slate:** `rm "$HOME/Library/Application Support/Mikan/neeme-auth.bin"`, relaunch
-(the userData dir follows the brand `productName` — `Mikan`; the `neeme-auth.bin`
-filename is internal and unchanged).
+**Reset to a clean slate:** quit the app, remove the shared secrets vault, then relaunch:
+
+```sh
+rm "$HOME/Library/Application Support/Mikan/neeme-secrets.bin"
+```
+
+The userData dir follows the brand `productName` (`Mikan`). Removing the whole vault
+also clears connector tokens, the cached broker token, and the sync recovery key; if
+you only need a sign-out path, prefer Settings → Account → Sign out.
 
 ## Two OAuth flows (login vs connectors) — don't conflate them
 
@@ -180,7 +187,7 @@ scheme or they'll capture each other's callbacks.
   on macOS the `open-url` event usually still fires; on Windows/Linux deep links rely on the
   single-instance lock + argv parsing (already wired). If dev redirects don't return, use Option B
   (packaged build). The redirect is `${brand.scheme}://callback`
-  (`auth/logto.ts`, scheme from `@nimi/brand`); a loopback redirect would mean code changes (a local
+  (`auth/logto.ts`, scheme from `@mikan/brand`); a loopback redirect would mean code changes (a local
   HTTP listener) — not wired today.
 - The `id_token` **is** signature-verified client-side now (`auth/oidc.ts` `verifyIdToken`: JWKS
   signature + `iss`/`aud`/`exp` + the `nonce` bound on the authorize request). The **access token**

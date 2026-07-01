@@ -1,8 +1,8 @@
 // mock.ts — the browser-preview seed + an in-memory `window.api` stand-in.
 //
-// Ported from the design bundle (nimi-data.jsx + the BACKLOG that lived in
-// nimi-plan.jsx). This is hand-authored placeholder content. The view-model
-// types now live in `@nimi/contract/views` — this file only holds sample data
+// Ported from the design bundle (mikan-data.jsx + the BACKLOG that lived in
+// mikan-plan.jsx). This is hand-authored placeholder content. The view-model
+// types now live in `@mikan/contract/views` — this file only holds sample data
 // and `makeMockApi()`, the adapter `api.ts` falls back to when `window.api` is
 // absent (i.e. running in a plain browser, not Electron). It mutates module-local
 // arrays and returns the updated view shapes, mirroring the real worker so the
@@ -15,16 +15,16 @@ import type {
   MemoryKind,
   Task,
   UncoveredTodo
-} from '@nimi/contract/views'
-import { CAP_REACHED, type CaptureResult, type NimiApi, type Todo } from '@nimi/contract/ipc'
+} from '@mikan/contract/views'
+import { CAP_REACHED, type CaptureResult, type MikanApi, type Todo } from '@mikan/contract/ipc'
 
-type MockApi = Pick<NimiApi, 'pipeline' | 'todos' | 'ui' | 'update'>
+type MockApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui' | 'update'>
 
-// The day's focus cap (mirrors NimiApp's CAP) — lets the mock raise CAP_REACHED
+// The day's focus cap (mirrors MikanApp's CAP) — lets the mock raise CAP_REACHED
 // so the add-todo → backlog fallback is exercisable in the browser.
 const CAP = 5
 
-// ── the memory archive (what you've "fed" Nimi) ────────────────────────────
+// ── the memory archive (what you've "fed" Mikan) ────────────────────────────
 export const MEMORIES: Record<string, Memory> = {
   m_cabin_note: {
     id: 'm_cabin_note',
@@ -260,7 +260,7 @@ const FED_RECENT: FedItem[] = [
   }
 ]
 
-// ── to-dos Nimi infers from the recent feed (AI-gap; real backend gates on a key) ──
+// ── to-dos Mikan infers from the recent feed (AI-gap; real backend gates on a key) ──
 const UNCOVERED: UncoveredTodo[] = [
   {
     id: 'unc_dentist',

@@ -1,5 +1,5 @@
 import { extractText as pdfText, getDocumentProxy } from 'unpdf'
-import type { ContentType, ItemStatus } from '@nimi/contract/ipc'
+import type { ContentType, ItemStatus } from '@mikan/contract/ipc'
 import { ocr } from './ocr'
 import { asr } from './asr'
 

@@ -27,7 +27,7 @@ Confirms the fail-closed behavior: with sync requested but no valid key, the app
 fully local and makes no network calls.
 
 ```bash
-pnpm --filter @nimi/desktop test:smoke:sync
+pnpm --filter @mikan/desktop test:smoke:sync
 ```
 
 Expected tail:
@@ -40,7 +40,7 @@ Expected tail:
 Also run the unit suite (16+ sync-seam tests, incl. the key validator):
 
 ```bash
-pnpm --filter @nimi/desktop test
+pnpm --filter @mikan/desktop test
 ```
 
 ---
@@ -67,7 +67,7 @@ export NEEME_SYNC_ENCRYPTION_KEY=<64-hex>             # generateKey() — see st
 ### Run it (one command)
 
 ```bash
-pnpm --filter @nimi/desktop test:smoke:sync
+pnpm --filter @mikan/desktop test:smoke:sync
 ```
 
 The script spawns two isolated replicas (separate `NEEME_USER_DATA` dirs, mirroring two

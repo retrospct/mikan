@@ -1,6 +1,6 @@
 import { Mastra } from '@mastra/core'
-import { nimiAgent } from '../agents/nimi-agent.js'
+import { mikanAgent } from '../agents/mikan-agent.js'
 
 export const mastra = new Mastra({
-  agents: { nimiAgent },
+  agents: { mikanAgent },
 })

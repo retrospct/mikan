@@ -3,7 +3,7 @@
  * Requires NEEME_USER_DATA + NEEME_EMBEDDER=hash (set by test/setup.ts).
  */
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
-import { initDb, client } from '../../src/main/db/index'
+import { initDb, client, vecClient } from '../../src/main/db/index'
 import { pipelineService } from '../../src/main/services/pipeline-service'
 import { clearTables } from '../helpers'
 
@@ -19,10 +19,10 @@ beforeEach(async () => {
 
 describe('pipelineService.captureText', () => {
   it('captures text and returns created:true on first call', async () => {
-    const result = await pipelineService.captureText('Hello nimi world', 'note.md')
+    const result = await pipelineService.captureText('Hello mikan world', 'note.md')
     expect(result.created).toBe(true)
     expect(result.memory.id).toBeTruthy()
-    expect(result.memory.title).toBe('Hello nimi world')
+    expect(result.memory.title).toBe('Hello mikan world')
   })
 
   it('returns created:false (idempotent) for identical content', async () => {
@@ -195,13 +195,13 @@ describe('pipelineService.syncEmbedder', () => {
     await pipelineService.captureText('sync embedder idempotency test', 'doc.md')
     await pipelineService.syncEmbedder()
 
-    // Count chunks after first sync
-    const before = await client.execute('SELECT COUNT(*) AS n FROM chunks')
+    // Count chunks after first sync (chunks live in neeme-vec.db via vecClient)
+    const before = await vecClient.execute('SELECT COUNT(*) AS n FROM chunks')
     const countBefore = Number(before.rows[0]!.n)
 
     await pipelineService.syncEmbedder()
 
-    const after = await client.execute('SELECT COUNT(*) AS n FROM chunks')
+    const after = await vecClient.execute('SELECT COUNT(*) AS n FROM chunks')
     const countAfter = Number(after.rows[0]!.n)
 
     // No additional chunks created — reindexAll was not called

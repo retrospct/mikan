@@ -23,12 +23,12 @@ becomes a lock-out.
 
 ### Behavior matrix
 
-| Logto configured? | Auth state | What renders |
-|---|---|---|
-| No (`MAIN_VITE_LOGTO_*` unset — dev/CI/preview) | n/a | **App** (gate never mounts) |
-| Yes | hydrating (first tick) | Neutral splash (`AuthSplash`) |
-| Yes | signed out | **Login gate** (`AuthGate`) |
-| Yes | signed in (incl. **offline** w/ cached session) | **App** |
+| Logto configured?                               | Auth state                                      | What renders                  |
+| ----------------------------------------------- | ----------------------------------------------- | ----------------------------- |
+| No (`MAIN_VITE_LOGTO_*` unset — dev/CI/preview) | n/a                                             | **App** (gate never mounts)   |
+| Yes                                             | hydrating (first tick)                          | Neutral splash (`AuthSplash`) |
+| Yes                                             | signed out                                      | **Login gate** (`AuthGate`)   |
+| Yes                                             | signed in (incl. **offline** w/ cached session) | **App**                       |
 
 The gate decision lives at the top of `NimiApp`'s render:
 
@@ -37,9 +37,9 @@ const gated = auth.configured && (!authReady || !auth.isAuthenticated)
 ```
 
 - `auth.configured` comes from main (`isConfigured()` = `MAIN_VITE_LOGTO_ENDPOINT`
-  + `_APP_ID` present). Unconfigured builds are **never** gated, so the browser
-  preview, the Playwright E2E, and the `NEEME_EMBEDDER=hash` smoke tests all run
-  unauthenticated exactly as before.
+  - `_APP_ID` present). Unconfigured builds are **never** gated, so the browser
+    preview, the Playwright E2E, and the `NEEME_EMBEDDER=hash` smoke tests all run
+    unauthenticated exactly as before.
 - `authReady` is a new flag on `useAuth`. `useAuth` starts at `EMPTY`
   (`configured:false`), then main reports the real state asynchronously. Without
   `ready`, a configured build would render the app for one frame and then snap to
@@ -81,16 +81,17 @@ in **Settings → Sync**.
 
 ### Two sources of truth (don't conflate them)
 
-| Type | Owner | Meaning | IPC |
-|---|---|---|---|
-| `SyncSettings` | **main** | The toggle *intent* + key presence + broker availability | `sync:get-settings`, `sync:set-enabled` |
-| `SyncStatus` | **worker** | The *live* replica state (syncing / synced / error) | `sync:get-status`, `sync:now` |
+| Type           | Owner      | Meaning                                                  | IPC                                     |
+| -------------- | ---------- | -------------------------------------------------------- | --------------------------------------- |
+| `SyncSettings` | **main**   | The toggle _intent_ + key presence + broker availability | `sync:get-settings`, `sync:set-enabled` |
+| `SyncStatus`   | **worker** | The _live_ replica state (syncing / synced / error)      | `sync:get-status`, `sync:now`           |
 
 The Settings UI binds the toggle to `SyncSettings.enabled` (intent) and the status
 line to `SyncStatus` (reality). They can legitimately disagree — e.g. intent ON
 but replica "Connecting…" while offline.
 
 `SyncSettings`:
+
 - `enabled` — persisted pref (`neeme-sync-prefs.json`), the toggle position.
 - `hasKey` — whether this device has an at-rest encryption key yet (drives the
   "reveal recovery key" affordance).
@@ -117,7 +118,7 @@ downgrading it.
 ### Encryption key + recovery key (ADR 0008)
 
 - On first enable, a 64-hex AES-256-GCM key is generated (`randomBytes(32)`) and
-  sealed in the OS keychain (`safeStorage`) at `neeme-sync-key.bin`
+  sealed in the shared secrets vault (`neeme-secrets.bin`, `syncKey` slice)
   (`sync-prefs.getOrCreateKey`).
 - **Reveal recovery key** (Settings) shows the hex + copy button so you can move
   it to another device. A **Show QR code** toggle renders the same hex as a QR
@@ -136,66 +137,81 @@ downgrading it.
 > These are the things to be careful about and the obvious next improvements.
 
 ### 4.1 Sticky encryption key (intentional, but know why)
+
 When you turn sync **off**, we keep the encryption key in the worker env and do
 **not** delete it. Reason: with the key gone, `crypto.decrypt()` becomes a
 pass-through and every previously-encrypted local row (`enc:…`) would render as
-garbled ciphertext. So "off" stops the *network replica* only; local rows stay
+garbled ciphertext. So "off" stops the _network replica_ only; local rows stay
 encrypted-and-readable. A device that has **never** enabled sync has no key and
 stays plaintext-local (unchanged default, and what all the unit tests rely on).
+
 - **To improve:** offer an explicit "remove sync from this device" that first
   decrypts rows back to plaintext (or wipes the local replica) before dropping
   the key, so the at-rest format can actually be reverted.
 
 ### 4.2 Importing a recovery key replaces the device key — destructively
+
 `setRecoveryKey` overwrites this device's key. If the device already has rows
-encrypted under a *different* key, those rows will no longer decrypt. The intended
+encrypted under a _different_ key, those rows will no longer decrypt. The intended
 flow is **fresh device → import key → then enable sync**. The UI warns about this,
 but nothing enforces "device is fresh."
+
 - **To improve:** detect existing encrypted rows and block/confirm import; or
   re-encrypt existing rows under the imported key.
 
 ### 4.3 Mid-session toggle doesn't refresh already-rendered data
+
 Enabling sync restarts the worker, but the renderer keeps its already-loaded data
 in React state. The local DB file is the same (data is safe), but rows pulled from
 the remote on first connect won't appear until the next navigation/reload or a
 manual "sync now."
+
 - **To improve:** have main broadcast a "worker restarted / sync changed" event
   and have the renderer refetch the active view.
 
 ### 4.4 No push event for sync status — the renderer polls
+
 `useSync` polls `sync:get-status` every 5s (paused when hidden). Right after a
 toggle the status line can lag by up to a poll interval.
+
 - **To improve:** a `sync:changed` main→renderer push (like `auth:changed`).
 
 ### 4.5 Worker restart races (handled, but fragile)
+
 `restartWorker()` waits for the old process's `exit` before forking so the
 module-level `child`/`ready` aren't clobbered by a late exit event. In-flight
 `call()` promises are rejected during the gap; the renderer's pollers swallow
 those. Rapid double-toggles are prevented by disabling the toggle while `busy`.
+
 - **To watch:** any new caller that holds a long-lived `call()` across a restart
   will see a rejection — treat worker calls as retryable.
 
 ### 4.6 Offline / not-logged-in enable backs off silently
+
 If you flip sync on while offline or before a broker token can be fetched, the
 pref stays ON but we don't set `NEEME_SYNC` for that session (so the worker
 doesn't surface a confusing "NEEME_SYNC_URL is not set" error). The status reads
 "Connecting…". It activates on the next online boot or toggle.
+
 - **To improve:** a clearer "waiting for connection" state distinct from a real
   config error, and an auto-retry once a token becomes available.
 
 ### 4.7 Gate assumes the cached-session check is cheap and correct
+
 The gate trusts `getState().isAuthenticated`, which is `Boolean(session)`. After
 the offline-tolerance change, a session with an expired access token but a live
-refresh token still counts as authenticated (correct). But a *revoked* refresh
+refresh token still counts as authenticated (correct). But a _revoked_ refresh
 token is only discovered on the next refresh attempt — until then the user sees
 the app, and the first server call fails. Acceptable (local-first), but note that
 the gate is not a real-time authorization check.
 
 ### 4.8 Single-device key custody
+
 The key lives only in the device keychain. If a user loses the device without
 having exported the recovery key, their synced ciphertext is unrecoverable (by
 design — "trusted cloud with encrypted content", not key escrow). The reveal/
 export flow is the only backup.
+
 - **To improve:** prompt the user to save the recovery key at first enable, not
   just expose it passively in Settings.
 
@@ -203,7 +219,7 @@ export flow is the only backup.
 
 ## 5. What's verified vs. not
 
-- **Verified here:** `pnpm --filter @nimi/desktop typecheck`, `lint` (clean on all
+- **Verified here:** `pnpm --filter @mikan/desktop typecheck`, `lint` (clean on all
   touched files), `test` (266 pass), and a full `build`.
 - **Not verified here (needs a GUI + creds):** the live sign-in → toggle → broker
   → Turso round-trip, and the two-device recovery-key flow. Run on a packaged

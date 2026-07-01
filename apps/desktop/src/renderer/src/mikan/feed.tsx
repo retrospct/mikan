@@ -3,16 +3,16 @@ import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
-import { NimiMark } from './mark'
+import { MikanMark } from './mark'
 import { VoiceRecorder } from './voice'
 import { AppHeader } from './today'
 import { data } from './api'
 import { captureFiles, kindOfFile } from './capture-file'
-import type { FedItem, MemoryKind, UncoveredTodo } from '@nimi/contract/views'
+import type { FedItem, MemoryKind, UncoveredTodo } from '@mikan/contract/views'
 import type { IconName } from './icons'
-import type { NimiMarkState } from './types'
+import type { MikanMarkState } from './types'
 
-// a new to-do accepted from the feed → routed to today (or backlog) by NimiApp
+// a new to-do accepted from the feed → routed to today (or backlog) by MikanApp
 type AddTodo = (item: {
   id?: string
   title: string
@@ -54,7 +54,7 @@ export function FeedView({
   onAddTodo,
   onAdd,
   onRecordingChange,
-  nimiState,
+  mikanState,
   badge,
   onSearch,
   onTomorrow,
@@ -66,14 +66,14 @@ export function FeedView({
   /** Open the real Add composer (the FAB sheet) — used by the Note/Link quick-tools. */
   onAdd: () => void
   onRecordingChange?: (v: boolean) => void
-  nimiState: NimiMarkState
+  mikanState: MikanMarkState
   badge: number
   onSearch: () => void
   onTomorrow: () => void
   onSettings: () => void
 }): JSX.Element {
   const [fed, setFed] = useState<FedItem[]>([])
-  // AI-gap: to-dos Nimi infers from the recent feed. `[]` until the drafter is
+  // AI-gap: to-dos Mikan infers from the recent feed. `[]` until the drafter is
   // configured; the section below hides itself when empty.
   const [unc, setUnc] = useState<UncoveredTodo[]>([])
   const [added, setAdded] = useState<Set<string>>(new Set())
@@ -179,7 +179,7 @@ export function FeedView({
     <div className="view feed">
       <div className="scroll">
         <AppHeader
-          nimiState={nimiState}
+          mikanState={mikanState}
           badge={badge}
           onSearch={onSearch}
           onTomorrow={onTomorrow}
@@ -220,7 +220,7 @@ export function FeedView({
               onMouseEnter={() => !busy.current && setOver(true)}
               onMouseLeave={() => setOver(false)}
             >
-              <NimiMark
+              <MikanMark
                 className="maw-mark"
                 state={eating ? 'gathering' : over ? 'thinking' : 'idle'}
                 size={64}
@@ -360,7 +360,7 @@ export function FeedView({
 
       {toast && (
         <div className="toast">
-          <NimiMark state="happy" size={22} />
+          <MikanMark state="happy" size={22} />
           <span>{toast.msg}</span>
         </div>
       )}

@@ -17,7 +17,7 @@ todos:
     content: 'Specify the TS token-broker backend (the one ADR 0002/0003 anticipate): JWKS-verify the Logto access token -> provision/lookup the user''s Turso DB via the Turso Platform API -> mint a short-lived DB-scoped token -> return { syncUrl, authToken, expiresAt }. Main fetches it with auth.getAccessToken(), caches the result in safeStorage, and pushes it to the worker — mirroring the connector access-token passing pattern.'
   - id: sync-service-wiring
     status: pending
-    content: 'Add a worker sync-service that owns client.sync() (on boot, on a NEEME_SYNC_MINUTES timer, and a syncNow IPC + status broadcast); main pushes syncUrl+token when starting the worker and on token refresh, via a new @nimi/contract channel.'
+    content: 'Add a worker sync-service that owns client.sync() (on boot, on a NEEME_SYNC_MINUTES timer, and a syncNow IPC + status broadcast); main pushes syncUrl+token when starting the worker and on token refresh, via a new @mikan/contract channel.'
   - id: at-rest-encryption
     status: pending
     content: 'Set encryptionKey for the synced primary + local replica; derive/store the key in safeStorage. Document explicitly that this is encryption-at-rest under a trusted cloud (the primary is readable with the key), NOT the zero-knowledge/E2E posture ADR 0001 explored.'
@@ -218,7 +218,7 @@ The Turso `authToken` is **not** the Logto token. We need a tiny **TS backend** 
 
 Client side mirrors the connector pattern exactly:
 
-- Main calls the broker with `await auth.getAccessToken()`, caches `{ syncUrl, authToken }` in `safeStorage` (like the refresh token), and **pushes it to the worker** over a new `@nimi/contract` channel (e.g. `IPC.syncSetToken`) — the same shape as `call(IPC.connectorsIngest, [provider, accessToken])` in [`index.ts`](apps/desktop/src/main/index.ts) line 158.
+- Main calls the broker with `await auth.getAccessToken()`, caches `{ syncUrl, authToken }` in `safeStorage` (like the refresh token), and **pushes it to the worker** over a new `@mikan/contract` channel (e.g. `IPC.syncSetToken`) — the same shape as `call(IPC.connectorsIngest, [provider, accessToken])` in [`index.ts`](apps/desktop/src/main/index.ts) line 158.
 - The worker's sync-config seam swaps the token into the client (`setSyncToken`). On 401 / expiry, the worker asks main to refresh (broadcast pattern like `auth.onChange`).
 
 **The Turso provisioning automation + where the broker runs are human decisions** (see Open questions). For an early spike, `NEEME_SYNC_URL` + `NEEME_SYNC_AUTH_TOKEN` env (a hand-created DB + `turso db tokens create`) lets us prove the replica loop **before** building the broker.
@@ -236,7 +236,7 @@ A small `sync-service` in `apps/desktop/src/main/services/` owns the `sync()` ca
 - **No `user_id` columns.** Isolation is at the database boundary (database-per-user), not the row boundary — a deliberate departure from ADR 0002's pencilled migration, forced by whole-DB replication. Document this in the ADR amendment.
 - **`chunks` leaves the synced DB.** Move it (and `chunks_vec_idx`) into `neeme-vec.db`; drop the `item_id` FK; keep the same DDL otherwise. `db/index.ts` `initDb()` splits into `initDb()` (synced tables) + `initVecDb()` (local-only).
 - **Local replica path is per-user.** `dbPath` derives from `sub` when sync is on; today's `neeme.db` remains the signed-out store.
-- **No change to view-models / `@nimi/contract` data shapes** — sync is invisible to the renderer; only new control channels (`syncSetToken`, `syncNow`, `syncStatus`) are added.
+- **No change to view-models / `@mikan/contract` data shapes** — sync is invisible to the renderer; only new control channels (`syncSetToken`, `syncNow`, `syncStatus`) are added.
 
 ## Phased todos
 

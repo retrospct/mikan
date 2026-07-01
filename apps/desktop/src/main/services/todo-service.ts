@@ -12,8 +12,8 @@ import {
   type ContextState,
   type Todo,
   type TodoStatus
-} from '@nimi/contract/ipc'
-import type { BacklogItem, Task } from '@nimi/contract/views'
+} from '@mikan/contract/ipc'
+import type { BacklogItem, Task } from '@mikan/contract/views'
 import { toBacklogItem, toTask } from './project'
 
 /**

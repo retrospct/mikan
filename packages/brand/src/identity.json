@@ -4,6 +4,6 @@
     "appId": "dev.retro.mikan",
     "scheme": "mikan",
     "icon": "assets/mikan/icon.png",
-    "publish": { "owner": "retrospct", "repo": "nimi" }
+    "publish": { "owner": "retrospct", "repo": "mikan" }
   }
 }

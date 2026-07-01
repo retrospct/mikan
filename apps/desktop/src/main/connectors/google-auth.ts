@@ -1,9 +1,9 @@
 /**
- * Standalone Google OAuth client for the nimi connectors (Gmail + Google Calendar).
+ * Standalone Google OAuth client for the mikan connectors (Gmail + Google Calendar).
  *
  * Architecture:
- *   - Decoupled from Logto (ADR 0002): Logto authenticates *who the user is* to nimi;
- *     this module grants nimi *read access to the user's Google data* — separate concern,
+ *   - Decoupled from Logto (ADR 0002): Logto authenticates *who the user is* to mikan;
+ *     this module grants mikan *read access to the user's Google data* — separate concern,
  *     separate client, separate tokens.
  *   - Inert until `MAIN_VITE_GOOGLE_CLIENT_ID` is set.
  *   - Redirect: Google Desktop-app OAuth clients reject custom schemes, so we use a
@@ -26,7 +26,7 @@ import { shell } from 'electron'
 import { createServer } from 'node:http'
 import * as secrets from '../secrets/store'
 import { randomVerifier, pkceChallenge, randomState } from '../auth/oidc'
-import type { ConnectorId, ConnectorsState, ProviderState } from '@nimi/contract/ipc'
+import type { ConnectorId, ConnectorsState, ProviderState } from '@mikan/contract/ipc'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
@@ -212,7 +212,7 @@ export async function connect(provider: ConnectorId): Promise<void> {
 
       res.writeHead(200, { 'content-type': 'text/html' })
       res.end(
-        '<html><head><meta charset="utf-8"></head><body><h2>Connected to nimi &#8212; you can close this tab.</h2></body></html>'
+        '<html><head><meta charset="utf-8"></head><body><h2>Connected to mikan &#8212; you can close this tab.</h2></body></html>'
       )
       server.close()
 

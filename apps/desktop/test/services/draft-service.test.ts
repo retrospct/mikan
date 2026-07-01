@@ -51,11 +51,11 @@ describe('rowToTaskDraft', () => {
 
   it('passes through brief, draftNote, note when present', () => {
     const result = rowToTaskDraft(
-      makeRow({ brief: 'My brief', draftNote: 'draft note', note: 'Nimi note' })
+      makeRow({ brief: 'My brief', draftNote: 'draft note', note: 'Mikan note' })
     )
     expect(result.brief).toBe('My brief')
     expect(result.draftNote).toBe('draft note')
-    expect(result.note).toBe('Nimi note')
+    expect(result.note).toBe('Mikan note')
   })
 
   it('passes through valid noteKind values', () => {

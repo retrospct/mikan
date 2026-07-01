@@ -92,4 +92,4 @@ export class LocalEmbedder implements Embedder {
  * vector index is a rebuildable artifact derived from `items.text`.
  */
 export const embedder: Embedder =
-  process.env.NEEME_EMBEDDER === 'hash' ? new HashEmbedder() : new LocalEmbedder()
+  process.env.NEEME_EMBEDDER?.trim() === 'hash' ? new HashEmbedder() : new LocalEmbedder()

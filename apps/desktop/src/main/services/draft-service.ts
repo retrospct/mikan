@@ -4,7 +4,7 @@ import { db } from '../db'
 import { todoAi, todoContext, type TodoAiRow } from '../db/schema'
 import { drafter, type DraftInput, type TaskDraft } from '../pipeline/draft'
 import { pipelineService } from './pipeline-service'
-import type { ContextEntry, ContentType, Todo } from '@nimi/contract/ipc'
+import type { ContextEntry, ContentType, Todo } from '@mikan/contract/ipc'
 
 /**
  * Draft service — the glue between the `Drafter` seam and the database.

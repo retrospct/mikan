@@ -1,6 +1,6 @@
-// make-tray-icon.mjs — generate the macOS menu-bar tray icon for Nimi.
+// make-tray-icon.mjs — generate the macOS menu-bar tray icon for Mikan.
 //
-// Draws the Nimi mark (a rounded diamond outline + center dot) as a monochrome
+// Draws the Mikan mark (a rounded diamond outline + center dot) as a monochrome
 // *template* PNG: black (RGB 0,0,0) with the shape carried in the alpha channel,
 // so macOS recolors it for light/dark menu bars. No image deps — a tiny hand-rolled
 // PNG encoder over Node's built-in zlib. Run: `node scripts/make-tray-icon.mjs`.

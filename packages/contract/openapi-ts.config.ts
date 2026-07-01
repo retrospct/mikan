@@ -1,7 +1,7 @@
 import { defineConfig } from '@hey-api/openapi-ts'
 
 /**
- * Generates the typed Nimi API SDK from the committed `openapi.json` snapshot
+ * Generates the typed Mikan API SDK from the committed `openapi.json` snapshot
  * (exported from the FastAPI backend in mr-matcha — see README "API client").
  *
  * Output is committed so desktop (and a future RN/Expo app) consume the client

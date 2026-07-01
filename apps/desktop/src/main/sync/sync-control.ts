@@ -11,7 +11,7 @@
  * Encryption-at-rest is sticky: once a device has a key it's always injected, so
  * previously-encrypted local rows keep decrypting even when the replica is off.
  */
-import type { SyncSettings } from '@nimi/contract/ipc'
+import type { SyncSettings } from '@mikan/contract/ipc'
 import * as auth from '../auth/logto'
 import { restartWorker } from '../worker/client'
 import { getSyncToken, isBrokerConfigured } from './broker'

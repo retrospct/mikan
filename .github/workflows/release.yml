@@ -91,7 +91,7 @@ jobs:
         # release-please created for this tag), which electron-updater polls on
         # installed clients. BRAND selects the brand for both electron-vite and
         # electron-builder.config.cjs (which sets the publish owner/repo).
-        run: pnpm --filter @nimi/desktop build:mac --publish always
+        run: pnpm --filter @mikan/desktop build:mac --publish always
 
   # Windows canary is deferred for the friends-and-family alpha.
   # Uncomment and add Azure Trusted Signing secrets when Windows is revisited.
@@ -113,4 +113,4 @@ jobs:
   #         node-version: '24'
   #         cache: pnpm
   #     - run: pnpm install --frozen-lockfile
-  #     - run: pnpm --filter @nimi/desktop build:win --publish always
+  #     - run: pnpm --filter @mikan/desktop build:win --publish always

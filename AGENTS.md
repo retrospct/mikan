@@ -1,4 +1,4 @@
-# nimi — agent guide (monorepo root)
+# mikan — agent guide (monorepo root)
 
 See **`CLAUDE.md`** for the full shared spine (architecture, contract, verify steps, security).
 
@@ -6,19 +6,25 @@ See **`CLAUDE.md`** for the full shared spine (architecture, contract, verify st
 
 ### Services (this repo)
 
-| Service | Required for dev? | Notes |
-|--------|-------------------|--------|
-| **Electron app** (`pnpm dev`) | Yes | Starts main + preload + renderer (Vite `:5173`) + data **utilityProcess** worker |
-| **neeme FastAPI** (`:8000`) | No | Sibling repo; only if testing `@nimi/contract/api` HTTP client |
-| **Logto OIDC** | No | Inert until `MAIN_VITE_LOGTO_*` env is set |
+| Service                       | Required for dev? | Notes                                                                            |
+| ----------------------------- | ----------------- | -------------------------------------------------------------------------------- |
+| **Electron app** (`pnpm dev`) | Yes               | Starts main + preload + renderer (Vite `:5173`) + data **utilityProcess** worker |
+| **neeme FastAPI** (`:8000`)   | No                | Sibling repo; only if testing `@mikan/contract/api` HTTP client                   |
+| **Logto OIDC**                | No                | Inert until `MAIN_VITE_LOGTO_*` env is set                                       |
 
 ### Verify (no runtime)
 
 From repo root: `pnpm typecheck` (green), `pnpm build` (green), `pnpm lint`, `pnpm test`. Pre-existing ESLint failures in `packages/contract/src/api/generated/**` are expected (hey-api output); `pnpm lint` over the whole workspace also currently reports pre-existing `services/**` errors, so it exits non-zero — only your changed files need to be clean.
 
-`pnpm test` fans out to `@nimi/desktop` vitest in plain Node (no Electron, no model download): pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`.
+> **Lint after build gotcha:** `pnpm build` writes the gitignored, regenerable
+> `services/mastra/.mastra/` bundles (multi-MB `.mjs`). They are **not** in
+> `eslint.config.mjs`'s ignore list, so running `pnpm lint` *after* a build makes
+> ESLint type-lint those giant files — ~20 min runtime that ends in
+> `RangeError: Invalid string length` (the `stylish` formatter overflows). Lint
+> *before* building, or `rm -rf services/mastra/.mastra` first; a clean `pnpm lint`
+> then finishes in ~6 s and reports only the pre-existing debt (exit 1).
 
-> **Pre-existing test-harness drift (not an env problem):** commit `00b72eb` moved the `chunks` table out of the main DB into a separate local-only `neeme-vec.db` (`vecClient`), but `apps/desktop/test/helpers.ts` (`clearTables`) and `apps/desktop/test/smoke/capture-file.ts` (`chunkCount`) still query `chunks` on the main `client`. As of this writing that makes ~81 tests across the 6 integration files fail with `SQLITE_ERROR: no such table: chunks`, and `test:smoke` throws the same error; ~187 unit tests still pass. The fix is to point those test helpers at `vecClient`. The **app and the real pipeline are unaffected** — capture → embed → index → search works (verified via the data-layer smoke below and a live GUI capture).
+`pnpm test` fans out to `@mikan/desktop` vitest: 269 tests in plain Node (no Electron, no model download). Covers pipeline unit tests + integration tests for pipeline-service / todo-service / draft-service / uncover-service against a temp libSQL DB with `NEEME_EMBEDDER=hash` + `NEEME_DRAFTER=off`. 2 tests in `test/services/broker-client.test.ts` currently fail (fetch-mock setup issue in the sync-token tests, unrelated to the pipeline) — the rest pass.
 
 ### Run the desktop app
 
@@ -32,14 +38,14 @@ Use `NEEME_EMBEDDER=hash` in cloud/CI VMs to skip ONNX model download and `onnxr
 
 **Display:** Electron needs X11 (`DISPLAY` is usually `:1` in this environment). Harmless `dbus` errors in logs are normal without a session bus.
 
-**Worker / DB:** On successful boot, main forks the `neeme-data` utilityProcess and creates `neeme.db` under Electron `userData` (Linux: `~/.config/@nimi/desktop/neeme.db`). The renderer still uses sample data in `apps/desktop/src/renderer/src/nimi/data.ts`; IPC (`window.api.pipeline.*`, `window.api.todos.*`) is wired for integration work.
+**Worker / DB:** On successful boot, main forks the `neeme-data` utilityProcess and creates `neeme.db` under Electron `userData` (Linux: `~/.config/@mikan/desktop/neeme.db`). In Electron, renderer data flows through `apps/desktop/src/renderer/src/mikan/api.ts` to the real `window.api.pipeline.*` / `window.api.todos.*` IPC surface; the in-memory `mock.ts` is only the plain-browser preview fallback.
 
 ### Data-layer smoke (optional, no Electron UI)
 
 ```bash
-mkdir -p /tmp/nimi-smoke
+mkdir -p /tmp/mikan-smoke
 cd apps/desktop
-NEEME_USER_DATA=/tmp/nimi-smoke NEEME_EMBEDDER=hash pnpm exec tsx -e "
+NEEME_USER_DATA=/tmp/mikan-smoke NEEME_EMBEDDER=hash pnpm exec tsx -e "
 import { initDb } from './src/main/db/index.ts';
 import { pipelineService } from './src/main/services/pipeline-service.ts';
 (async () => {
@@ -58,16 +64,25 @@ Two committed tiers under `apps/desktop/test/` (fixtures in `test/fixtures/`). B
 
 ```bash
 # Tier 1 — headless pipeline (no Electron, no display): capture → extract → index → search
-pnpm --filter @nimi/desktop test:smoke
+pnpm --filter @mikan/desktop test:smoke
 
 # Tier 2 — Playwright Electron E2E (real picker + drag-drop → IPC → worker → DB).
 # Launches the BUILT app, so build first. Electron _electron needs no browser download.
-pnpm --filter @nimi/desktop build && pnpm --filter @nimi/desktop test:e2e
+pnpm --filter @mikan/desktop build && pnpm --filter @mikan/desktop test:e2e
 ```
 
 The E2E reads ground truth back through `window.api.pipeline.archive()` (the app's own DB
 connection — a separate SQLite reader hits WAL-visibility races). It launches with
 `--user-data-dir=<tmp>` for an isolated throwaway DB.
+
+> **Logto-gate gotcha (cloud agents with secrets):** `electron-vite build` inlines
+> `MAIN_VITE_*` env at build time. When `MAIN_VITE_LOGTO_ENDPOINT` + `MAIN_VITE_LOGTO_APP_ID`
+> are present (they're injected as Cloud Agent secrets here), the **built** app boots behind
+> the Logto sign-in gate, so `.nav` never appears and every `_electron` spec times out in
+> `launchBuiltApp` (`waiting for locator('.nav')`). `pnpm dev` is unaffected. To run the E2E
+> tier / a built-app smoke in this environment, build with those vars unset, e.g.
+> `env -u MAIN_VITE_LOGTO_ENDPOINT -u MAIN_VITE_LOGTO_APP_ID -u MAIN_VITE_LOGTO_RESOURCE pnpm --filter @mikan/desktop build`
+> then run `test:e2e` (also with them unset). All 7 specs pass once unconfigured.
 
 ### Sync + encryption-at-rest tests (#10)
 
@@ -76,12 +91,12 @@ Opt-in Turso sync with mandatory field encryption. Full procedure:
 
 ```bash
 # Tier 1 — gate check (no creds): NEEME_SYNC=on without a valid key must stay local
-pnpm --filter @nimi/desktop test:smoke:sync
+pnpm --filter @mikan/desktop test:smoke:sync
 
 # Tier 2 — live two-device replica loop (needs a Turso DB; key is REQUIRED)
 NEEME_SYNC=on NEEME_SYNC_URL=libsql://<db>.turso.io \
 NEEME_SYNC_AUTH_TOKEN=<token> NEEME_SYNC_ENCRYPTION_KEY=<64-hex> \
-pnpm --filter @nimi/desktop test:smoke:sync
+pnpm --filter @mikan/desktop test:smoke:sync
 ```
 
 Sync **fails closed**: `NEEME_SYNC=on` enables sync only with a valid 64-hex
@@ -92,13 +107,13 @@ four env vars when running as a cloud agent).
 ### Tier 3 — packaged installer on a second computer (Mac/Windows)
 
 ```bash
-pnpm --filter @nimi/desktop build:mac    # → apps/desktop/dist/nimi-<ver>.dmg
-pnpm --filter @nimi/desktop build:win    # → dist/nimi-<ver>-setup.exe (build ON Windows)
+pnpm --filter @mikan/desktop build:mac    # → apps/desktop/dist/mikan-<ver>.dmg
+pnpm --filter @mikan/desktop build:win    # → dist/mikan-<ver>-setup.exe (build ON Windows)
 ```
 
-Unsigned: macOS → right-click **Open** (or `xattr -dr com.apple.quarantine /Applications/Nimi.app`);
+Unsigned: macOS → right-click **Open** (or `xattr -dr com.apple.quarantine /Applications/Mikan.app`);
 Windows SmartScreen → **More info → Run anyway**. Packaged userData/DB: macOS
-`~/Library/Application Support/Nimi/neeme.db`, Windows `%APPDATA%\Nimi\neeme.db`.
+`~/Library/Application Support/Mikan/neeme.db`, Windows `%APPDATA%\Mikan\neeme.db`.
 
 > The preload **must** stay bundled (not externalized) — sandboxed preloads can't
 > `require()` npm modules, so `@electron-toolkit/preload` is in `electron.vite.config.ts`'s
@@ -110,19 +125,19 @@ Windows SmartScreen → **More info → Run anyway**. Packaged userData/DB: macO
 Features that require `NEEME_ANTHROPIC_KEY` + a display are covered by runbooks in
 `docs/testing/`. Run them using a GUI-capable cloud agent.
 
-| Runbook | Feature | Needs |
-|---|---|---|
-| `docs/testing/uncovered-todos-gui-runbook.md` | Feed → "I spotted these to-dos" | `NEEME_ANTHROPIC_KEY`, `DISPLAY` |
-| `docs/testing/csp-smoke-runbook.md` | CSP hardening + local fonts (#11) | `DISPLAY` (deterministic tier needs neither) |
+| Runbook                                       | Feature                           | Needs                                        |
+| --------------------------------------------- | --------------------------------- | -------------------------------------------- |
+| `docs/testing/uncovered-todos-gui-runbook.md` | Feed → "I spotted these to-dos"   | `NEEME_ANTHROPIC_KEY`, `DISPLAY`             |
+| `docs/testing/csp-smoke-runbook.md`           | CSP hardening + local fonts (#11) | `DISPLAY` (deterministic tier needs neither) |
 
 Runbooks follow `docs/testing/RUNBOOK-TEMPLATE.md`; the `gui-smoke` skill
 (`.cursor/skills/gui-smoke/SKILL.md`) is the SOP for running them + capturing
-artifacts. The deterministic tier (`pnpm --filter @nimi/desktop test:e2e` under
+artifacts. The deterministic tier (`pnpm --filter @mikan/desktop test:e2e` under
 Xvfb) runs automatically on PRs via `.github/workflows/e2e-smoke.yml`; see
 `docs/testing/automation-setup.md` for wiring an auto-launched cloud agent for the
 visual tier.
 
 ### Scoped commands
 
-- Desktop only: `pnpm --filter @nimi/desktop dev|build|typecheck|test`
+- Desktop only: `pnpm --filter @mikan/desktop dev|build|typecheck|test`
 - See root `README.md` and `CLAUDE.md` for monorepo layout and agent lanes (`docs/agent-sync/INBOX.md`).

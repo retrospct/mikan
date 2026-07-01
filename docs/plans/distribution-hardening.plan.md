@@ -52,7 +52,7 @@ todos:
     content: 'Audit native modules for packaging: onnxruntime-node, @libsql/client, heic-convert, ffmpeg-static — confirm `electron-builder install-app-deps` (postinstall) rebuilds them and asarUnpack covers everything dlopen-ed at runtime (resources/** + ffmpeg-static already listed); add onnxruntime/libsql unpack entries if the signed app fails to load them'
   - id: v13-mac-build-verify
     status: pending
-    content: 'Build + verify a signed/notarized mac dmg: `pnpm --filter @nimi/desktop build:mac`, then `codesign --verify --deep --strict`, `spctl -a -vvv`, and `stapler validate` on the .app; boot it and confirm the worker forks + DB writes to ~/Library/Application Support/Nimi/neeme.db'
+    content: 'Build + verify a signed/notarized mac dmg: `pnpm --filter @mikan/desktop build:mac`, then `codesign --verify --deep --strict`, `spctl -a -vvv`, and `stapler validate` on the .app; boot it and confirm the worker forks + DB writes to ~/Library/Application Support/Nimi/neeme.db'
   - id: v13-credential-audit
     status: pending
     content: 'Pre-release credential audit: (1) confirm no .env files committed (`git ls-files | grep "\.env"`); (2) verify CI build job env does NOT include NEEME_ANTHROPIC_KEY or any MAIN_VITE_ secret beyond the expected Google/Logto public OAuth params; (3) spot-check asar: `npx asar list dist/mac*/Nimi.app/Contents/Resources/app.asar | grep -i "env\|key\|secret\|token"` — no .env files, no embedded secrets.'
@@ -386,7 +386,7 @@ Add each of the following:
 
 ```bash
 # macOS — from apps/desktop
-pnpm --filter @nimi/desktop build:mac          # → dist/nimi-<ver>.dmg + .zip
+pnpm --filter @mikan/desktop build:mac          # → dist/nimi-<ver>.dmg + .zip
 codesign --verify --deep --strict --verbose=2 "dist/mac*/Nimi.app"
 spctl -a -vvv -t install "dist/mac*/Nimi.app"  # → "accepted, source=Notarized Developer ID"
 xcrun stapler validate "dist/mac*/Nimi.app"
@@ -530,7 +530,7 @@ Run this before cutting any release:
 
 ```bash
 # Local dry-run against a built feed
-pnpm --filter @nimi/desktop build:mac          # publishes nothing without --publish
+pnpm --filter @mikan/desktop build:mac          # publishes nothing without --publish
 # Real flow: tag vX → release workflow publishes → install →
 #            tag vX+1 → release workflow publishes →
 #            launch vX, confirm: update-available → download → relaunch applies vX+1
@@ -564,7 +564,7 @@ part of the secure-release definition-of-done.
 pnpm audit                                   # clean
 gh api repos/retrospct/nimi/dependabot/alerts # no open alerts
 pnpm typecheck && pnpm build && pnpm lint    # green (contract + preload + main changes)
-pnpm --filter @nimi/desktop build:mac        # signed, notarized dmg/zip
+pnpm --filter @mikan/desktop build:mac        # signed, notarized dmg/zip
 # spctl/codesign/stapler checks pass (see #13)
 # updater: vX → vX+1 applies on relaunch (see #12)
 ```

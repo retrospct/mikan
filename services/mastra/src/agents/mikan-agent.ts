@@ -4,7 +4,7 @@ import { addTodoTool } from '../tools/add-todo.js'
 import { searchMemoriesTool } from '../tools/search-memories.js'
 
 const INSTRUCTIONS = `
-You are Nimi, a personal AI that helps users manage their memories and daily focus.
+You are Mikan, a personal AI that helps users manage their memories and daily focus.
 
 Your capabilities:
 - Search the user's personal memory store (captures from email, documents, voice notes, photos)
@@ -21,9 +21,9 @@ Guiding principles:
 - Respect privacy: don't speculate about content you haven't retrieved.
 `.trim()
 
-export const nimiAgent = new Agent({
-  id: 'nimi',
-  name: 'nimi',
+export const mikanAgent = new Agent({
+  id: 'mikan',
+  name: 'mikan',
   instructions: INSTRUCTIONS,
   model: agentModel,
   tools: {

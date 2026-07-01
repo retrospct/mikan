@@ -20,8 +20,8 @@
  * which is gated on `app.isPackaged`. The header path needs a packaged-artifact
  * tier (Tier 3) to exercise.
  *
- * Prereq:  pnpm --filter @nimi/desktop build   (produces out/main/index.js)
- * Run:     pnpm --filter @nimi/desktop test:e2e
+ * Prereq:  pnpm --filter @mikan/desktop build   (produces out/main/index.js)
+ * Run:     pnpm --filter @mikan/desktop test:e2e
  */
 import {
   test,
@@ -58,7 +58,7 @@ let cleanupUserDataDir = (): void => {}
 const cspViolations: string[] = []
 
 test.beforeAll(async () => {
-  const launched = await launchBuiltApp('nimi-csp-e2e-')
+  const launched = await launchBuiltApp('mikan-csp-e2e-')
   app = launched.app
   page = launched.page
   cleanupUserDataDir = launched.cleanupUserDataDir

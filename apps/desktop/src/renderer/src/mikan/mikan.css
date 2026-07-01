@@ -1,9 +1,9 @@
 /* ============================================================================
-   Nimi — a personal-memory companion.  (mneme · the muse of memory)
+   Mikan — a personal-memory companion.  (mneme · the muse of memory)
    Visual system extends "Mr. Matcha": warm-dark, accent, hairlines,
    Hanken Grotesk + JetBrains Mono. Animation-forward & personable.
 
-   Ported from the Claude Design handoff bundle (nimi.html). The desktop
+   Ported from the Claude Design handoff bundle (mikan.html). The desktop
    surface fills the real Electron window — the prototype's simulated macOS menu
    bar + tray popover are intentionally dropped (the OS provides the real chrome;
    real frameless-window + tray integration is a later step in the main process).
@@ -13,7 +13,7 @@
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  /* accent — driven by the active brand (@nimi/brand). applyBrandTheme writes
+  /* accent — driven by the active brand (@mikan/brand). applyBrandTheme writes
      --brand-primary / --brand-primary-active per mode; the matcha oklch values
      are a pre-mount fallback only. soft/faint/line derive from --accent. */
   --accent: var(--brand-primary, oklch(0.8 0.13 142));
@@ -320,7 +320,7 @@ button.sync-pill:disabled {
   color: var(--ink);
 }
 
-/* ───────────────── Nimi mark — monoline diamond node, dots fill as it thinks ───────────────── */
+/* ───────────────── Mikan mark — monoline diamond node, dots fill as it thinks ───────────────── */
 .nm {
   position: relative;
   display: inline-grid;
@@ -469,7 +469,7 @@ html[data-ambient='off'] .nm[data-state='idle'] .nm-dot.q {
   transform: scale(1);
 }
 
-/* a small inline "Nimi is …" status line */
+/* a small inline "Mikan is …" status line */
 .nm-status {
   display: inline-flex;
   align-items: center;
@@ -890,7 +890,7 @@ html[data-ambient='off'] .draft-badge svg {
   animation-delay: 0.4s;
 }
 
-/* ───────── Nimi note (LLM voice) · completion delight · accomplished state ───────── */
+/* ───────── Mikan note (LLM voice) · completion delight · accomplished state ───────── */
 .nnote {
   display: inline-flex;
   align-items: flex-start;
@@ -1146,7 +1146,7 @@ html[data-ambient='off'] .win-big {
   animation: none;
 }
 
-/* badge on the Nimi mark (tray + header) — things waiting on you */
+/* badge on the Mikan mark (tray + header) — things waiting on you */
 .hdr-mark,
 .tray-peek-mark {
   position: relative;
@@ -1739,7 +1739,7 @@ html[data-ambient='off'] .win-big {
   opacity: 1;
 }
 
-/* "Nimi is reading the file" spinner */
+/* "Mikan is reading the file" spinner */
 .attach-spin {
   position: absolute;
   width: 18px;
@@ -2742,7 +2742,7 @@ html[data-ambient='off'] .vrec-wave span {
   color: var(--accent-ink);
 }
 
-/* Nimi's brief — quiet narration above the action (not a competing card) */
+/* Mikan's brief — quiet narration above the action (not a competing card) */
 .brief {
   display: flex;
   gap: 11px;
@@ -3655,7 +3655,7 @@ html[data-ambient='off'] .mem.fresh::after {
   gap: 9px;
   align-items: stretch;
 }
-/* left: ask Nimi (chat). right: dig deeper (search your life) */
+/* left: ask Mikan (chat). right: dig deeper (search your life) */
 .dt-ask {
   flex: 0 0 auto;
   width: 48px;
@@ -3712,7 +3712,7 @@ html[data-ambient='off'] .mem.fresh::after {
   cursor: default;
 }
 
-/* Ask-Nimi chat sheet */
+/* Ask-Mikan chat sheet */
 .chat-sheet {
   height: 74%;
   max-height: 74%;

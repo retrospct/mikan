@@ -18,7 +18,7 @@
  *     by electron-vite, so packaged releases (no shell env) still find the broker.
  *   e.g. https://sync.getmikan.com
  */
-import type { BrokerTokenResponse } from '@nimi/contract/ipc'
+import type { BrokerTokenResponse } from '@mikan/contract/ipc'
 import * as secrets from '../secrets/store'
 
 const REFRESH_BUFFER_MS = 60_000 // refresh when < 60 s from expiry

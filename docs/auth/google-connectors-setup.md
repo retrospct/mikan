@@ -11,6 +11,7 @@ Gmail + Google Calendar ingest in nimi (ROADMAP #8, ADR 0007).
 ## 2. Enable the required APIs
 
 In **APIs & Services → Library**, enable:
+
 - **Gmail API**
 - **Google Calendar API**
 
@@ -82,10 +83,10 @@ NEEME_EMBEDDER=hash pnpm dev
 
 nimi has two separate, independent OAuth flows:
 
-| Flow | Module | Redirect | Token owner | Purpose |
-|------|--------|----------|-------------|---------|
-| **Logto app login** | `auth/logto.ts` | `neeme://callback` (custom scheme) | `neeme-auth.bin` | Identifies the user to nimi |
-| **Google connectors** | `connectors/google-auth.ts` | `http://127.0.0.1:<port>` (loopback) | `neeme-connectors.bin` | Grants nimi read access to Gmail + Calendar |
+| Flow                  | Module                      | Redirect                             | Token owner                                     | Purpose                                     |
+| --------------------- | --------------------------- | ------------------------------------ | ----------------------------------------------- | ------------------------------------------- |
+| **Logto app login**   | `auth/logto.ts`             | `mikan://callback` (custom scheme)   | shared vault `neeme-secrets.bin` (`auth`)       | Identifies the user to nimi                 |
+| **Google connectors** | `connectors/google-auth.ts` | `http://127.0.0.1:<port>` (loopback) | shared vault `neeme-secrets.bin` (`connectors`) | Grants nimi read access to Gmail + Calendar |
 
 These are independent: connecting Gmail does not require being signed in to Logto,
 and vice versa.
@@ -97,14 +98,14 @@ and vice versa.
 
 **"redirect_uri_mismatch"**
 → You accidentally created a **Web app** client instead of a **Desktop app** client.
-   Web app clients need exact redirect URIs pre-registered. Create a Desktop app client instead.
+Web app clients need exact redirect URIs pre-registered. Create a Desktop app client instead.
 
 **"Google did not return a refresh_token"**
 → The account previously authorized this client and Google is reusing the existing grant.
-   Go to [myaccount.google.com/permissions](https://myaccount.google.com/permissions),
-   revoke nimi's access, then try connecting again. The `prompt=consent` + `access_type=offline`
-   flags in the authorize URL ensure a fresh refresh token is issued.
+Go to [myaccount.google.com/permissions](https://myaccount.google.com/permissions),
+revoke nimi's access, then try connecting again. The `prompt=consent` + `access_type=offline`
+flags in the authorize URL ensure a fresh refresh token is issued.
 
 **Sync not starting**
 → Check that `MAIN_VITE_GOOGLE_CLIENT_ID` and `MAIN_VITE_GOOGLE_CLIENT_SECRET` are set and that
-   `NEEME_CONNECTORS` is not `off`. Check the Electron DevTools console for `[connectors]` logs.
+`NEEME_CONNECTORS` is not `off`. Check the Electron DevTools console for `[connectors]` logs.

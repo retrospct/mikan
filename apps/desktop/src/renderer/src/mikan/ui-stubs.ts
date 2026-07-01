@@ -4,7 +4,7 @@
 // the backend returns as `[]` until the inference layer lands — see
 // docs/INTEGRATION.md), and a voice-transcript stub that gives the recorder
 // something real to land on until on-device transcription exists.
-import type { UncoveredTodo } from '@nimi/contract/views'
+import type { UncoveredTodo } from '@mikan/contract/views'
 
 // suggestion chips on the compose sheet
 export const TASK_SUGGESTIONS = [

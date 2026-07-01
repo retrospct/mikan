@@ -4,32 +4,66 @@
 
 - **`packages/contract/src/views.ts`** — the view model: `Memory`, `Task`, `BacklogItem`, `FedItem`, `MatchHit`.
 - **`packages/contract/src/ipc.ts`** — the `window.api.*` surface (`NimiApi`) + channels.
-- Import from the workspace package: `import type { Task, Memory } from '@nimi/contract/views'`.
+- Import from the workspace package: `import type { Task, Memory } from '@mikan/contract/views'`.
 
 ## "Wire real, plain"
 
 Structural data is **served for real** from the on-device pipeline. **AI-generated fields come back `null`/empty** until the drafting layer lands. The UI degrades gracefully — no brief, no draft, neutral status.
 
-## Swap map: `data.ts` mock → `window.api.*`
+## Task lifecycle (Mikan Flows)
 
-| UI today (mock in `data.ts`) | Call instead                                               | Returns               |
-| ---------------------------- | ---------------------------------------------------------- | --------------------- |
-| `MEMORIES` (archive lookup)  | `await window.api.pipeline.archive()`                      | `Memory[]`            |
-| `FED_RECENT`                 | `await window.api.pipeline.feed()`                         | `FedItem[]`           |
-| `uncoverTodos()` (stub)      | `await window.api.pipeline.uncoverTodos()`                 | `UncoveredTodo[]`     |
-| `matchTask(text)`            | `await window.api.pipeline.search(text)`                   | `MatchHit[]`          |
-| `SEED_TASKS`                 | `await window.api.todos.today()`                           | `Task[]`              |
-| `BACKLOG`                    | `await window.api.todos.backlog()`                         | `BacklogItem[]`       |
-| add a task                   | `window.api.todos.add(title, notes?)`                      | `Task`                |
-| complete / reopen            | `window.api.todos.{complete,reopen}(id)`                   | `Task \| null`        |
-| plan the day                 | `window.api.todos.plan(keep[], day?)`                      | `Task[]`              |
-| pull from backlog            | `window.api.todos.schedule(id, day?)`                      | `Task \| null`        |
-| pin / dismiss context        | `window.api.todos.{pinContext,dismissContext}(id, itemId)` | `Task \| null`        |
-| "search more" context        | `window.api.todos.searchMoreContext(id)`                   | `Task \| null`        |
-| capture a note               | `window.api.pipeline.captureText(text, name?)`             | `{ memory, created }` |
-| capture a file               | `window.api.pipeline.captureFile(bytes, name, mime?)`      | `{ memory, created }` |
+The renderer redesign (`docs/plans/mikan-flows.prd.md`, model in `CONTEXT.md`) introduces a
+canonical six-state lifecycle that **supersedes `TaskStatus`**. It is rolled out **additively**
+so the build stays green — `Task.status` stays; new fields are added alongside:
 
-`MEMORIES` is a `Record<id, Memory>`; `archive()` returns a `Memory[]`. Build the lookup with `Object.fromEntries(archive.map((m) => [m.id, m]))`.
+| Field | Type | Real / AI-gap |
+| --- | --- | --- |
+| `Task.state` | `'listed' \| 'planning' \| 'planned' \| 'working' \| 'awaiting' \| 'done'` | **Real** — derived from `status` at the projector (`toTask`) |
+| `Task.mode` | `'plan' \| 'auto'` | **Real** — defaults to `'plan'` (no stored per-task mode yet) |
+| `Task.steps` | `PlanStep[]` | **AI-gap** — `undefined` until the planner lands |
+| `Task.receipt` | `RunReceipt` | **AI-gap** — present once a run settles |
+
+Projector mapping today (`services/project.ts` → `toTask`): `done → 'done'`,
+drafted (a landed AI draft) `→ 'awaiting'` (the approval gate), otherwise `→ 'listed'`. The
+intermediate `'planning' / 'planned' / 'working'` states become real once the planner +
+run-loop land (slices S4/S5). Group-01 presentation states are **derived in the renderer**,
+not stored: `delegated = mode:auto & working`, `deferred = planning`, `in-progress = working`,
+`done = done`. Decision of record: `docs/adr/0010-task-lifecycle.md`.
+
+## Current renderer wiring
+
+Renderer components import `data` from `apps/desktop/src/renderer/src/nimi/api.ts`.
+In Electron, that seam is the real preload bridge (`window.api`). In a plain Vite
+browser preview, where no preload exists, `api.ts` falls back to `mock.ts` so the UI
+can still be exercised without Electron.
+
+Remaining renderer stubs are not the main data seam. They are feature-specific UI
+affordances: voice transcription (`ui-stubs.nextTranscript()`), the Feed voice quick
+demo (`feedOne('voice')`), task draft CTA fallback (`tryDraft()`), task chat replies,
+and static suggestion chips. Track them in `docs/agent-sync/UX-PUNCHLIST.md`.
+
+## Contract map: renderer call → `window.api.*`
+
+| Renderer need                      | Call                                                       | Returns               |
+| ---------------------------------- | ---------------------------------------------------------- | --------------------- |
+| Archive lookup for `MemoryContext` | `await window.api.pipeline.archive()`                      | `Memory[]`            |
+| Recent feed rows                   | `await window.api.pipeline.feed()`                         | `FedItem[]`           |
+| Inferred to-dos from recent feed   | `await window.api.pipeline.uncoverTodos()`                 | `UncoveredTodo[]`     |
+| Global search                      | `await window.api.pipeline.search(text)`                   | `MatchHit[]`          |
+| Today's tasks                      | `await window.api.todos.today()`                           | `Task[]`              |
+| Backlog                            | `await window.api.todos.backlog()`                         | `BacklogItem[]`       |
+| Add a task                         | `window.api.todos.add(title, notes?)`                      | `Task`                |
+| Complete / reopen                  | `window.api.todos.{complete,reopen}(id)`                   | `Task \| null`        |
+| Plan the day                       | `window.api.todos.plan(keep[], day?)`                      | `Task[]`              |
+| Pull from backlog                  | `window.api.todos.schedule(id, day?)`                      | `Task \| null`        |
+| Pin / dismiss context              | `window.api.todos.{pinContext,dismissContext}(id, itemId)` | `Task \| null`        |
+| "Search more" context              | `window.api.todos.searchMoreContext(id)`                   | `Task \| null`        |
+| Capture a note                     | `window.api.pipeline.captureText(text, name?)`             | `{ memory, created }` |
+| Capture a file                     | `window.api.pipeline.captureFile(bytes, name, mime?)`      | `{ memory, created }` |
+
+`archive()` returns a `Memory[]`. `NimiApp` builds the `MemoryContext` lookup with
+`Object.fromEntries(archive.map((m) => [m.id, m]))`, so task detail screens can resolve
+`Task.ctx` / `Task.pinned` ids without prop-drilling the whole archive.
 
 The mutators return the **updated `Task`**, so drop the result straight back into state instead of refetching `today()`.
 
@@ -41,7 +75,7 @@ The mutators return the **updated `Task`**, so drop the result straight back int
 
 - `Task.brief`, `Task.draft`, `Task.draftNote`, `Task.note`, `Task.noteKind`, and the `draftFor`/`draftType`/`draftIcon`/`useLabel`/`useNote`/`useDone` detail fields — all populated by the `Drafter` seam (`apps/desktop/src/main/pipeline/draft.ts`) and persisted in the `todo_ai` table.
 - `Task.status` advances to `'gathering'` while the draft runs and `'drafted'` once it lands (still `'done'` when the todo is done).
-- `Task.whyMap` — per-context reason strings; read as `task.whyMap?.[id]` in the renderer (replaces the mock `whyOf()` from `data.ts` — a #2 follow-up).
+- `Task.whyMap` — per-context reason strings; read as `task.whyMap?.[id]` in the renderer.
 - `BacklogItem.conf` — populated by the drafter even for backlog items (search-backed context).
 - `pipeline.uncoverTodos()` — `UncoveredTodo[]` inferred from the recent feed by `Drafter.uncover()` (`apps/desktop/src/main/services/uncover-service.ts`). Cached in the `meta` table keyed by an inputs-hash of the feed window, so it re-calls the API only when the feed changes. `[]` without a key. Surfaced in the Feed tab.
 
@@ -62,21 +96,21 @@ and `'extracted'` to `done`; `'pending'` stays as pending until extraction compl
 
 **Env knobs:**
 
-| Var | Effect |
-|-----|--------|
-| `NEEME_EXTRACTOR=off` | Skip OCR/ASR entirely — image/audio stay `pending` forever |
-| `NEEME_EXTRACTOR=portable` | Force tesseract.js/Whisper even on macOS |
-| `NEEME_OCR_LANG` | Tesseract language code (default `eng`) |
-| `NEEME_WHISPER_MODEL` | Whisper model (default `Xenova/whisper-tiny`) |
+| Var                        | Effect                                                     |
+| -------------------------- | ---------------------------------------------------------- |
+| `NEEME_EXTRACTOR=off`      | Skip OCR/ASR entirely — image/audio stay `pending` forever |
+| `NEEME_EXTRACTOR=portable` | Force tesseract.js/Whisper even on macOS                   |
+| `NEEME_OCR_LANG`           | Tesseract language code (default `eng`)                    |
+| `NEEME_WHISPER_MODEL`      | Whisper model (default `Xenova/whisper-tiny`)              |
 
 ## Cloud sync status (`window.api.sync`)
 
 Opt-in Turso sync (ROADMAP #10) exposes a small status surface on `window.api`:
 
-| Call | Returns | Notes |
-|------|---------|-------|
-| `await window.api.sync.getStatus()` | `SyncStatus` | `{ enabled, lastSyncAt, syncing, error }` |
-| `await window.api.sync.now()` | `void` | trigger an immediate sync; no-op when disabled |
+| Call                                | Returns      | Notes                                          |
+| ----------------------------------- | ------------ | ---------------------------------------------- |
+| `await window.api.sync.getStatus()` | `SyncStatus` | `{ enabled, lastSyncAt, syncing, error }`      |
+| `await window.api.sync.now()`       | `void`       | trigger an immediate sync; no-op when disabled |
 
 `SyncStatus.error` is set when sync is refused or fails — notably when `NEEME_SYNC=on`
 but no valid `NEEME_SYNC_ENCRYPTION_KEY` is present (`enabled:false` + an error message).

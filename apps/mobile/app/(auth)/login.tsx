@@ -1,4 +1,4 @@
-import { brand } from '@nimi/brand'
+import { brand } from '@mikan/brand'
 import { useState, type ReactElement } from 'react'
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
@@ -87,7 +87,7 @@ export default function LoginScreen(): ReactElement {
       try {
         await bootstrapDb(tokens.access_token)
       } catch (e) {
-        console.warn('[nimi/db] post-login bootstrap failed:', e)
+        console.warn('[mikan/db] post-login bootstrap failed:', e)
         setError(e instanceof Error ? `Signed in, but sync failed: ${e.message}` : 'Sync failed')
       }
       router.replace('/(tabs)/feed')

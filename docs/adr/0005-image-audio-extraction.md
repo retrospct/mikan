@@ -95,7 +95,7 @@ unlike drafting, this is the case least likely to ever need the cloud fallback.
 ### Build helper (macOS)
 
 ```bash
-pnpm --filter @nimi/desktop build:mac-helper
+pnpm --filter @mikan/desktop build:mac-helper
 # or directly:
 swiftc resources/mac/nimi-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/nimi-extract
 ```

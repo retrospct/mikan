@@ -1,10 +1,13 @@
 {
-  "name": "@nimi/desktop",
+  "name": "@mikan/desktop",
   "version": "1.5.0",
   "description": "nimi — a privacy-first, local-first personal memory desktop app (Electron)",
   "main": "./out/main/index.js",
   "author": "jlee",
   "homepage": "https://github.com/retrospct/nimi",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
@@ -32,8 +35,8 @@
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@huggingface/transformers": "^4.2.0",
     "@libsql/client": "^0.17.4",
-    "@nimi/brand": "workspace:*",
-    "@nimi/contract": "workspace:*",
+    "@mikan/brand": "workspace:*",
+    "@mikan/contract": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "electron-updater": "^6.8.9",
     "ffmpeg-static": "^5.3.0",
@@ -45,21 +48,21 @@
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^2.0.0",
-    "@playwright/test": "^1.61.0",
-    "@tailwindcss/vite": "^4.3.1",
-    "@types/node": "^26.0.0",
+    "@playwright/test": "^1.61.1",
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/node": "^26.0.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.0.3",
     "drizzle-kit": "^0.31.10",
-    "electron": "^42.4.1",
+    "electron": "^42.5.1",
     "electron-builder": "^26.15.3",
-    "electron-vite": "^5.0.0",
+    "electron-vite": "^6.0.0-beta.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "tailwindcss": "^4.3.1",
+    "tailwindcss": "^4.3.2",
     "typescript": "^6.0.3",
-    "vite": "^7.3.5",
+    "vite": "^8.1.1",
     "vitest": "^4.1.9"
   }
 }

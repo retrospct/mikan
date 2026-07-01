@@ -166,7 +166,7 @@ export interface ContextEntry {
   contentType: ContentType | null
   excerpt: string | null
   state: ContextState
-  /** AI-gap: why Nimi kept this beside the task. Populated by the drafter; null otherwise. */
+  /** AI-gap: why Mikan kept this beside the task. Populated by the drafter; null otherwise. */
   why: string | null
 }
 
@@ -206,7 +206,7 @@ export interface PipelineApi {
   archive: () => Promise<Memory[]>
   /** The recent-capture feed (newest first). */
   feed: () => Promise<FedItem[]>
-  /** AI-gap: candidate to-dos Nimi infers from the recent feed. `[]` until the
+  /** AI-gap: candidate to-dos Mikan infers from the recent feed. `[]` until the
    *  drafter is configured (`NEEME_ANTHROPIC_KEY`); cached between feed changes. */
   uncoverTodos: () => Promise<UncoveredTodo[]>
   /** Rank archive memories for a typed task/query (the UI's `matchTask`). */
@@ -257,7 +257,7 @@ export interface ConnectorsApi {
   onChanged: (cb: (state: ConnectorsState) => void) => () => void
 }
 
-export interface NimiApi {
+export interface MikanApi {
   pipeline: PipelineApi
   todos: TodoApi
   auth: AuthApi
@@ -269,7 +269,8 @@ export interface NimiApi {
 
 // --- Auto-updater (ROADMAP #12 — electron-updater via GitHub Releases) ----
 
-export type UpdateStage = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
+export type UpdateStage =
+  'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error' | 'unavailable'
 
 /**
  * Snapshot of the auto-updater state pushed to the renderer via `update:changed`

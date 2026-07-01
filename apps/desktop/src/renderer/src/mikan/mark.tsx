@@ -1,9 +1,9 @@
-// mark.tsx — the Nimi mark: a monoline rounded-diamond node whose dot-grid
+// mark.tsx — the Mikan mark: a monoline rounded-diamond node whose dot-grid
 // fills in as it thinks; the frame rotates subtly while it's working.
 // states: idle | thinking | gathering | drafting | happy | done
 import { useEffect, useState } from 'react'
 import type { CSSProperties, JSX, ReactNode } from 'react'
-import type { NimiMarkState } from './types'
+import type { MikanMarkState } from './types'
 
 const NM_DOTS: Array<[number, number]> = [
   [7.7, 7.7],
@@ -20,21 +20,21 @@ const NM_QUINCUNX = new Set([0, 2, 4, 6, 8])
 // center-out fill order: center, corners (→ quincunx), then edges (→ full grid)
 const NM_FILL_ORDER = [4, 0, 2, 6, 8, 1, 3, 5, 7]
 
-interface NimiMarkProps {
-  state?: NimiMarkState
+interface MikanMarkProps {
+  state?: MikanMarkState
   size?: number
   fill?: number | null
   style?: CSSProperties
   className?: string
 }
 
-export function NimiMark({
+export function MikanMark({
   state = 'idle',
   size = 34,
   fill = null,
   style,
   className = ''
-}: NimiMarkProps): JSX.Element {
+}: MikanMarkProps): JSX.Element {
   const fixed = fill != null
   const onSet = fixed ? new Set(NM_FILL_ORDER.slice(0, Math.max(0, Math.min(9, fill)))) : null
   return (
@@ -81,27 +81,27 @@ export function NimiMark({
   )
 }
 
-// A small "Nimi is thinking…" status line with the mark + animated copy.
-export function NimiSay({
+// A small "Mikan is thinking…" status line with the mark + animated copy.
+export function MikanSay({
   state = 'thinking',
   size = 22,
   children
 }: {
-  state?: NimiMarkState
+  state?: MikanMarkState
   size?: number
   children: ReactNode
 }): JSX.Element {
   return (
     <span className="nm-status">
-      <NimiMark state={state} size={size} />
+      <MikanMark state={state} size={size} />
       <span className="lbl">{children}</span>
     </span>
   )
 }
 
-// A quiet line in Nimi's voice: ready / open question / waiting on content.
+// A quiet line in Mikan's voice: ready / open question / waiting on content.
 // kind: ready | ask | wait | gathered | done
-export function NimiNote({
+export function MikanNote({
   kind = 'gathered',
   children
 }: {
@@ -111,7 +111,7 @@ export function NimiNote({
   const done = kind === 'ready' || kind === 'done'
   return (
     <span className={'nnote nnote-' + kind}>
-      <NimiMark state={done ? 'done' : 'idle'} fill={done ? 9 : null} size={14} />
+      <MikanMark state={done ? 'done' : 'idle'} fill={done ? 9 : null} size={14} />
       <span className="nnote-tx">{children}</span>
     </span>
   )

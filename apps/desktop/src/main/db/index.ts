@@ -310,6 +310,19 @@ async function createChunksLocal(): Promise<void> {
 }
 
 /**
+ * Drop and recreate the chunks table + vector index in neeme-vec.db.
+ *
+ * A plain DELETE FROM chunks leaves the libsql_vector_idx shadow tables in an
+ * inconsistent state, causing subsequent INSERTs to fail. Drop+recreate is the
+ * safe reset for tests and any other caller that needs a clean slate.
+ */
+export async function resetVecChunks(): Promise<void> {
+  await vecClient.execute('DROP INDEX IF EXISTS chunks_vec_idx').catch(() => {})
+  await vecClient.execute('DROP TABLE IF EXISTS chunks').catch(() => {})
+  await createChunksLocal()
+}
+
+/**
  * Add a column to an existing table only if it doesn't already exist.
  *
  * SQLite can't parameterize identifiers, so table/column/type are interpolated.

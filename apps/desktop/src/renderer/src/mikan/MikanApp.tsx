@@ -29,7 +29,7 @@ import { FeedView } from './feed'
 import { NIcon } from './icons'
 import { Dots, MikanMark } from './mark'
 import './mikan.css'
-import { PlanRitual } from './plan'
+import { PlanRitual, PlanReview } from './plan'
 import { SearchOverlay } from './search'
 import { SettingsView } from './settings'
 import { TaskDetail } from './task'
@@ -388,17 +388,24 @@ export default function MikanApp(): JSX.Element {
                   />
                 )}
 
-                {openTask && (
-                  <TaskDetail
-                    task={openTask}
-                    index={openIndex}
-                    onBack={() => setOpenId(null)}
-                    onToggle={toggleTask}
-                    onUpdate={updateTask}
-                    onDig={openTaskSearch}
-                    onSearch={openGlobalSearch}
-                  />
-                )}
+                {openTask &&
+                  (openTask.state === 'planned' ? (
+                    <PlanReview
+                      task={openTask}
+                      onBack={() => setOpenId(null)}
+                      onUpdate={updateTask}
+                    />
+                  ) : (
+                    <TaskDetail
+                      task={openTask}
+                      index={openIndex}
+                      onBack={() => setOpenId(null)}
+                      onToggle={toggleTask}
+                      onUpdate={updateTask}
+                      onDig={openTaskSearch}
+                      onSearch={openGlobalSearch}
+                    />
+                  ))}
 
                 {overlay === 'add' && (
                   <AddSheet

@@ -7,7 +7,19 @@ import { NIcon } from './icons'
 import { kindIcon } from './iconKind'
 import { MikanMark, MikanSay, Dots } from './mark'
 import { data, MemoryContext } from './api'
-import type { Memory, Task } from '@mikan/contract/views'
+import { StepRow } from './growing-card'
+import type { Memory, PlanStep, Task, TaskState } from '@mikan/contract/views'
+
+// tool label (from `PlanStep.tool`, e.g. "CALENDAR"/"MAPS") -> dock/reasoning icon
+const TOOL_ICON: Record<string, string> = {
+  CALENDAR: 'calendar',
+  MAPS: 'globe',
+  MAIL: 'mail',
+  GMAIL: 'mail'
+}
+function toolIcon(tool: string): string {
+  return TOOL_ICON[tool] ?? 'bolt'
+}
 
 // Relevance is real (`Task.relMap` from search); fall back to a neutral fit when
 // a ctx id has no score yet.
@@ -145,7 +157,9 @@ function DraftCard({
   confirm,
   done,
   onComplete,
-  onUse
+  onUse,
+  onEdit,
+  onRedo
 }: {
   draft: string[]
   typeLabel?: string
@@ -157,10 +171,15 @@ function DraftCard({
   done: boolean
   onComplete?: () => void
   onUse?: () => void
+  /** Applies both manual edits (Save) and refine-chip taps — same draft-shape contract. */
+  onEdit?: (next: string[]) => void
+  onRedo?: () => void
 }): JSX.Element {
   const [used, setUsed] = useState(false)
   const [copied, setCopied] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editText, setEditText] = useState(() => draft.join('\n\n'))
 
   if (collapsed) {
     return (
@@ -208,11 +227,41 @@ function DraftCard({
           <NIcon name="chevUp" size={14} />
         </span>
       </button>
-      <div className="draft-paper">
-        {draft.map((p, i) => (
-          <p key={i}>{renderBold(p)}</p>
-        ))}
-      </div>
+      {editing ? (
+        <div className="draft-edit">
+          <textarea
+            className="draft-edit-ta"
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            rows={6}
+            aria-label="Edit draft"
+          />
+          <div className="draft-edit-acts">
+            <button className="btn btn-sm ghost" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-sm primary"
+              onClick={() => {
+                const next = editText
+                  .split(/\n{2,}/)
+                  .map((p) => p.trim())
+                  .filter(Boolean)
+                onEdit && onEdit(next.length ? next : [editText.trim()])
+                setEditing(false)
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="draft-paper">
+          {draft.map((p, i) => (
+            <p key={i}>{renderBold(p)}</p>
+          ))}
+        </div>
+      )}
       {note && (
         <div className="draft-src">
           <NIcon name="layers" size={11} /> {note}
@@ -223,6 +272,7 @@ function DraftCard({
           <NIcon name="arrowRight" size={12} /> {useNote}
         </div>
       )}
+      {!used && !editing && onEdit && <RefineChips draft={draft} onApply={onEdit} />}
       <div className="draft-actions">
         {used ? (
           <div className="draft-confirm">
@@ -250,15 +300,150 @@ function DraftCard({
             >
               <NIcon name="check" size={15} /> {useLabel || 'Use this'}
             </button>
-            <button className="btn btn-sm ghost icon-only" aria-label="Edit">
+            <button
+              className="btn btn-sm ghost icon-only"
+              aria-label="Edit"
+              onClick={() => {
+                setEditText(draft.join('\n\n'))
+                setEditing(true)
+              }}
+            >
               <NIcon name="edit" size={16} />
             </button>
-            <button className="btn btn-sm ghost icon-only" aria-label="Redo">
+            <button
+              className="btn btn-sm ghost icon-only"
+              aria-label="Redo"
+              onClick={() => onRedo && onRedo()}
+            >
               <NIcon name="refresh" size={16} />
             </button>
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+// collapsible "what Mikan did/is doing" — the same step rows the growing card
+// renders (Group 07), reused here at the expanded-workspace zoom level (Group 02)
+function ReasoningCard({ steps }: { steps: PlanStep[] | undefined }): JSX.Element | null {
+  const [open, setOpen] = useState(true)
+  if (!steps || steps.length === 0) return null
+  return (
+    <>
+      <button
+        className={'pool-group-hd as-toggle' + (open ? ' open' : '')}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <NIcon name="layers" size={11} /> Reasoning
+        <span className="ln" />
+        <span className="kept-toggle">
+          {open ? 'Tuck away' : 'Show'} <NIcon name="chevDown" size={13} />
+        </span>
+      </button>
+      {open && (
+        <div className="gcard-steps reasoning-steps">
+          {steps.map((s) => (
+            <StepRow key={s.id} step={s} />
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+// the skills/tools/connectors Mikan used, deduped from the plan's steps
+function Dock({ steps }: { steps: PlanStep[] | undefined }): JSX.Element | null {
+  const tools = Array.from(
+    new Set((steps ?? []).map((s) => s.tool).filter((t): t is string => !!t))
+  )
+  if (tools.length === 0) return null
+  return (
+    <div className="dock">
+      {tools.map((t) => (
+        <span key={t} className="chip-pill">
+          <NIcon name={toolIcon(t)} size={13} /> {t}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+const STEPPER_STAGES = ['Gathered', 'Your voice', 'Drafting', 'Approve & send'] as const
+
+// Maps the six-state lifecycle onto the Group-02 guided-review stepper — a
+// narrower, reply-shaped read of the same lifecycle (CONTEXT.md § "The expanded
+// workspace"). `planned` sits between "gathered" and "your voice" (the plan is
+// ready, waiting on the human's input); `working` is drafting; `awaiting` is the
+// approval gate; `done` completes every stage.
+function stepperIndex(state: TaskState | undefined): number {
+  switch (state) {
+    case 'planned':
+      return 1
+    case 'working':
+      return 2
+    case 'awaiting':
+      return 3
+    case 'done':
+      return 4
+    default:
+      return 0
+  }
+}
+
+function GuidedStepper({ state }: { state: TaskState | undefined }): JSX.Element {
+  const idx = stepperIndex(state)
+  return (
+    <div className="stepper" role="list" aria-label="Task progress">
+      {STEPPER_STAGES.map((label, i) => (
+        <div
+          key={label}
+          role="listitem"
+          className={'stepper-step' + (i < idx ? ' done' : i === idx ? ' active' : '')}
+        >
+          <span className="stepper-dot" aria-hidden="true" />
+          <span className="stepper-lbl">{label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// tap-don't-type refine chips — local text transforms over the draft, same
+// AI-gap fidelity as `tryDraft()` (no backend draft-refine call exists yet)
+function RefineChips({
+  draft,
+  onApply
+}: {
+  draft: string[]
+  onApply: (next: string[]) => void
+}): JSX.Element {
+  const apply = (kind: 'warmer' | 'shorter' | 'photos'): void => {
+    if (kind === 'warmer') {
+      const last = draft[draft.length - 1] ?? ''
+      const warmed = last
+        ? last.replace(/[.!]?\s*$/, '') + " — really can't wait!"
+        : "Really can't wait!"
+      onApply(draft.length ? [...draft.slice(0, -1), warmed] : [warmed])
+      return
+    }
+    if (kind === 'shorter') {
+      onApply(draft.map((p) => p.split(/(?<=[.!?])\s+/)[0] || p))
+      return
+    }
+    onApply([...draft, "I'll attach a couple of photos from last time."])
+  }
+  return (
+    <div className="refine-chips">
+      <button className="refine-chip" onClick={() => apply('warmer')}>
+        <NIcon name="sparkle" size={12} /> Warmer
+      </button>
+      <button className="refine-chip" onClick={() => apply('shorter')}>
+        <NIcon name="chevUp" size={12} /> Shorter
+      </button>
+      <button className="refine-chip" onClick={() => apply('photos')}>
+        <NIcon name="camera" size={12} /> Attach photos
+      </button>
     </div>
   )
 }
@@ -415,47 +600,12 @@ export function TaskDetail({
           </div>
         )}
 
-        {/* the draft, or an invitation to make one */}
-        {draft ? (
-          <DraftCard
-            draft={draft}
-            typeLabel={task.draft ? task.draftType : 'Draft message'}
-            typeIcon={task.draft ? task.draftIcon : 'note'}
-            note={task.draft ? task.draftNote : 'Stitched from what you kept.'}
-            useLabel={task.draft ? task.useLabel : 'Use this'}
-            useNote={task.draft ? task.useNote : 'Saves it to this task, ready to edit and send.'}
-            confirm={task.draft ? task.useDone : 'Saved to this task.'}
-            done={done}
-            onComplete={() => {
-              if (!done) onToggle(task.id)
-            }}
-          />
-        ) : drafting ? (
-          <div className="draft draft-working">
-            <MikanMark state="drafting" size={30} />
-            <div className="draft-working-tx">
-              Taking a crack at it
-              <Dots />
-            </div>
-          </div>
-        ) : (
-          !done && (
-            <button className="draft draft-cta" onClick={tryDraft}>
-              <MikanMark state="idle" size={30} />
-              <div className="draft-cta-main">
-                <div className="draft-cta-t">Want me to take a crack at it?</div>
-                <div className="draft-cta-s">I&apos;ll draft a start from what you kept</div>
-              </div>
-              <span className="draft-cta-go">
-                <NIcon name="arrowRight" size={18} />
-              </span>
-            </button>
-          )
-        )}
+        {!done && <ReasoningCard steps={task.steps} />}
 
         {/* context Mikan gathered */}
         {!done && (
           <>
+            <div className="ovr sources-label">Sources</div>
             {keptCount > 0 ? (
               <>
                 <button
@@ -566,7 +716,54 @@ export function TaskDetail({
                 Pool&apos;s empty — everything&apos;s been swept. Ask me to dig deeper whenever.
               </div>
             )}
+
+            <Dock steps={task.steps} />
           </>
+        )}
+
+        {!done && <GuidedStepper state={task.state} />}
+
+        {/* the draft, or an invitation to make one */}
+        {draft ? (
+          <DraftCard
+            draft={draft}
+            typeLabel={task.draft ? task.draftType : 'Draft message'}
+            typeIcon={task.draft ? task.draftIcon : 'note'}
+            note={task.draft ? task.draftNote : 'Stitched from what you kept.'}
+            useLabel={task.draft ? task.useLabel : 'Use this'}
+            useNote={task.draft ? task.useNote : 'Saves it to this task, ready to edit and send.'}
+            confirm={task.draft ? task.useDone : 'Saved to this task.'}
+            done={done}
+            onComplete={() => {
+              if (!done) onToggle(task.id)
+            }}
+            onEdit={(next) => setDraft(next)}
+            onRedo={() => {
+              setDraft(null)
+              tryDraft()
+            }}
+          />
+        ) : drafting ? (
+          <div className="draft draft-working">
+            <MikanMark state="drafting" size={30} />
+            <div className="draft-working-tx">
+              Taking a crack at it
+              <Dots />
+            </div>
+          </div>
+        ) : (
+          !done && (
+            <button className="draft draft-cta" onClick={tryDraft}>
+              <MikanMark state="idle" size={30} />
+              <div className="draft-cta-main">
+                <div className="draft-cta-t">Want me to take a crack at it?</div>
+                <div className="draft-cta-s">I&apos;ll draft a start from what you kept</div>
+              </div>
+              <span className="draft-cta-go">
+                <NIcon name="arrowRight" size={18} />
+              </span>
+            </button>
+          )
         )}
 
         {done && (
@@ -609,18 +806,30 @@ const CHAT_SUGGESTIONS = [
   'What am I still missing?',
   'Summarize the sources'
 ]
-const CHAT_REPLIES: Record<string, string> = {
-  'Make the draft warmer':
-    'Done — I softened the opener and added a little warmth at the end. Take a look at the draft above.',
-  'What am I still missing?':
-    "Honestly, not much. The only open thing is confirming the date on your side — everything else I've got covered.",
-  'Summarize the sources':
-    "Quick version: Sarah's flexible on the weekend, your calendar's clear Apr 18–20, and the photos are from the last trip. That's the whole picture."
+// Replies stay mocked (no backend chat channel — tracked in UX-PUNCHLIST.md), but
+// carry `cites` so the reply can show the same citation/source parts the main
+// workspace uses, per CONTEXT.md: "Chat is built from the same parts."
+interface ChatReply {
+  text: string
+  cites?: string[]
+}
+const CHAT_REPLIES: Record<string, ChatReply> = {
+  'Make the draft warmer': {
+    text: 'Done — I softened the opener and added a little warmth at the end. Take a look at the draft above.'
+  },
+  'What am I still missing?': {
+    text: "Honestly, not much. The only open thing is confirming the date on your side — everything else I've got covered."
+  },
+  'Summarize the sources': {
+    text: "Quick version: Sarah's flexible on the weekend, your calendar's clear Apr 18–20, and the photos are from the last trip. That's the whole picture.",
+    cites: ['m_cabin_mail', 'm_cabin_cal', 'm_cabin_pic']
+  }
 }
 
 interface ChatMsg {
   from: 'mikan' | 'me'
   text: string
+  cites?: string[]
 }
 
 function TaskChat({
@@ -633,6 +842,7 @@ function TaskChat({
   onClose: () => void
 }): JSX.Element {
   const brand = useBrand()
+  const mem = useContext(MemoryContext)
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     {
       from: 'mikan',
@@ -657,10 +867,10 @@ function TaskChat({
     setText('')
     setThinking(true)
     setTimeout(() => {
-      const reply =
-        CHAT_REPLIES[q] ||
-        'Got it — I pulled what I have on that and tucked it into the sources below. Want me to fold it into the draft?'
-      setMsgs((m) => [...m, { from: 'mikan', text: reply }])
+      const reply: ChatReply = CHAT_REPLIES[q] || {
+        text: 'Got it — I pulled what I have on that and tucked it into the sources below. Want me to fold it into the draft?'
+      }
+      setMsgs((m) => [...m, { from: 'mikan', text: reply.text, cites: reply.cites }])
       setThinking(false)
     }, 1200)
   }
@@ -686,12 +896,26 @@ function TaskChat({
         </div>
 
         <div className="chat-thread" ref={threadRef}>
-          {msgs.map((m, i) => (
-            <div key={i} className={'chat-msg ' + (m.from === 'me' ? 'me' : 'ai')}>
-              {m.from === 'mikan' && <MikanMark state="idle" size={20} />}
-              <div className="chat-bubble">{m.text}</div>
-            </div>
-          ))}
+          {msgs.map((m, i) => {
+            const cites = (m.cites ?? []).filter((id) => task.ctx.includes(id) && mem[id])
+            return (
+              <div key={i} className={'chat-msg ' + (m.from === 'me' ? 'me' : 'ai')}>
+                {m.from === 'mikan' && <MikanMark state="idle" size={20} />}
+                <div className="chat-msg-col">
+                  <div className="chat-bubble">{renderBold(m.text)}</div>
+                  {cites.length > 0 && (
+                    <div className="chat-cites">
+                      {cites.map((id) => (
+                        <span key={id} className="chip-pill" title={mem[id].title}>
+                          <NIcon name={kindIcon(mem[id].kind)} size={12} /> {mem[id].title}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
           {thinking && (
             <div className="chat-msg ai">
               <MikanMark state="thinking" size={20} />

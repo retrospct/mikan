@@ -166,6 +166,13 @@ const SEED_TASKS: Task[] = [
     title: 'Reply to Sarah about the cabin weekend',
     when: 'today',
     status: 'drafted',
+    state: 'awaiting',
+    mode: 'plan',
+    steps: [
+      { id: 's1', title: 'Checked your calendar', run: 'auto', tool: 'CALENDAR', status: 'done' },
+      { id: 's2', title: "Read Sarah's email", run: 'auto', tool: 'MAIL', status: 'done' },
+      { id: 's3', title: 'Drafted the reply', run: 'ask', tool: null, status: 'done' }
+    ],
     done: false,
     noteKind: 'ready',
     note: "Draft's ready — it just needs your yes.",
@@ -190,6 +197,13 @@ const SEED_TASKS: Task[] = [
     title: 'Send Priya the Q3 one-pager',
     when: 'by Friday',
     status: 'gathered',
+    state: 'planned',
+    mode: 'plan',
+    steps: [
+      { id: 's1', title: "Pulled Priya's ask", run: 'auto', tool: 'MAIL', status: 'done' },
+      { id: 's2', title: 'Checked the Q3 draft', run: 'auto', tool: null, status: 'pending' },
+      { id: 's3', title: 'Write the one-pager', run: 'ask', tool: null, status: 'pending' }
+    ],
     done: false,
     noteKind: 'wait',
     note: 'Waiting on the final numbers before I draft.',
@@ -205,6 +219,13 @@ const SEED_TASKS: Task[] = [
     title: "Book mom's birthday dinner",
     when: 'this week',
     status: 'gathered',
+    state: 'working',
+    mode: 'auto',
+    steps: [
+      { id: 's1', title: "Checked mom's favorite spots", run: 'auto', tool: null, status: 'done' },
+      { id: 's2', title: 'Looked up availability', run: 'auto', tool: 'MAPS', status: 'running' },
+      { id: 's3', title: 'Book the table', run: 'ask', tool: null, status: 'pending' }
+    ],
     done: false,
     noteKind: 'ask',
     note: 'One open question — which night works?',

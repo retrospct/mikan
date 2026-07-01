@@ -5114,3 +5114,156 @@ html[data-ambient='off'] .gcard-step.status-running .gcard-step-dot {
 .gcard-save:hover {
   background: var(--accent-soft);
 }
+
+/* ─────────── task workspace: reasoning / sources / dock / stepper / refine (Group 02) ─────────── */
+.sources-label {
+  font-size: 10px;
+  color: var(--ink-3);
+  margin: 4px 2px 6px;
+}
+.reasoning-steps {
+  padding: 0 0 4px;
+  margin-bottom: 4px;
+}
+
+/* a small icon+label pill — shared by the dock and chat citation rows */
+.chip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  max-width: 100%;
+  overflow: hidden;
+}
+.chip-pill svg {
+  flex: 0 0 auto;
+  color: var(--ink-3);
+}
+
+.dock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 2px 2px 16px;
+}
+
+/* guided stepper — gathered → your voice → drafting → approve & send */
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 2px 2px 16px;
+}
+.stepper-step {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.stepper-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hairline-strong);
+  border: 1px solid var(--hairline-strong);
+}
+.stepper-step.done .stepper-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.stepper-step.active .stepper-dot {
+  border-color: var(--accent);
+  background: var(--accent-faint);
+  animation: nm-pulse 1.6s var(--ease-out) infinite;
+}
+html[data-ambient='off'] .stepper-step.active .stepper-dot {
+  animation: none;
+}
+.stepper-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.stepper-step.done .stepper-lbl,
+.stepper-step.active .stepper-lbl {
+  color: var(--ink-2);
+}
+
+/* tap-don't-type refine chips, shown alongside the editable draft */
+.refine-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0 14px 12px;
+}
+.refine-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-faint);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+.refine-chip:hover {
+  background: var(--accent-soft);
+}
+
+/* editable draft */
+.draft-edit {
+  margin: 0 14px;
+}
+.draft-edit-ta {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--hairline);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  font-family: inherit;
+  resize: vertical;
+}
+.draft-edit-ta:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+.draft-edit-acts {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 0 0;
+}
+
+/* Ask Mikan: replies carry the same citation parts as the workspace's Sources */
+.chat-msg-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.chat-cites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chat-cites .chip-pill {
+  font-size: 10.5px;
+  padding: 4px 9px;
+}

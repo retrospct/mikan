@@ -75,7 +75,9 @@ function GrowingOrb({
   )
 }
 
-function StepRow({ step }: { step: PlanStep }): JSX.Element {
+/** Exported so other Group-02 surfaces (the task workspace's reasoning card and
+ * guided stepper) render the same step-row look instead of duplicating it. */
+export function StepRow({ step }: { step: PlanStep }): JSX.Element {
   return (
     <div className={'gcard-step status-' + step.status}>
       <span className="gcard-step-ico">

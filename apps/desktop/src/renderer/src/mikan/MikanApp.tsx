@@ -182,6 +182,40 @@ export default function MikanApp(): JSX.Element {
   const updateTask = (id: string, patch: Partial<Task>): void =>
     setTasks((ts) => ts.map((x) => (x.id === id ? { ...x, ...patch } : x)))
 
+  // Group 03 auto switch: optimistic flip, reconciled against the persisted
+  // value once setMode() resolves (mirrors toggleTask's optimistic pattern).
+  const toggleMode = (id: string): void => {
+    const cur = tasks.find((x) => x.id === id)
+    if (!cur) return
+    const next = cur.mode === 'auto' ? 'plan' : 'auto'
+    const prevMode = cur.mode
+    updateTask(id, { mode: next })
+    void data.todos.setMode(id, next).then((updated) => {
+      if (updated) updateTask(id, { mode: updated.mode })
+      else updateTask(id, { mode: prevMode })
+    })
+  }
+
+  // Group 03 run loop: run()/approve()/pause() each resolve to the settled task
+  // (state + receipt, and possibly a draft once a run lands one) — drop it
+  // straight into state, same pattern as every other todos.* mutator here.
+  // Returns the promise (rather than fire-and-forget) so callers with a local
+  // "busy" flag (e.g. the Today-list card) can clear it deterministically —
+  // an unconfigured drafter resolves to the task UNCHANGED, so a prop-diff-based
+  // reset wouldn't fire in that case.
+  const runTask = (id: string): Promise<void> =>
+    data.todos.run(id).then((updated) => {
+      if (updated) updateTask(id, updated)
+    })
+  const approveTask = (id: string): Promise<void> =>
+    data.todos.approve(id).then((updated) => {
+      if (updated) updateTask(id, updated)
+    })
+  const pauseTask = (id: string): Promise<void> =>
+    data.todos.pause(id).then((updated) => {
+      if (updated) updateTask(id, updated)
+    })
+
   // a new to-do (typed, or accepted from indexing) → today if there's room, else
   // the backlog. The contract has no "add to backlog", so a full day (CAP_REACHED)
   // or an unreachable worker falls back to local backlog state — the to-do is never
@@ -366,6 +400,10 @@ export default function MikanApp(): JSX.Element {
                     lastFed={archive[0]?.when ?? null}
                     onOpen={setOpenId}
                     onToggle={toggleTask}
+                    onToggleMode={toggleMode}
+                    onRun={runTask}
+                    onApprove={approveTask}
+                    onPause={pauseTask}
                     onAdd={() => setOverlay('add')}
                     onPlan={() => setOverlay('plan')}
                     onTomorrow={beginNewDay}

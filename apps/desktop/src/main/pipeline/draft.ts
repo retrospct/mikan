@@ -75,7 +75,9 @@ export interface UncoveredDraft {
 
 export interface Drafter {
   readonly name: string
-  draft(input: DraftInput): Promise<TaskDraft>
+  /** `signal` (Group 03 `pause()`) aborts the in-flight call; the caller treats an
+   *  `AbortError` as cancellation, not a fatal failure. */
+  draft(input: DraftInput, signal?: AbortSignal): Promise<TaskDraft>
   /** Infer candidate to-dos from the recent feed. `[]` when there's nothing
    *  actionable (or the drafter is the null impl). */
   uncover(input: UncoverInput): Promise<UncoveredDraft[]>
@@ -87,7 +89,7 @@ export class NullDrafter implements Drafter {
   readonly name = 'null-drafter'
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  draft(_input: DraftInput): Promise<TaskDraft> {
+  draft(_input: DraftInput, _signal?: AbortSignal): Promise<TaskDraft> {
     return Promise.resolve({
       brief: null,
       draft: null,
@@ -311,8 +313,8 @@ export class CloudDrafter implements Drafter {
     this.model = model
   }
 
-  async draft(input: DraftInput): Promise<TaskDraft> {
-    const text = await this.complete(SYSTEM_PROMPT, buildUserMessage(input))
+  async draft(input: DraftInput, signal?: AbortSignal): Promise<TaskDraft> {
+    const text = await this.complete(SYSTEM_PROMPT, buildUserMessage(input), signal)
     if (text == null) return nullResult()
     try {
       return coerceTaskDraft(JSON.parse(stripJsonFence(text)) as Record<string, unknown>, input)
@@ -335,8 +337,15 @@ export class CloudDrafter implements Drafter {
   }
 
   /** One Anthropic Messages call. Returns the assistant's text, or null on any
-   *  transport/API failure (callers degrade gracefully). */
-  private async complete(system: string, userMessage: string): Promise<string | null> {
+   *  transport/API failure (callers degrade gracefully). An abort via `signal`
+   *  (Group 03 `pause()`) rethrows the `AbortError` instead — that's a
+   *  cancellation, not a failure to swallow, so the caller can revert state
+   *  rather than land on "gathered/nothing to draft". */
+  private async complete(
+    system: string,
+    userMessage: string,
+    signal?: AbortSignal
+  ): Promise<string | null> {
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -350,7 +359,8 @@ export class CloudDrafter implements Drafter {
           max_tokens: 1024,
           system,
           messages: [{ role: 'user', content: userMessage }]
-        })
+        }),
+        signal
       })
 
       if (!res.ok) {
@@ -367,6 +377,7 @@ export class CloudDrafter implements Drafter {
 
       return data.content?.find((b) => b.type === 'text')?.text ?? ''
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') throw err
       console.error('[drafter] unexpected error', err)
       return null
     }

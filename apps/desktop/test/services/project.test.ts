@@ -8,6 +8,7 @@ import {
 } from '../../src/main/services/project'
 import type { Item, Todo, ContextEntry } from '@mikan/contract/ipc'
 import type { TaskDraft } from '../../src/main/pipeline/draft'
+import type { TodoRunRow } from '../../src/main/db/schema'
 
 // ── factories ─────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ function makeTodo(overrides: Partial<Todo> = {}): Todo {
     status: 'open',
     day: new Date().toISOString().slice(0, 10),
     position: 0,
+    mode: 'plan',
     createdAt: new Date(),
     completedAt: null,
     ...overrides
@@ -47,6 +49,20 @@ function makeContext(overrides: Partial<ContextEntry> = {}): ContextEntry {
     excerpt: 'Relevant excerpt',
     state: 'surfaced',
     why: null,
+    ...overrides
+  }
+}
+
+function makeRunRow(overrides: Partial<TodoRunRow> = {}): TodoRunRow {
+  return {
+    todoId: 'todo-1',
+    state: 'awaiting',
+    ranOnDevice: true,
+    durationMs: 1200,
+    touched: JSON.stringify(['item-1']),
+    sentAnything: false,
+    startedAt: new Date(),
+    updatedAt: new Date(),
     ...overrides
   }
 }
@@ -120,10 +136,12 @@ describe('toMemory', () => {
   })
 
   it('uses item.uri as src when present', () => {
-    const m = toMemory(makeItem({
-      connector: 'gmail',
-      uri: 'https://mail.google.com/mail/u/0/#inbox/abc123'
-    }))
+    const m = toMemory(
+      makeItem({
+        connector: 'gmail',
+        uri: 'https://mail.google.com/mail/u/0/#inbox/abc123'
+      })
+    )
     expect(m.src).toBe('https://mail.google.com/mail/u/0/#inbox/abc123')
   })
 
@@ -343,6 +361,53 @@ describe('toTask', () => {
   it('when is "today" for day=null', () => {
     const task = toTask(makeTodo({ day: null }), [])
     expect(task.when).toBe('today')
+  })
+})
+
+// ── toTask — Group 03 auto-mode run row ───────────────────────────────────────
+
+describe('toTask — run row (Group 03)', () => {
+  it('mode passes through from todo.mode', () => {
+    expect(toTask(makeTodo({ mode: 'auto' }), []).mode).toBe('auto')
+    expect(toTask(makeTodo({ mode: 'plan' }), []).mode).toBe('plan')
+  })
+
+  it('falls back to the status-based derivation when no run row exists (regression guard)', () => {
+    const task = toTask(makeTodo(), [], makeDraft({ status: 'drafted' }), undefined)
+    expect(task.state).toBe('awaiting')
+    expect(task.receipt).toBeUndefined()
+  })
+
+  it('a run row at "awaiting" overrides the derived state and populates the receipt', () => {
+    const task = toTask(makeTodo(), [], undefined, makeRunRow({ state: 'awaiting' }))
+    expect(task.state).toBe('awaiting')
+    expect(task.receipt).toEqual({
+      ranOnDevice: true,
+      durationMs: 1200,
+      touched: ['item-1'],
+      sentAnything: false
+    })
+  })
+
+  it('a run row at "done" overrides the derived state', () => {
+    const task = toTask(makeTodo(), [], undefined, makeRunRow({ state: 'done' }))
+    expect(task.state).toBe('done')
+  })
+
+  it('a run row at "listed" (never run, or reverted by pause) defers to the derivation and carries no receipt', () => {
+    const task = toTask(
+      makeTodo({ status: 'done' }),
+      [],
+      undefined,
+      makeRunRow({ state: 'listed' })
+    )
+    expect(task.state).toBe('done') // derivation wins — done comes from todo.status here
+    expect(task.receipt).toBeUndefined()
+  })
+
+  it('touched parses to [] when the run row has no touched JSON', () => {
+    const task = toTask(makeTodo(), [], undefined, makeRunRow({ touched: null }))
+    expect(task.receipt?.touched).toEqual([])
   })
 })
 

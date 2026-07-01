@@ -7,6 +7,7 @@ import {
   type MikanApi,
   type UpdateStatus
 } from '@mikan/contract/ipc'
+import type { TaskMode } from '@mikan/contract/views'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 
 // Custom APIs for renderer — the only data surface the renderer can reach.
@@ -33,7 +34,11 @@ const api: MikanApi = {
     searchMoreContext: (id: string) => ipcRenderer.invoke(IPC.todoContextSearch, id),
     pinContext: (id: string, itemId: string) => ipcRenderer.invoke(IPC.todoContextPin, id, itemId),
     dismissContext: (id: string, itemId: string) =>
-      ipcRenderer.invoke(IPC.todoContextDismiss, id, itemId)
+      ipcRenderer.invoke(IPC.todoContextDismiss, id, itemId),
+    setMode: (id: string, mode: TaskMode) => ipcRenderer.invoke(IPC.todoSetMode, id, mode),
+    run: (id: string) => ipcRenderer.invoke(IPC.todoRun, id),
+    approve: (id: string) => ipcRenderer.invoke(IPC.todoApprove, id),
+    pause: (id: string) => ipcRenderer.invoke(IPC.todoPause, id)
   },
   auth: {
     login: () => ipcRenderer.invoke(IPC.authLogin),

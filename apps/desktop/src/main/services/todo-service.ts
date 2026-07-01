@@ -1,6 +1,15 @@
 import { and, count, desc, eq, isNotNull, isNull } from 'drizzle-orm'
 import { client, db } from '../db'
-import { items, todoContext, todos, type Todo as TodoRow, type TodoContextRow } from '../db/schema'
+import {
+  items,
+  todoContext,
+  todoRun,
+  todos,
+  type NewTodoRunRow,
+  type Todo as TodoRow,
+  type TodoContextRow,
+  type TodoRunRow
+} from '../db/schema'
 import { pipelineService } from './pipeline-service'
 import { draftService, rowToTaskDraft } from './draft-service'
 import { drafter } from '../pipeline/draft'
@@ -13,7 +22,7 @@ import {
   type Todo,
   type TodoStatus
 } from '@mikan/contract/ipc'
-import type { BacklogItem, Task } from '@mikan/contract/views'
+import type { BacklogItem, Task, TaskMode } from '@mikan/contract/views'
 import { toBacklogItem, toTask } from './project'
 
 /**
@@ -40,6 +49,7 @@ function toTodo(row: TodoRow): Todo {
     status: row.status as TodoStatus,
     day: row.day,
     position: row.position,
+    mode: row.mode as TaskMode,
     createdAt: row.createdAt,
     completedAt: row.completedAt
   }
@@ -130,11 +140,47 @@ async function surfaceContext(todo: Todo): Promise<ContextEntry[]> {
   return listContext(todo.id)
 }
 
-/** Project a todo + its context pool + AI row into the UI `Task` shape. */
+async function readRunRow(todoId: string): Promise<TodoRunRow | null> {
+  const [row] = await db.select().from(todoRun).where(eq(todoRun.todoId, todoId)).limit(1)
+  return row ?? null
+}
+
+async function upsertRunRow(
+  todoId: string,
+  patch: Partial<Omit<NewTodoRunRow, 'todoId' | 'updatedAt'>>
+): Promise<void> {
+  const now = new Date()
+  await db
+    .insert(todoRun)
+    .values({ todoId, updatedAt: now, ...patch })
+    .onConflictDoUpdate({ target: todoRun.todoId, set: { updatedAt: now, ...patch } })
+}
+
+// --- Auto-mode run loop (Group 03) -----------------------------------------
+//
+// `run()` is a single-shot, synchronous request-response: it gathers context +
+// drafts (the current unit of AI-gap work — there's no persisted multi-step
+// plan yet, that's S4-scope) and settles at `awaiting` (a draft landed — the
+// approval gate) or `done` (nothing to gate on). `pause()` aborts the in-flight
+// drafter call; `runHandles` lets a concurrent `pause()` call wait for that
+// abort to actually land before reading the reverted task back, since `run()`'s
+// own DB write happens asynchronously after the abort signal fires.
+interface RunHandle {
+  controller: AbortController
+  /** Resolves once run()'s own try/catch/finally has settled the DB. */
+  done: Promise<void>
+}
+const runHandles = new Map<string, RunHandle>()
+
+/** Project a todo + its context pool + AI row + run row into the UI `Task` shape. */
 async function taskOf(todo: Todo): Promise<Task> {
-  const [context, aiRow] = await Promise.all([listContext(todo.id), draftService.read(todo.id)])
+  const [context, aiRow, runRow] = await Promise.all([
+    listContext(todo.id),
+    draftService.read(todo.id),
+    readRunRow(todo.id)
+  ])
   const ai = aiRow ? rowToTaskDraft(aiRow) : undefined
-  return toTask(todo, context, ai)
+  return toTask(todo, context, ai, runRow ?? undefined)
 }
 
 /** Re-read a todo by id and project it (used by mutators that return the task). */
@@ -332,6 +378,93 @@ export const todoService = {
     const todo = toTodo(r)
     const pool = await listContext(id)
     await draftService.regenerate(todo, pool)
+    return taskById(id)
+  },
+
+  /** Set a task's run mode (Group 03 auto switch, toggled on the list). */
+  async setMode(id: string, mode: TaskMode): Promise<Task | null> {
+    const [r] = await db.update(todos).set({ mode }).where(eq(todos.id, id)).returning()
+    return r ? taskOf(toTodo(r)) : null
+  },
+
+  /**
+   * Run the task on device: gather context + draft, synchronously, to
+   * settlement. No-op (returns the task unchanged) when the drafter is
+   * unconfigured — there's nothing to run, and a receipt would falsely imply
+   * something happened. Safe to call repeatedly (draftService.regenerate is
+   * idempotent via its inputsHash skip).
+   */
+  async run(id: string): Promise<Task | null> {
+    const [r] = await db.select().from(todos).where(eq(todos.id, id)).limit(1)
+    if (!r) return null
+    const todo = toTodo(r)
+    if (drafter.name === 'null-drafter') return taskOf(todo)
+
+    const controller = new AbortController()
+    const t0 = Date.now()
+    const done = (async (): Promise<void> => {
+      try {
+        const pool = await surfaceContext(todo)
+        await draftService.regenerate(todo, pool, controller.signal)
+        const aiRow = await draftService.read(id)
+        const produced = aiRow?.status === 'drafted'
+        await upsertRunRow(id, {
+          state: produced ? 'awaiting' : 'done',
+          ranOnDevice: true,
+          durationMs: Date.now() - t0,
+          touched: JSON.stringify(pool.map((c) => c.itemId)),
+          sentAnything: false,
+          startedAt: new Date(t0)
+        })
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          // pause() landed mid-flight — revert to the resting state, no receipt
+          // (nothing salvageable from an aborted draft call).
+          await upsertRunRow(id, {
+            state: 'listed',
+            durationMs: null,
+            touched: null,
+            sentAnything: false
+          })
+        } else {
+          throw err
+        }
+      } finally {
+        runHandles.delete(id)
+      }
+    })()
+    runHandles.set(id, { controller, done })
+
+    await done
+    return taskById(id)
+  },
+
+  /**
+   * Approve an awaiting run: closes the gate, settles the run at `done`. Not
+   * the same as `complete()` (the todo's own done/reopen toggle stays a
+   * separate user action). No-op when there's nothing awaiting.
+   * `receipt.sentAnything` stays false — there's no outbound send integration.
+   */
+  async approve(id: string): Promise<Task | null> {
+    const runRow = await readRunRow(id)
+    if (runRow && runRow.state === 'awaiting') {
+      await upsertRunRow(id, { state: 'done' })
+    }
+    return taskById(id)
+  },
+
+  /**
+   * Cancel an in-flight run (aborts the drafter call). No-op if nothing is
+   * running for this task. Awaits the aborted run's own settlement so the
+   * returned task reflects the reverted `listed` state rather than a stale
+   * mid-flight snapshot.
+   */
+  async pause(id: string): Promise<Task | null> {
+    const handle = runHandles.get(id)
+    if (handle) {
+      handle.controller.abort()
+      await handle.done.catch(() => {})
+    }
     return taskById(id)
   }
 }

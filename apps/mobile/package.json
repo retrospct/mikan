@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~56.0.15",
+    "@expo/metro-runtime": "~57.0.3",
     "@mikan/brand": "workspace:*",
     "@mikan/contract": "workspace:*",
     "@noble/ciphers": "^2.2.0",

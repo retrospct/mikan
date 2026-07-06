@@ -18,7 +18,7 @@
     "@noble/ciphers": "^2.2.0",
     "@tursodatabase/sync-react-native": "^0.6.1",
     "expo": "^56.0.12",
-    "expo-auth-session": "^56.0.14",
+    "expo-auth-session": "^57.0.1",
     "expo-camera": "~56.0.8",
     "expo-constants": "^56.0.18",
     "expo-crypto": "~56.0.4",

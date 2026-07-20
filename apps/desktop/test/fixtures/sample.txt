@@ -1,3 +1,3 @@
-Hello Mikan smoke test — retrieval works.
+Hello smoke test — retrieval works.
 The quick brown fox jumps over the lazy dog.
 Capybara pangolin axolotl: distinctive tokens for vector search.

@@ -12,7 +12,7 @@ import type { MikanApi } from '@mikan/contract/ipc'
 import { makeMockApi } from './mock'
 
 /** The slice of the contract the UI actually drives (auth is handled separately). */
-type DataApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui'>
+type DataApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui' | 'data'>
 
 // `Window.api` types as non-optional `MikanApi` in the renderer (the preload's
 // ambient d.ts flows in via tsconfig.web.json), but at runtime it is undefined

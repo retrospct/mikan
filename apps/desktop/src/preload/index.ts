@@ -89,6 +89,15 @@ const api: MikanApi = {
         ipcRenderer.removeListener(IPC.updateChanged, handler)
       }
     }
+  },
+  data: {
+    onInvalidated: (cb: () => void) => {
+      const handler = (): void => cb()
+      ipcRenderer.on(IPC.dataInvalidated, handler)
+      return (): void => {
+        ipcRenderer.removeListener(IPC.dataInvalidated, handler)
+      }
+    }
   }
 }
 

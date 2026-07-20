@@ -20,7 +20,7 @@ import type {
 } from '@mikan/contract/views'
 import { CAP_REACHED, type CaptureResult, type MikanApi, type Todo } from '@mikan/contract/ipc'
 
-type MockApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui' | 'update'>
+type MockApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui' | 'update' | 'data'>
 
 // The day's focus cap (mirrors MikanApp's CAP) — lets the mock raise CAP_REACHED
 // so the add-todo → backlog fallback is exercisable in the browser.
@@ -592,6 +592,9 @@ export function makeMockApi(): MockApi {
       quitAndInstall: async (): Promise<void> => {},
       checkNow: async (): Promise<void> => {},
       onChanged: () => () => {}
+    },
+    data: {
+      onInvalidated: () => () => {}
     }
   }
 }

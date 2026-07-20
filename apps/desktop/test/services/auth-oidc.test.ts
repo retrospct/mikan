@@ -10,6 +10,7 @@ import { SignJWT, generateKeyPair } from 'jose'
 import {
   buildAuthorizeUrl,
   claimsFromPayload,
+  parseCallbackParams,
   pkceChallenge,
   randomNonce,
   randomState,
@@ -80,6 +81,48 @@ describe('buildAuthorizeUrl', () => {
     expect(new URL(buildAuthorizeUrl(base)).searchParams.has('resource')).toBe(false)
     const withRes = new URL(buildAuthorizeUrl({ ...base, resource: 'https://api.getmikan.com' }))
     expect(withRes.searchParams.get('resource')).toBe('https://api.getmikan.com')
+  })
+
+  it('round-trips a dev loopback redirect URI unmangled', () => {
+    const url = new URL(
+      buildAuthorizeUrl({ ...base, redirectUri: 'http://127.0.0.1:51703/callback' })
+    )
+    expect(url.searchParams.get('redirect_uri')).toBe('http://127.0.0.1:51703/callback')
+  })
+})
+
+// ── callback URL parsing ───────────────────────────────────────────────────
+
+describe('parseCallbackParams', () => {
+  it('extracts code and state from a successful callback', () => {
+    expect(parseCallbackParams('mikan://callback?code=abc123&state=xyz')).toEqual({
+      code: 'abc123',
+      state: 'xyz',
+      error: null,
+      errorDescription: null
+    })
+  })
+
+  it('extracts error and error_description when the user declines', () => {
+    expect(
+      parseCallbackParams(
+        'http://127.0.0.1:51703/callback?error=access_denied&error_description=User+declined&state=xyz'
+      )
+    ).toEqual({
+      code: null,
+      state: 'xyz',
+      error: 'access_denied',
+      errorDescription: 'User declined'
+    })
+  })
+
+  it('returns nulls for a callback with no query params', () => {
+    expect(parseCallbackParams('mikan://callback')).toEqual({
+      code: null,
+      state: null,
+      error: null,
+      errorDescription: null
+    })
   })
 })
 

@@ -190,6 +190,48 @@ describe('clearSyncToken', () => {
   })
 })
 
+describe('refreshSyncToken', () => {
+  it('bypasses a still-fresh cache and always hits the broker', async () => {
+    const stillFresh = freshToken()
+    const refreshed = freshToken({ authToken: 'tok_refreshed' })
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(stillFresh), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(refreshed), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const { getSyncToken, refreshSyncToken } = await import('../../src/main/sync/broker')
+    await getSyncToken(LOGTO_TOKEN) // caches `stillFresh`
+    const result = await refreshSyncToken(LOGTO_TOKEN) // must NOT return the cache as-is
+    expect(result.authToken).toBe('tok_refreshed')
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('updates the cache so a subsequent getSyncToken sees the refreshed token', async () => {
+    const refreshed = freshToken({ authToken: 'tok_refreshed' })
+    vi.stubGlobal('fetch', makeFetch(refreshed))
+    const { getSyncToken, refreshSyncToken } = await import('../../src/main/sync/broker')
+    await refreshSyncToken(LOGTO_TOKEN)
+    const result = await getSyncToken(LOGTO_TOKEN)
+    expect(result?.authToken).toBe('tok_refreshed')
+    expect(global.fetch).toHaveBeenCalledOnce() // getSyncToken hit the cache, not the broker
+  })
+})
+
+describe('getCachedToken', () => {
+  it('returns null before any fetch', async () => {
+    const { getCachedToken } = await import('../../src/main/sync/broker')
+    expect(getCachedToken()).toBeNull()
+  })
+
+  it('returns the last fetched token', async () => {
+    const token = freshToken()
+    vi.stubGlobal('fetch', makeFetch(token))
+    const { getSyncToken, getCachedToken } = await import('../../src/main/sync/broker')
+    await getSyncToken(LOGTO_TOKEN)
+    expect(getCachedToken()).toEqual(token)
+  })
+})
+
 describe('restoreCachedToken', () => {
   it('populates the in-memory cache from a fresh disk token', async () => {
     const token = freshToken()

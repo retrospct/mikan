@@ -105,10 +105,42 @@ function buildClient(): Client {
 
 // Exported so the pipeline can use libSQL's native vector functions
 // (vector32 / vector_distance_cos / libsql_vector_idx) via raw SQL — Drizzle's
-// query builder doesn't model the F32_BLOB type.
-export const client = buildClient()
+// query builder doesn't model the F32_BLOB type. `let`, not `const`: every
+// caller dereferences these at call time, so reconfigureSyncAuth (below) can
+// swap them for a refreshed-token replica client without re-forking the worker.
+export let client = buildClient()
 
-export const db = drizzle(client, { schema })
+export let db = drizzle(client, { schema })
+
+/**
+ * Swap the replica client to a freshly-refreshed Turso token, in place — no
+ * worker re-fork. Pushed from main when the broker proactively refreshes the
+ * sync token ahead of expiry (see src/main/sync/sync-control.ts).
+ *
+ * Returns false when this worker forked without an active replica (sync
+ * disabled, or no broker credentials were available at boot): a token push
+ * can't turn sync on for a bare `file:` client — only prepareSyncEnv() +
+ * restartWorker() can. The local db file already has valid replica metadata
+ * at this point (buildClient() succeeded at boot), so this is a plain
+ * reconnect, not the first-boot backup/recovery dance in buildClient().
+ */
+export async function reconfigureSyncAuth(syncUrl: string, authToken: string): Promise<boolean> {
+  if (!syncConfig.enabled) return false
+  const old = client
+  client = createClient({
+    url: `file:${dbPath}`,
+    syncUrl,
+    authToken,
+    syncInterval: syncConfig.syncIntervalMs / 1000
+  })
+  db = drizzle(client, { schema })
+  try {
+    old.close()
+  } catch {
+    // best-effort — a call in flight on the old handle may already be closing it
+  }
+  return true
+}
 
 /**
  * Local-only SQLite client for the vector index (chunks table).

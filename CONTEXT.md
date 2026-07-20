@@ -60,6 +60,7 @@ The app is a narrow, centered single column over a wallpaper margin.
 
 ## Where to look
 
+- **Linear** — workspace [retrospct](https://linear.app/retrospct), team **retrospct** (`RETRO-…`), project **Mikan**. Full agent ops: [`docs/agents/REFERENCE.md` §3](docs/agents/REFERENCE.md#3-linear-issue-tracker).
 - `docs/adr/` — decisions. Most relevant here: 0002 (auth), 0003 (on-device pipeline),
   0008 (sync broker), 0009 (mobile cloud pipeline), **0010** (UI foundation), **0011** (Ask Mikan).
 - `docs/ROADMAP.md` — punch list + v1.1 wire-up/hardening.

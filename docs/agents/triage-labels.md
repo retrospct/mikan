@@ -1,21 +1,17 @@
-# Triage Labels
+# Triage labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the
-actual label strings used in this repo's tracker (Linear — see `issue-tracker.md`).
+> **Canonical guide:** [`REFERENCE.md` §4](REFERENCE.md#4-triage-labels)
+>
+> Stub for Matt skills that open `docs/agents/triage-labels.md`. Prefer the reference.
 
-We use the canonical names verbatim. Create these as **labels** in Linear (or map them onto
-existing workflow states if you prefer state-based triage — edit the right-hand column if so).
+Not the same as Linear's **Triage inbox** (Team Settings → Triage — see [`REFERENCE.md` §3](REFERENCE.md#3-linear-issue-tracker)).
 
-| Canonical role    | Label in our tracker | Meaning                                  |
-| ----------------- | -------------------- | ---------------------------------------- |
-| `needs-triage`    | `needs-triage`       | Maintainer needs to evaluate this issue  |
-| `needs-info`      | `needs-info`         | Waiting on reporter for more information |
-| `ready-for-agent` | `ready-for-agent`    | Fully specified, ready for an AFK agent  |
-| `ready-for-human` | `ready-for-human`    | Requires human implementation            |
-| `wontfix`         | `wontfix`            | Will not be actioned                     |
+| Canonical role | Label in Linear | Meaning |
+|---|---|---|
+| `needs-triage` | `needs-triage` | Maintainer needs to evaluate |
+| `needs-info` | `needs-info` | Waiting on reporter |
+| `ready-for-agent` | `ready-for-agent` | Fully specified; AFK agent can pick up |
+| `ready-for-human` | `ready-for-human` | Requires human implementation |
+| `wontfix` | `wontfix` | Will not be actioned |
 
-When a skill mentions a role (e.g. "apply the AFK-ready triage label"), apply the
-corresponding label string from this table to the Linear issue.
-
-Edit the right-hand column to match whatever vocabulary you actually use (e.g. point
-`ready-for-agent` at a Linear label like `agent-ready`, or at a workflow state).
+When a skill names a role, apply the matching Linear label string.

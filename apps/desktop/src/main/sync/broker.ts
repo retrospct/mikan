@@ -114,3 +114,23 @@ export async function clearSyncToken(): Promise<void> {
   cached = null
   await clearPersisted()
 }
+
+/**
+ * Force-fetch a fresh token from the broker, bypassing the freshness check.
+ * Used by the proactive refresh scheduler (sync-control.ts), which calls this
+ * deliberately ahead of expiry — waiting for `isTokenFresh()` to go stale
+ * would defeat the point of refreshing early.
+ */
+export async function refreshSyncToken(logtoAccessToken: string): Promise<BrokerTokenResponse> {
+  const token = await fetchFromBroker(logtoAccessToken)
+  cached = token
+  await persist(token).catch((err) =>
+    console.warn('[broker-client] failed to persist sync token:', err)
+  )
+  return token
+}
+
+/** The currently cached token (may be stale), or null if none. */
+export function getCachedToken(): BrokerTokenResponse | null {
+  return cached
+}

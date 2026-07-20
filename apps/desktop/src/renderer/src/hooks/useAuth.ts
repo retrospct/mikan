@@ -3,7 +3,12 @@ import type { AuthState } from '@mikan/contract/ipc'
 import { useEffect, useState } from 'react'
 import { isElectron } from '../mikan/api'
 
-const EMPTY: AuthState = { configured: false, isAuthenticated: false, claims: null }
+const EMPTY: AuthState = {
+  configured: false,
+  isAuthenticated: false,
+  claims: null,
+  lastError: null
+}
 const NOOP = (): void => {}
 
 /**

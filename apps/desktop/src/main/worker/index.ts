@@ -10,9 +10,9 @@
  *   worker → parent : { ready: true }  (once the schema is up)  | { fatal }
  */
 import { IPC } from '@mikan/contract/ipc'
-import type { ConnectorId, SyncStatus } from '@mikan/contract/ipc'
+import type { BrokerTokenResponse, ConnectorId, SyncStatus } from '@mikan/contract/ipc'
 import type { TaskMode } from '@mikan/contract/views'
-import { initDb, syncNow, reimportPreSyncBackup } from '../db'
+import { initDb, reconfigureSyncAuth, syncNow, reimportPreSyncBackup } from '../db'
 import { getSyncConfig } from '../db/sync-config'
 import { pipelineService } from '../services/pipeline-service'
 import { todoService } from '../services/todo-service'
@@ -112,7 +112,20 @@ const handlers: Record<string, Handler> = {
 
   // Sync (ROADMAP #10) — request-response; safe when sync is disabled.
   [IPC.syncGetStatus]: () => ({ ...syncState }) satisfies SyncStatus,
-  [IPC.syncNow]: () => runSyncNow()
+  [IPC.syncNow]: () => runSyncNow(),
+  // Proactive token refresh (main → worker push, see sync/sync-control.ts).
+  // Swaps the replica client in place — no re-fork — and syncs immediately to
+  // prove the new token. Returns false (a no-op) when this worker forked
+  // without an active replica; the caller falls back to logging, not retrying.
+  [IPC.syncSetAuth]: async ([token]) => {
+    const t = token as BrokerTokenResponse
+    const applied = await reconfigureSyncAuth(t.syncUrl, t.authToken)
+    if (applied) {
+      syncState = { ...syncState, error: null }
+      await runSyncNow()
+    }
+    return applied
+  }
 }
 
 interface CallMessage {

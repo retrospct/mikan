@@ -1,6 +1,7 @@
-import { app, utilityProcess, type UtilityProcess } from 'electron';
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { IPC } from '@mikan/contract/ipc'
+import { app, BrowserWindow, utilityProcess, type UtilityProcess } from 'electron'
+import { existsSync } from 'fs'
+import { join } from 'path'
 
 /**
  * Main-side handle to the data utilityProcess. Main stays a thin router: it forks
@@ -75,6 +76,11 @@ export function startWorker(): Promise<void> {
  * We wait for the old process to fully exit (its `exit` handler clears child/ready
  * and rejects in-flight calls) before forking, so the module-level child/ready never
  * gets clobbered by a late exit event from the previous worker.
+ *
+ * The new worker starts with an empty in-memory view (e.g. a freshly-pulled
+ * replica), so once it's ready every renderer is told to refetch — this is the
+ * single choke point every re-fork path (sync toggle, recovery-key import, a
+ * future crash-restart) goes through.
  */
 export async function restartWorker(): Promise<void> {
   const old = child
@@ -84,6 +90,9 @@ export async function restartWorker(): Promise<void> {
     await exited
   }
   await startWorker()
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send(IPC.dataInvalidated)
+  }
 }
 
 /** Forward an IPC call to the worker and await its reply. */

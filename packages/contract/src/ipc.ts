@@ -55,11 +55,18 @@ export const IPC = {
   connectorsGetStats: 'connectors:get-stats',
   // UI shell (tray/menu-bar window — see src/main/window/tray-window.ts)
   traySetBadge: 'tray:set-badge',
+  // Data lifecycle (main → renderer)
+  /** main → renderer push: the data worker was re-forked or reconfigured — the
+   *  renderer's in-memory today/backlog/archive are stale, refetch everything. */
+  dataInvalidated: 'data:invalidated',
   // Sync (cloud offload — ROADMAP #10; see docs/plans/sync-cloud-offload.plan.md)
   /** Query current sync status from the worker (request-response). */
   syncGetStatus: 'sync:get-status',
   /** Trigger an immediate sync; resolves when complete (request-response). */
   syncNow: 'sync:now',
+  /** Internal channel: main pushes a refreshed Turso token to the worker, which
+   *  swaps its replica client in place (no re-fork). See src/main/sync/sync-control.ts. */
+  syncSetAuth: 'sync:set-auth',
   /** Read the user-facing sync settings (pref + key presence + availability). main-owned. */
   syncGetSettings: 'sync:get-settings',
   /** Turn the cloud replica on/off; persists the pref + restarts the worker. main-owned. */
@@ -124,11 +131,24 @@ export interface AuthClaims {
   picture?: string
 }
 
+/**
+ * Why the last interactive sign-in attempt failed. Cleared the moment a new
+ * attempt starts, on success, and on logout — so it only ever reflects the
+ * most recent completed attempt, never a stale one.
+ */
+export interface AuthLoginError {
+  /** 'user_cancelled' — the user declined at the provider (?error=access_denied).
+   *  'login_failed' — anything else (network, exchange failure, timeout). */
+  code: 'user_cancelled' | 'login_failed'
+  message: string
+}
+
 /** Auth state surfaced to the renderer. `configured` is false until Logto env is set. */
 export interface AuthState {
   configured: boolean
   isAuthenticated: boolean
   claims: AuthClaims | null
+  lastError: AuthLoginError | null
 }
 
 export interface AuthApi {
@@ -244,6 +264,17 @@ export interface UiApi {
   setBadge: (count: number) => Promise<void>
 }
 
+/**
+ * Coarse data-lifecycle events. Today this is just the one signal the worker's
+ * re-fork points (sync toggle, recovery-key import, a future crash restart) all
+ * need: "the data you're holding may be stale, refetch it." No payload — the
+ * renderer already knows how to refetch today/backlog/archive from scratch.
+ */
+export interface DataEventsApi {
+  /** Subscribe; returns an unsubscribe fn. Fires with no payload — refetch all queries. */
+  onInvalidated: (cb: () => void) => () => void
+}
+
 // --- Connectors (Google OAuth + ingest — main-process concern) -----------
 
 /** The connector providers currently supported. */
@@ -290,6 +321,7 @@ export interface MikanApi {
   sync: SyncApi
   ui: UiApi
   update: UpdateApi
+  data: DataEventsApi
 }
 
 // --- Auto-updater (ROADMAP #12 — electron-updater via GitHub Releases) ----

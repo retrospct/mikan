@@ -12,6 +12,13 @@ interface ImportMetaEnv {
   readonly MAIN_VITE_LOGTO_APP_ID?: string
   /** Optional API resource indicator the access token should be scoped to. */
   readonly MAIN_VITE_LOGTO_RESOURCE?: string
+  /**
+   * Dev-only loopback port for the OAuth callback (see src/main/auth/dev-loopback.ts).
+   * `mikan://callback` can't route back to a `pnpm dev` instance on macOS, so dev
+   * builds use `http://127.0.0.1:<port>/callback` instead. Must match a redirect
+   * URI registered in the Logto console. Defaults to 51703 when unset.
+   */
+  readonly MAIN_VITE_LOGTO_DEV_PORT?: string
   /** Google Desktop-app OAuth client ID (for Gmail + Calendar connectors). */
   readonly MAIN_VITE_GOOGLE_CLIENT_ID?: string
   /** Google Desktop-app OAuth client secret (non-confidential in a native app). */

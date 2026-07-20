@@ -10,9 +10,11 @@ import { installApplicationMenu } from './menu'
 import * as secrets from './secrets/store'
 import { clearSyncToken, restoreCachedToken } from './sync/broker'
 import {
+  cancelTokenRefresh,
   getRecoveryKey,
   getSyncSettings,
   importRecoveryKey,
+  onLoginEnableSync,
   prepareSyncEnv,
   setSyncEnabled
 } from './sync/sync-control'
@@ -153,14 +155,29 @@ app.whenReady().then(async () => {
   // The onChange callback broadcasts to renderers. Windows don't exist yet when
   // auth.init() fires the initial state-change from a restored session, so the
   // BrowserWindow loop is a safe no-op at that point.
+  //
+  // `bootReady` gates onLoginEnableSync: prepareSyncEnv() below already handles
+  // "already logged in at boot", so only an in-session transition to
+  // authenticated (after startWorker()) should trigger it — not the restored-
+  // session emit that auth.init() itself may fire. `wasAuthenticated` tracks
+  // that transition; a token refresh re-emits with isAuthenticated unchanged,
+  // so it never looks like a fresh login.
+  let bootReady = false
+  let wasAuthenticated = false
   auth.onChange((state, accessToken) => {
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send(IPC.authChanged, { state, accessToken })
     }
-    // When the user logs out, clear the cached broker token so the next login
-    // gets a fresh one. Best-effort — never blocks the auth state update.
+    const justLoggedIn = state.isAuthenticated && !wasAuthenticated
+    wasAuthenticated = state.isAuthenticated
     if (!state.isAuthenticated) {
+      // Logged out: clear the cached broker token (fresh one next login) and
+      // stop the proactive refresh loop. Best-effort — never blocks the auth
+      // state update.
       clearSyncToken().catch((err) => console.warn('[broker-client] clear on logout:', err))
+      cancelTokenRefresh()
+    } else if (bootReady && justLoggedIn) {
+      onLoginEnableSync().catch((err) => console.warn('[sync] enable-after-login failed:', err))
     }
   })
   await auth.init()
@@ -177,6 +194,8 @@ app.whenReady().then(async () => {
   // router: every data channel is forwarded to the worker, which owns the DB +
   // services. Start it (it inits the schema) before handlers can be called.
   await startWorker()
+  bootReady = true
+
   const DATA_CHANNELS: string[] = [
     IPC.pipelineCaptureText,
     IPC.pipelineCaptureFile,

@@ -75,6 +75,25 @@ export function claimsFromPayload(payload: JWTPayload): AuthClaims {
   }
 }
 
+export interface CallbackParams {
+  code: string | null
+  state: string | null
+  /** OAuth error code (e.g. 'access_denied' when the user declines at the provider). */
+  error: string | null
+  errorDescription: string | null
+}
+
+/** Parse the query params off a `<scheme>://callback` or loopback callback URL. */
+export function parseCallbackParams(callbackUrl: string): CallbackParams {
+  const params = new URL(callbackUrl).searchParams
+  return {
+    code: params.get('code'),
+    state: params.get('state'),
+    error: params.get('error'),
+    errorDescription: params.get('error_description')
+  }
+}
+
 export interface VerifyIdTokenOptions {
   /** JWKS resolver (prod: `createRemoteJWKSet(...)`; tests: a local public key). */
   jwks: VerifyKey

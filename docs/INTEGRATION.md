@@ -136,6 +136,42 @@ tooltip, "Syncing…" while a sync runs, or "Synced" (click to sync now) when he
 pill renders nothing when sync is simply off with no error. There's no push event yet, so
 `useSync` polls `getStatus()` on an interval.
 
+Two more moving parts keep the replica and the renderer's view current without a manual
+toggle:
+
+- **Token refresh (`sync:set-auth`, main → worker, internal).** The worker reads
+  `NEEME_SYNC_URL`/`NEEME_SYNC_AUTH_TOKEN` once at fork, so a long-running session would
+  otherwise sync with a stale, expired Turso token. `sync/sync-control.ts` refreshes the
+  token at the broker ~2 min ahead of expiry and pushes it to the worker over this
+  channel; the worker swaps its replica client in place (`reconfigureSyncAuth`,
+  `db/index.ts`) — no re-fork, no interrupted in-flight work. Also fires when a user logs
+  in after boot with the sync pref already on (`onLoginEnableSync`), and returns `false`
+  (a no-op, logged not retried) when the worker forked without an active replica.
+- **`data:invalidated` (main → renderer push, `window.api.data.onInvalidated`).** Every
+  worker re-fork (`restartWorker()` in `worker/client.ts` — the sync toggle, a recovery-key
+  import, and any future crash-restart) leaves the renderer holding a stale in-memory
+  today/backlog/archive. `restartWorker()` broadcasts this event once the new worker is
+  ready; `MikanApp.tsx` subscribes and bumps its `reloadKey` to refetch. No payload — the
+  renderer already knows how to reload everything from scratch.
+
+## Auth status (`window.api.auth`)
+
+Logto OIDC + PKCE (ADR 0002), inert until `MAIN_VITE_LOGTO_ENDPOINT`/`_APP_ID` are set:
+
+| Call                                  | Returns     | Notes                                             |
+| -------------------------------------- | ----------- | -------------------------------------------------- |
+| `await window.api.auth.getState()`     | `AuthState` | `{ configured, isAuthenticated, claims, lastError }` |
+| `await window.api.auth.getAccessToken()` | `string \| undefined` | refreshed if near expiry; `undefined` if signed out |
+| `window.api.auth.login()`              | `void`      | opens the system browser (or, in dev, starts the loopback listener — see `src/main/auth/dev-loopback.ts`) |
+| `window.api.auth.logout()`             | `void`      | clears the session; also clears `lastError`        |
+| `window.api.auth.onChanged(cb)`        | unsubscribe | push on login/refresh/logout/callback-failure       |
+
+`AuthState.lastError: AuthLoginError | null` surfaces why the **most recent** interactive
+sign-in attempt failed — `{ code: 'user_cancelled' | 'login_failed', message }`. It's cleared
+the moment a new attempt starts, on success, and on logout, so it only ever reflects a
+still-relevant failure. The gate (`mikan/auth-gate.tsx`) reads it to show an error and re-enable
+the Sign in button instead of hanging on the optimistic "awaiting" state forever.
+
 ## Process model
 
 `renderer (sandboxed, no node)` → `preload (contextBridge)` → `main (router)` → `utilityProcess (DB + pipeline/todos)`. See `docs/SECURITY.md`.

@@ -149,6 +149,11 @@ export default function MikanApp(): JSX.Element {
     }
   }, [reloadKey])
 
+  // The worker re-forked (sync toggle, recovery-key import) — its in-memory
+  // view is fresh (e.g. a newly-pulled replica) and no longer matches what's
+  // rendered here. Bump reloadKey to re-run the load above.
+  useEffect(() => data.data.onInvalidated(() => setReloadKey((k) => k + 1)), [])
+
   // archive → id-keyed lookup the screens read via MemoryContext (no prop drilling).
   const memMap = useMemo(
     () => Object.fromEntries(archive.map((m) => [m.id, m])) as Record<string, Memory>,
@@ -363,7 +368,9 @@ export default function MikanApp(): JSX.Element {
     return (
       <div className="desk">
         <div className="desk-wall" />
-        <div className="app-frame">{authReady ? <AuthGate onLogin={login} /> : <AuthSplash />}</div>
+        <div className="app-frame">
+          {authReady ? <AuthGate onLogin={login} error={auth.lastError} /> : <AuthSplash />}
+        </div>
       </div>
     )
   }

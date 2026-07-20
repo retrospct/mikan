@@ -10,12 +10,12 @@
  * and does not need an Electron context; the portable tesseract path is what this
  * headless smoke covers.
  *
- * Run: NEEME_USER_DATA=/tmp/nimi-smoke-ocr pnpm --filter @mikan/desktop exec tsx test/smoke/ocr-live.ts
+ * Run: NEEME_USER_DATA=/tmp/mikan-smoke-ocr pnpm --filter @mikan/desktop exec tsx test/smoke/ocr-live.ts
  */
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-process.env.NEEME_USER_DATA ??= '/tmp/nimi-smoke-ocr'
+process.env.NEEME_USER_DATA ??= '/tmp/mikan-smoke-ocr'
 process.env.NEEME_EMBEDDER ??= 'hash'
 process.env.NEEME_EXTRACTOR = 'portable' // force tesseract, not mac-vision
 
@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   const pngRow = await waitForExtracted(client, pngResult.memory.id, 'PNG')
   check("png status === 'extracted'", pngRow.status === 'extracted')
   check('png text non-empty', pngRow.text.trim().length > 0)
-  check('png text contains "Mikan"', pngRow.text.toLowerCase().includes('nimi'))
+  check('png text contains "Nimi"', pngRow.text.toLowerCase().includes('nimi'))
 
   // ── HEIC via heic-convert → tesseract ────────────────────────────────────
   console.log('\nHEIC OCR (heic-convert → tesseract.js)')
@@ -83,7 +83,7 @@ async function main(): Promise<void> {
   const heicRow = await waitForExtracted(client, heicResult.memory.id, 'HEIC')
   check("heic status === 'extracted'", heicRow.status === 'extracted')
   check('heic text non-empty', heicRow.text.trim().length > 0)
-  check('heic text contains "Mikan"', heicRow.text.toLowerCase().includes('nimi'))
+  check('heic text contains "Nimi"', heicRow.text.toLowerCase().includes('nimi'))
 
   // ── Summary ──────────────────────────────────────────────────────────────
   const failed = results.filter((r) => !r.ok)

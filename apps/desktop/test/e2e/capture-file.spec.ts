@@ -57,7 +57,7 @@ async function gotoFeed(): Promise<void> {
 }
 
 test.beforeAll(async () => {
-  const launched = await launchBuiltApp('nimi-e2e-')
+  const launched = await launchBuiltApp('mikan-e2e-')
   app = launched.app
   page = launched.page
   cleanupUserDataDir = launched.cleanupUserDataDir

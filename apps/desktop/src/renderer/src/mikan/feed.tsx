@@ -73,7 +73,7 @@ export function FeedView({
   onSettings: () => void
 }): JSX.Element {
   const [fed, setFed] = useState<FedItem[]>([])
-  // AI-gap: to-dos Nimi infers from the recent feed. `[]` until the drafter is
+  // AI-gap: to-dos Mikan infers from the recent feed. `[]` until the drafter is
   // configured; the section below hides itself when empty.
   const [unc, setUnc] = useState<UncoveredTodo[]>([])
   const [added, setAdded] = useState<Set<string>>(new Set())

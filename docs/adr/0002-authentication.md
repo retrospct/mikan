@@ -123,3 +123,24 @@ Electron system-browser PKCE flow** before committing.
 - Logto (cloud + OSS, OIDC, native) — https://blog.logto.io/top-7-auth-providers-2026 · https://logto.io
 - Kinde (consumer apps comparison) — https://www.kinde.com/comparisons/authentication-providers-for-consumer-software-apps-compared-top-10-options-in-2026/
 - OAuth for native apps (PKCE, system browser, loopback) — RFC 8252
+
+## Amendment (2026-07-02) — dev-mode loopback redirect
+
+The provider decision above landed on **Logto Cloud**; the flow is implemented in
+`apps/desktop/src/main/auth/logto.ts` per "the three layers" section, with the packaged app
+using the `mikan://callback` custom-scheme redirect.
+
+That redirect doesn't work in `pnpm dev` on macOS: Launch Services resolves `mikan://` to
+whatever app last registered the scheme, which in dev is the bare `node_modules/electron/dist/
+Electron.app` binary — not the running dev process — so the browser hands the callback to a
+fresh, empty Electron window instead of the app in `pnpm dev`. Packaged builds are unaffected
+(electron-builder registers the scheme against the signed bundle's Info.plist, so Launch
+Services resolves it correctly).
+
+Fix: dev builds use the other RFC 8252-sanctioned redirect for native apps — a loopback URI,
+`http://127.0.0.1:51703/callback` (port overridable via `MAIN_VITE_LOGTO_DEV_PORT`) — served by
+a one-shot local HTTP listener the dev process is already running (`src/main/auth/
+dev-loopback.ts`). `startLogin()` branches on `app.isPackaged` to pick the redirect; everything
+downstream (PKCE, state/nonce, token exchange) is unchanged. Requires registering
+`http://127.0.0.1:51703/callback` as an additional Redirect URI in the Logto console, alongside
+`mikan://callback`.

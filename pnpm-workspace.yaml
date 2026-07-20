@@ -7,18 +7,16 @@ packages:
 # setting; lives here rather than .npmrc so npm/npx don't warn on an unknown key.
 shamefullyHoist: true
 
-# Only run install scripts for packages that actually need them.
-onlyBuiltDependencies:
-  - better-sqlite3
-  - electron
-  - electron-winstaller
-  - esbuild
-  - ffmpeg-static
-  - onnxruntime-node
-  - protobufjs
-  - sharp
-  - tesseract.js
-
 # Force a patched esbuild everywhere to avoid bundler incompatibilities.
 overrides:
   esbuild@<0.25.0: '>=0.25.0'
+allowBuilds:
+  better-sqlite3: true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  ffmpeg-static: true
+  onnxruntime-node: true
+  protobufjs: true
+  sharp: true
+  tesseract.js: true

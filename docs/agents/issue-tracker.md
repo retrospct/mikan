@@ -1,18 +1,50 @@
+> **Also see:** [`REFERENCE.md`](REFERENCE.md) — recommended Matt flow + full Linear setup (Triage inbox, labels, checklist).
+
 # Issue tracker: Linear
 
-> **Canonical guide:** [`REFERENCE.md` §3](REFERENCE.md#3-linear-issue-tracker)
->
-> This stub exists so Matt Pocock skills that open `docs/agents/issue-tracker.md` still resolve.
-> Prefer the reference for humans.
+Issues and PRDs for this repo live in **Linear**, not in GitHub Issues. Skills that
+create, read, or move work items (`to-issues`, `triage`, `to-prd`, `qa`) operate against
+Linear.
 
-| | Value |
-|---|---|
-| **Workspace** | [retrospct](https://linear.app/retrospct) |
-| **Team** | **retrospct** (`RETRO-…`) |
-| **Project** | **Mikan** |
+**Default target:** the **`retrospct`** team (key `RETRO` → issue ids like `RETRO-123`),
+**`Mikan`** project (<https://linear.app/retrospct/project/mikan-722e3699ff26>). Skills should
+create work items there without re-asking unless the user says otherwise.
 
-Issues live in Linear (Cursor MCP `plugin-linear-linear`). External GitHub PRs are **not** a triage surface.
+## How to operate Linear
 
-**Setup:** enable Team Settings → Triage on the **retrospct** team for inbound/external work; create labels in [`REFERENCE.md` §4](REFERENCE.md#4-triage-labels); authorize Linear MCP once.
+Use the **Linear MCP** (the `productivity:linear` integration). Its tools are namespaced
+`mcp__...__*` and are loaded on demand via `ToolSearch` (query `linear`). The first call in
+a session may require an interactive auth/`authenticate` step — if a tool returns an auth
+error, surface it and ask the user to authorize rather than silently retrying. In a
+headless/cron run where interactive auth isn't possible, report that Linear is unreachable
+instead of falling back to another tracker.
 
-**Ops:** `save_issue` (team `retrospct`, project Mikan), `get_issue`, `list_issues`, `save_comment`, labels/status tools. Identifiers like `RETRO-123`.
+Typical operations (use the MCP tool whose schema matches; don't guess channel names):
+
+- **Create an issue**: create a Linear issue with a title and a markdown description in the
+  default team/project above (`retrospct` / `Mikan`) unless the skill knows a better target.
+- **Read an issue**: fetch the issue by its identifier (e.g. `RETRO-123`) including comments,
+  labels, and current workflow state.
+- **List / search issues**: list open issues filtered by label or workflow state.
+- **Comment**: add a comment to the issue.
+- **Apply / remove labels**: edit the issue's labels (see `triage-labels.md` for the
+  canonical role → Linear label mapping).
+- **Move state / close**: move the issue through its workflow state; "close" means moving it
+  to a Done/Canceled state, not deleting it.
+
+Identifiers are Linear keys like `RETRO-123`, not bare integers — when a skill references a
+ticket number, resolve it as a Linear identifier.
+
+## Pull requests as a triage surface
+
+**PRs as a request surface: no.** External GitHub PRs are not pulled into the Linear triage
+queue. `/triage` operates only on Linear issues. (Code review of PRs is a separate workflow —
+this flag is only about whether PRs are treated as incoming *requests*.)
+
+## When a skill says "publish to the issue tracker"
+
+Create a Linear issue (see above).
+
+## When a skill says "fetch the relevant ticket"
+
+Fetch the Linear issue by its identifier, including comments.

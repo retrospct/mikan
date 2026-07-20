@@ -12,10 +12,11 @@ wired; you just need the credentials below.
 
 1. Sign in at [https://turso.tech](https://turso.tech).
 2. Create (or use) an **organization**. Note the **org slug** (shown in the URL or
-  in `turso org list`).
+   in `turso org list`).
 3. Choose a **plan**:
-  - **Free** — 100 databases/org cap; fine for a closed cohort of < ~80 devices.
-  - **Developer ($4.99/mo)** — unlimited databases; use this the moment you might
+
+- **Free** — 100 databases/org cap; fine for a closed cohort of < ~80 devices.
+- **Developer ($4.99/mo)** — unlimited databases; use this the moment you might
   exceed ~80 user-DBs.
 
 ### 2. A group in a region near testers
@@ -104,16 +105,20 @@ pnpm dev
 
 1. **Device A** — launch with the env vars above, capture a note.
 2. Check the Turso console to confirm a row appeared in the primary:
-  ```sh
-   turso db shell nimi-test "SELECT id, source_name FROM items LIMIT 5;"
-  ```
+
+```sh
+ turso db shell nimi-test "SELECT id, source_name FROM items LIMIT 5;"
+```
+
 3. **Device B** — launch with the **same** `NEEME_SYNC_URL` + `NEEME_SYNC_AUTH_TOKEN`
-  - the **same** `NEEME_SYNC_ENCRYPTION_KEY` (required, and it must match Device A or the
-   pulled rows cannot be decrypted). On boot the worker calls
-   `syncNow()` which pulls from the primary. The note from Device A should appear in
-   the archive feed.
+
+- the **same** `NEEME_SYNC_ENCRYPTION_KEY` (required, and it must match Device A or the
+  pulled rows cannot be decrypted). On boot the worker calls
+  `syncNow()` which pulls from the primary. The note from Device A should appear in
+  the archive feed.
+
 4. Confirm Device B can search semantically — `reindexAll()` runs via `syncEmbedder()`
-  at startup and rebuilds the local `chunks` vector index from the synced `items`.
+   at startup and rebuilds the local `chunks` vector index from the synced `items`.
 
 ---
 
@@ -142,14 +147,14 @@ mode:
 
 ### Broker credentials to provision (your side)
 
-| Secret | Where to get it |
-|--------|-----------------|
+| Secret                 | Where to get it                                                |
+| ---------------------- | -------------------------------------------------------------- |
 | `TURSO_PLATFORM_TOKEN` | Turso console → Settings → API Tokens → create org-admin token |
-| `TURSO_ORG` | Your org slug (visible in the Turso URL or `turso org list`) |
-| `TURSO_GROUP` | Group you created in step 2 above (e.g. `nimi-primary`) |
-| `LOGTO_JWKS_URL` | `https://<your-logto-domain>/oidc/jwks` |
-| `LOGTO_ISSUER` | `https://<your-logto-domain>/oidc` |
-| `LOGTO_AUDIENCE` | Your Logto API resource indicator |
+| `TURSO_ORG`            | Your org slug (visible in the Turso URL or `turso org list`)   |
+| `TURSO_GROUP`          | Group you created in step 2 above (e.g. `nimi-primary`)        |
+| `LOGTO_JWKS_URL`       | `https://<your-logto-domain>/oidc/jwks`                        |
+| `LOGTO_ISSUER`         | `https://<your-logto-domain>/oidc`                             |
+| `LOGTO_AUDIENCE`       | Your Logto API resource indicator                              |
 
 ### Deploy the broker
 
@@ -184,10 +189,13 @@ pnpm dev
 > in broker mode — main fetches them from the broker at boot and injects them before
 > forking the worker.
 
-### Future items (not broker-specific)
+### Remaining items (not broker-specific)
 
-1. **safeStorage key custody** — derive + seal `NEEME_SYNC_ENCRYPTION_KEY` in Electron
-   `safeStorage` instead of env. See `todo: at-rest-encryption` in the plan.
+1. **Recovery-key backup UX** — desktop now stores the per-device encryption key in
+   the shared `safeStorage` vault (`neeme-secrets.bin`, `syncKey` slice), and Settings
+   can reveal/import it or render it as a QR code. The remaining product gap is a
+   first-enable backup prompt so users do not lose synced ciphertext when a device is
+   lost before export.
 2. **Account deletion / teardown** — delete the user's Turso DB via the Platform API
    when the account is deleted (ADR 0008 action item #4).
 3. **CSP** — add the broker + Logto/JWKS origins to `apps/desktop/src/renderer/index.html`

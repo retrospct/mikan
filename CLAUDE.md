@@ -1,4 +1,4 @@
-# nimi — agent guide (monorepo root)
+# mikan — agent guide (monorepo root)
 
 Mikan is an all-TypeScript, **on-device-first** personal-memory desktop app (Electron):
 capture multi-modal input → surface it (semantic search + a daily focus list) to get
@@ -10,7 +10,7 @@ spine; per-package guides add lane-specific detail.
 ## Repo layout
 
 ```
-nimi/
+mikan/
   apps/
     desktop/        ← the Electron app (main · preload · renderer). Has its own CLAUDE.md.
   packages/

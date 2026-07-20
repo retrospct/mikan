@@ -3,7 +3,7 @@ todos:
   # --- #11 Vuln cleanup + CSP tighten (lane: back, size S, P1 quick) ---
   - id: v11-audit-baseline
     status: pending
-    content: 'Capture the vuln baseline: `pnpm audit` (currently clean) + `gh api repos/retrospct/mikan/dependabot/alerts` (3 alerts: drizzle-orm GHSA-gpj5-g38j-94v9 x2, esbuild GHSA-67mh-4wv8-2f99 — all already "fixed"); record any newly-open ones and confirm the lockfile pins patched versions (drizzle-orm >=0.45.2, esbuild >=0.25 via vite 7)'
+    content: 'Capture the vuln baseline: `pnpm audit` (currently clean) + `gh api repos/retrospct/nimi/dependabot/alerts` (3 alerts: drizzle-orm GHSA-gpj5-g38j-94v9 x2, esbuild GHSA-67mh-4wv8-2f99 — all already "fixed"); record any newly-open ones and confirm the lockfile pins patched versions (drizzle-orm >=0.45.2, esbuild >=0.25 via vite 7)'
   - id: v11-electron-cve
     status: pending
     content: 'Check Electron itself for advisories at the pinned 42.x (`pnpm why electron`, electronjs.org/releases + GH advisories); bump within the supported major if a Chromium/V8 CVE applies, then re-run `pnpm build` + `pnpm dev` smoke'
@@ -52,10 +52,10 @@ todos:
     content: 'Audit native modules for packaging: onnxruntime-node, @libsql/client, heic-convert, ffmpeg-static — confirm `electron-builder install-app-deps` (postinstall) rebuilds them and asarUnpack covers everything dlopen-ed at runtime (resources/** + ffmpeg-static already listed); add onnxruntime/libsql unpack entries if the signed app fails to load them'
   - id: v13-mac-build-verify
     status: pending
-    content: 'Build + verify a signed/notarized mac dmg: `pnpm --filter @mikan/desktop build:mac`, then `codesign --verify --deep --strict`, `spctl -a -vvv`, and `stapler validate` on the .app; boot it and confirm the worker forks + DB writes to ~/Library/Application Support/Mikan/neeme.db'
+    content: 'Build + verify a signed/notarized mac dmg: `pnpm --filter @mikan/desktop build:mac`, then `codesign --verify --deep --strict`, `spctl -a -vvv`, and `stapler validate` on the .app; boot it and confirm the worker forks + DB writes to ~/Library/Application Support/Nimi/neeme.db'
   - id: v13-credential-audit
     status: pending
-    content: 'Pre-release credential audit: (1) confirm no .env files committed (`git ls-files | grep "\.env"`); (2) verify CI build job env does NOT include NEEME_ANTHROPIC_KEY or any MAIN_VITE_ secret beyond the expected Google/Logto public OAuth params; (3) spot-check asar: `npx asar list dist/mac*/Mikan.app/Contents/Resources/app.asar | grep -i "env\|key\|secret\|token"` — no .env files, no embedded secrets.'
+    content: 'Pre-release credential audit: (1) confirm no .env files committed (`git ls-files | grep "\.env"`); (2) verify CI build job env does NOT include NEEME_ANTHROPIC_KEY or any MAIN_VITE_ secret beyond the expected Google/Logto public OAuth params; (3) spot-check asar: `npx asar list dist/mac*/Nimi.app/Contents/Resources/app.asar | grep -i "env\|key\|secret\|token"` — no .env files, no embedded secrets.'
   - id: v13-win-canary
     status: pending
     content: 'DEFERRED (post-alpha): Windows is out of scope for the friends-and-family alpha. When revisited, recommended path is Azure Trusted Signing (~$120/yr, immediate SmartScreen clearance, no hardware token required). Workaround for any Windows alpha tester: run the unsigned .exe → SmartScreen prompt → "More info" → "Run anyway". Document in AGENTS.md Tier 3 if needed.'
@@ -154,7 +154,7 @@ deferred `v13-win-canary` todo.
 - **Vulns are effectively already remediated.** `pnpm audit` at repo root returns **"No known
   vulnerabilities found."** The three dependabot alerts the [`INBOX`](../agent-sync/INBOX.md)
   flags (`@back … clear the 3 dependabot vulns (#1, #11)`) are, per
-  `gh api repos/retrospct/mikan/dependabot/alerts`:
+  `gh api repos/retrospct/nimi/dependabot/alerts`:
   - `drizzle-orm` **GHSA-gpj5-g38j-94v9** (high, `< 0.45.2`) — alerts #1 and #3 — **state: fixed**
   - `esbuild` **GHSA-67mh-4wv8-2f99** (medium, `<= 0.24.2`) — alert #2 — **state: fixed**
 
@@ -170,7 +170,7 @@ deferred `v13-win-canary` todo.
 
   Loose spots: `style-src 'unsafe-inline'` + the two Google Fonts origins (the UI pulls Hanken
   Grotesk + JetBrains Mono from `fonts.googleapis.com`/`fonts.gstatic.com`, referenced in
-  [`mikan.css`](../../apps/desktop/src/renderer/src/mikan/mikan.css) `--sans`/`--mono`), and
+  [`nimi.css`](../../apps/desktop/src/renderer/src/nimi/nimi.css) `--sans`/`--mono`), and
   `connect-src http://localhost:8000` (the legacy HTTP API base in
   [`packages/contract/src/api/runtime.ts`](../../packages/contract/src/api/runtime.ts), default
   `VITE_NEEME_API_URL`). There is **no runtime response-header CSP** — the meta tag is the only
@@ -198,7 +198,7 @@ deferred `v13-win-canary` todo.
   `default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'`.
 - **Renderer entry** (`apps/desktop/src/renderer/src/main.tsx`) — `import '@fontsource/hanken-grotesk'`
   and `'@fontsource/jetbrains-mono'`; add `@fontsource/*` to `apps/desktop/package.json`
-  `dependencies`. `mikan.css` `--sans`/`--mono` stacks already name the families, so no CSS rule
+  `dependencies`. `nimi.css` `--sans`/`--mono` stacks already name the families, so no CSS rule
   change beyond confirming the local faces register.
 - [`apps/desktop/src/main/index.ts`](../../apps/desktop/src/main/index.ts) — inside
   `app.whenReady()`, add a `session.defaultSession.webRequest.onHeadersReceived` handler that
@@ -228,7 +228,7 @@ PR, and let `.github/dependabot.yml` carry it forward.
 ### Current state
 
 - [`apps/desktop/electron-builder.yml`](../../apps/desktop/electron-builder.yml) exists and is
-  mostly wired: `appId: dev.retro.mikan`, `productName: Mikan`, `directories.buildResources: build`,
+  mostly wired: `appId: cool.jlee.nimi`, `productName: Nimi`, `directories.buildResources: build`,
   mac/win/linux/dmg/nsis/appImage targets, `asarUnpack` for `resources/**` + `ffmpeg-static`,
   `npmRebuild: false`, and `postinstall: electron-builder install-app-deps` in package.json.
 - **Signing/notarization is OFF.** `mac.notarize: false` (line 30), no `Developer ID`
@@ -387,10 +387,10 @@ Add each of the following:
 ```bash
 # macOS — from apps/desktop
 pnpm --filter @mikan/desktop build:mac          # → dist/nimi-<ver>.dmg + .zip
-codesign --verify --deep --strict --verbose=2 "dist/mac*/Mikan.app"
-spctl -a -vvv -t install "dist/mac*/Mikan.app"  # → "accepted, source=Notarized Developer ID"
-xcrun stapler validate "dist/mac*/Mikan.app"
-# boot it: worker forks, DB lands at ~/Library/Application Support/Mikan/neeme.db
+codesign --verify --deep --strict --verbose=2 "dist/mac*/Nimi.app"
+spctl -a -vvv -t install "dist/mac*/Nimi.app"  # → "accepted, source=Notarized Developer ID"
+xcrun stapler validate "dist/mac*/Nimi.app"
+# boot it: worker forks, DB lands at ~/Library/Application Support/Nimi/neeme.db
 ```
 
 ---
@@ -461,7 +461,7 @@ Run this before cutting any release:
   belong in the build job environment.
 - [ ] **Spot-check the asar manifest** after building:
   ```bash
-  npx asar list dist/mac*/Mikan.app/Contents/Resources/app.asar \
+  npx asar list dist/mac*/Nimi.app/Contents/Resources/app.asar \
     | grep -iE '\.env|key|secret|token'
   # Expected: no .env files; no credential-adjacent filenames
   ```
@@ -517,7 +517,7 @@ Run this before cutting any release:
 - [`packages/contract/src/ipc.ts`](../../packages/contract/src/ipc.ts) — add `update:get-state`,
   `update:check`, `update:restart`, and an `update:changed` main→renderer event (mirroring the
   `auth:*`/`connectors:*` pattern, lines 34-51), plus an `UpdateApi` interface and `update` field
-  on `MikanApi`.
+  on `NimiApi`.
 - [`src/preload/index.ts`](../../apps/desktop/src/preload/index.ts) — add the `update` bridge
   (same `ipcRenderer.invoke` + `onChanged` shape as `connectors`, lines 45-55).
 - **Renderer** — a subtle "Update ready — restart" affordance in the tray window header
@@ -562,7 +562,7 @@ part of the secure-release definition-of-done.
 
 ```bash
 pnpm audit                                   # clean
-gh api repos/retrospct/mikan/dependabot/alerts # no open alerts
+gh api repos/retrospct/nimi/dependabot/alerts # no open alerts
 pnpm typecheck && pnpm build && pnpm lint    # green (contract + preload + main changes)
 pnpm --filter @mikan/desktop build:mac        # signed, notarized dmg/zip
 # spctl/codesign/stapler checks pass (see #13)

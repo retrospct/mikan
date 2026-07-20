@@ -83,11 +83,11 @@ tool (items 2–4) before GA.
   pending:** confirm the assistant should share the product name vs. carry its own.
 - **Mobile app identity wiring.** `apps/mobile` imports `@mikan/brand` (login screen
   reads `brand.productName`/`brand.tagline`), but the Expo app identity is **not yet
-  wired to it**: `app.json` is still static (`name: Mikan`, `scheme: nimi`,
-  `bundleIdentifier cool.jlee.nimi`). When mobile graduates, align `app.json` (or a
+  wired to it**: `app.json` is still static (`name: Mikan`, `scheme: mikan`,
+  `bundleIdentifier cool.jlee.mikan`). When mobile graduates, align `app.json` (or a
   dynamic `app.config.js`) with `identity.mikan` — name/scheme `mikan`, bundleId
   `dev.retro.mikan` — mirroring the desktop wiring.
-- **Logto Account API stays off (revisit later).** nimi doesn't use Logto's Account
+- **Logto Account API stays off (revisit later).** mikan doesn't use Logto's Account
   Center / Account API: sign-out is local, identity comes from the verified id_token
   claims, and Google connector tokens are managed by the app's own OAuth
   (`src/main/connectors/google-auth.ts`), not Logto's Secret Vault. Revisit only if

@@ -25,7 +25,7 @@ const PRODUCT_NAME = brandIdentity.mikan.productName
 // hard-coded one. BrandProvider keeps document.title in sync thereafter.
 function brandHtmlPlugin(): Plugin {
   return {
-    name: 'nimi-brand-html',
+    name: 'mikan-brand-html',
     transformIndexHtml(html) {
       return html.replace(/<title>[^<]*<\/title>/, `<title>${PRODUCT_NAME}</title>`)
     }
@@ -41,8 +41,8 @@ function brandHtmlPlugin(): Plugin {
 //     (covered by script-src 'self'), so this never ships.
 //   - style-src 'unsafe-inline' — Vite injects <style> tags for CSS/HMR in dev
 //     (prod links a same-origin stylesheet instead, covered by style-src 'self').
-  //   - connect-src ws:/http: localhost — Vite HMR websocket + the optional FastAPI
-  //     round-trip smoke (ApiStatus / @mikan/contract/api), neither of which ships.
+//   - connect-src ws:/http: localhost — Vite HMR websocket + the optional FastAPI
+//     round-trip smoke (ApiStatus / @mikan/contract/api), neither of which ships.
 // This serve-only plugin rewrites the meta CSP for dev so we never have to loosen
 // the policy that actually ships. Keep DEV_CSP in sync with the meta tag + the
 // runtime header in src/main/index.ts.
@@ -53,7 +53,7 @@ const DEV_CSP =
 
 function devCspPlugin(): Plugin {
   return {
-    name: 'nimi-dev-csp',
+    name: 'mikan-dev-csp',
     apply: 'serve',
     transformIndexHtml(html) {
       return html.replace(

@@ -50,21 +50,25 @@ Severity: **high** = data loss / wrong behavior / broken shipped path ·
 
 ## 3. Sync limitations
 
-- [ ] **Turso auth token frozen at worker fork.** Worker reads sync config + token
-  once at module load (`sync/sync-control.ts:4-5`, `worker/client.ts:71-73`). Broker
-  refreshes the token in main (`broker.ts:112-126`) but the worker keeps the stale
-  one until `restartWorker()` → long sessions hit auth failures. **high**
-- [ ] **Login after boot doesn't enable sync.** `auth.onChange` (`main/index.ts:117-126`)
-  doesn't call `prepareSyncEnv()`/`restartWorker()`. A user who turns the sync pref on
-  while logged out, then logs in, stays local-only until a manual toggle. **high**
-- [ ] **Stale renderer after worker restart.** `setSyncEnabled`/`importRecoveryKey`
-  re-fork the worker but the renderer never refetches tasks/backlog/archive
-  (`useSync.ts:79`, `MikanApp.tsx:153-168`). (Cross-listed in UX-PUNCHLIST §C.) **high**
+- [x] **Turso auth token frozen at worker fork.** ~~Worker reads sync config + token
+  once at module load~~ Fixed: main proactively refreshes ~2 min ahead of expiry
+  (`sync/sync-control.ts` `scheduleTokenRefresh`/`refreshAndPush`) and pushes the new
+  token to the worker over RPC (`sync:set-auth`), which swaps its replica client in
+  place via `reconfigureSyncAuth` (`db/index.ts`) — no re-fork. **high**
+- [x] **Login after boot doesn't enable sync.** Fixed: `auth.onChange` (`main/index.ts`)
+  now calls `onLoginEnableSync()` (`sync/sync-control.ts`) on a fresh login (not the
+  boot-time restore, which `prepareSyncEnv()` already covers), which resolves the
+  broker token and restarts the worker if that produced a replica target. **high**
+- [x] **Stale renderer after worker restart.** Fixed: `restartWorker()`
+  (`worker/client.ts`) broadcasts `data:invalidated` to every window after the new
+  worker is ready; `MikanApp.tsx` subscribes and bumps `reloadKey` to refetch
+  today/backlog/archive. Covers `setSyncEnabled`/`importRecoveryKey` and any future
+  crash-restart (W2). (Cross-listed in UX-PUNCHLIST §C.) **high**
 - [ ] **No conflict resolution.** Pre-sync migration uses `INSERT OR IGNORE`
   (`db/migrate.ts:127`); libSQL replica is last-write-wins; concurrent multi-device
   edits to the same row are undefined at the app layer. **med**
-- [ ] **No proactive broker-token refresh** while the app runs — only on next
-  `getSyncToken()` at boot/toggle (`broker.ts:46-78`). **med**
+- [x] **No proactive broker-token refresh** while the app runs. Fixed as part of the
+  token-frozen-at-fork item above — the same scheduler covers both. **med**
 - [ ] **Sync status is poll-only** (5s, `useSync.ts:13`); no push on worker
   boot / sync-complete. **low**
 
@@ -110,4 +114,4 @@ testing a packaged build:
 - **Semantic search quality** — default `LocalEmbedder` downloads an ONNX model;
   `NEEME_EMBEDDER=hash` (tests/CI) is non-semantic.
 - **Login gate** — when Logto env is baked in, the whole app sits behind sign-in
-  (`MikanApp.tsx:330`); local-first data is reachable only after login.
+  (`NimiApp.tsx:330`); local-first data is reachable only after login.

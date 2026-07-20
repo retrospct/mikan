@@ -87,7 +87,7 @@ export default function LoginScreen(): ReactElement {
       try {
         await bootstrapDb(tokens.access_token)
       } catch (e) {
-        console.warn('[nimi/db] post-login bootstrap failed:', e)
+        console.warn('[mikan/db] post-login bootstrap failed:', e)
         setError(e instanceof Error ? `Signed in, but sync failed: ${e.message}` : 'Sync failed')
       }
       router.replace('/(tabs)/feed')

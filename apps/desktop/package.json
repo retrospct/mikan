@@ -1,10 +1,13 @@
 {
   "name": "@mikan/desktop",
   "version": "1.5.0",
-  "description": "mikan — a privacy-first, local-first personal memory desktop app (Electron)",
+  "description": "nimi \u2014 a privacy-first, local-first personal memory desktop app (Electron)",
   "main": "./out/main/index.js",
   "author": "jlee",
-    "homepage": "https://github.com/retrospct/mikan",
+  "homepage": "https://github.com/retrospct/mikan",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
@@ -23,7 +26,7 @@
     "build:unpack": "npm run build && electron-builder --dir --config electron-builder.config.cjs",
     "build:win": "npm run build && electron-builder --win --config electron-builder.config.cjs",
     "build:mac": "electron-vite build && electron-builder --mac --config electron-builder.config.cjs",
-    "build:mac-helper": "swiftc resources/mac/mikan-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/mikan-extract && echo 'mikan-extract compiled'"
+    "build:mac-helper": "swiftc resources/mac/nimi-extract.swift -O -target arm64-apple-macosx13.0 -o resources/mac/nimi-extract && echo 'nimi-extract compiled'"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -45,21 +48,21 @@
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^2.0.0",
-    "@playwright/test": "^1.61.0",
-    "@tailwindcss/vite": "^4.3.1",
-    "@types/node": "^26.0.0",
+    "@playwright/test": "^1.61.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.0.3",
     "drizzle-kit": "^0.31.10",
-    "electron": "^42.4.1",
+    "electron": "^43.1.1",
     "electron-builder": "^26.15.3",
-    "electron-vite": "^5.0.0",
+    "electron-vite": "^6.0.0-beta.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "tailwindcss": "^4.3.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
-    "vite": "^7.3.5",
-    "vitest": "^4.1.9"
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
   }
 }

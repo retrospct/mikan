@@ -1,9 +1,9 @@
 /* ============================================================================
-   Nimi — a personal-memory companion.  (mneme · the muse of memory)
+   Mikan — a personal-memory companion.  (mneme · the muse of memory)
    Visual system extends "Mr. Matcha": warm-dark, accent, hairlines,
    Hanken Grotesk + JetBrains Mono. Animation-forward & personable.
 
-   Ported from the Claude Design handoff bundle (nimi.html). The desktop
+   Ported from the Claude Design handoff bundle (mikan.html). The desktop
    surface fills the real Electron window — the prototype's simulated macOS menu
    bar + tray popover are intentionally dropped (the OS provides the real chrome;
    real frameless-window + tray integration is a later step in the main process).
@@ -320,7 +320,7 @@ button.sync-pill:disabled {
   color: var(--ink);
 }
 
-/* ───────────────── Nimi mark — monoline diamond node, dots fill as it thinks ───────────────── */
+/* ───────────────── Mikan mark — monoline diamond node, dots fill as it thinks ───────────────── */
 .nm {
   position: relative;
   display: inline-grid;
@@ -469,7 +469,7 @@ html[data-ambient='off'] .nm[data-state='idle'] .nm-dot.q {
   transform: scale(1);
 }
 
-/* a small inline "Nimi is …" status line */
+/* a small inline "Mikan is …" status line */
 .nm-status {
   display: inline-flex;
   align-items: center;
@@ -609,12 +609,57 @@ html[data-ambient='off'] .nm[data-state='idle'] .nm-dot.q {
   border-color: transparent;
   color: #0a0a0b;
 }
+/* status-carrying: the checkbox ring reads task.state, not just done/not-done.
+   listed/planning/planned/working share the resting look until S4/S5 give them
+   their own visual mechanism; awaiting gets an accent ring — it needs a look. */
+.task-check[data-state='awaiting'] {
+  border-color: var(--accent-line);
+}
 .task-main {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 7px;
+}
+/* the growing-card nests inside the task's own card chrome here (Today/Stack) —
+   flatten its standalone border/background/shadow so we don't double them up. */
+.task-main .gcard {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: inherit;
+}
+.task-main .gcard:hover {
+  border-color: transparent;
+  transform: none;
+}
+.task-main .gcard-hd {
+  padding: 0;
+}
+/* mode badge — plan is the quiet default; auto is "alive", gets the accent.
+   A real toggle button (Group 03 auto switch), so reset the native chrome. */
+.mode-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  cursor: pointer;
+}
+.mode-badge.auto {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
 }
 .task-num {
   font-family: var(--mono);
@@ -890,7 +935,7 @@ html[data-ambient='off'] .draft-badge svg {
   animation-delay: 0.4s;
 }
 
-/* ───────── Nimi note (LLM voice) · completion delight · accomplished state ───────── */
+/* ───────── Mikan note (LLM voice) · completion delight · accomplished state ───────── */
 .nnote {
   display: inline-flex;
   align-items: flex-start;
@@ -1146,7 +1191,7 @@ html[data-ambient='off'] .win-big {
   animation: none;
 }
 
-/* badge on the Nimi mark (tray + header) — things waiting on you */
+/* badge on the Mikan mark (tray + header) — things waiting on you */
 .hdr-mark,
 .tray-peek-mark {
   position: relative;
@@ -1739,7 +1784,7 @@ html[data-ambient='off'] .win-big {
   opacity: 1;
 }
 
-/* "Nimi is reading the file" spinner */
+/* "Mikan is reading the file" spinner */
 .attach-spin {
   position: absolute;
   width: 18px;
@@ -2742,7 +2787,7 @@ html[data-ambient='off'] .vrec-wave span {
   color: var(--accent-ink);
 }
 
-/* Nimi's brief — quiet narration above the action (not a competing card) */
+/* Mikan's brief — quiet narration above the action (not a competing card) */
 .brief {
   display: flex;
   gap: 11px;
@@ -3034,6 +3079,31 @@ html[data-ambient='off'] .vrec-wave span {
   display: grid;
   place-items: center;
   color: var(--accent-ink);
+}
+
+/* Group 03 auto mode: the detail-screen run block (the list-row mode badge is
+   already styled above via .mode-badge / .mode-badge.auto) */
+.auto-gate,
+.auto-run,
+.auto-receipt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent-line);
+  border-radius: 18px;
+  margin-bottom: 16px;
+  background: linear-gradient(180deg, var(--accent-faint), transparent 46%), var(--surface-2);
+}
+.auto-gate-tx,
+.auto-run-tx,
+.auto-receipt-tx {
+  flex: 1 1 auto;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.auto-receipt {
+  background: var(--surface-2);
 }
 
 /* pool section */
@@ -3655,7 +3725,7 @@ html[data-ambient='off'] .mem.fresh::after {
   gap: 9px;
   align-items: stretch;
 }
-/* left: ask Nimi (chat). right: dig deeper (search your life) */
+/* left: ask Mikan (chat). right: dig deeper (search your life) */
 .dt-ask {
   flex: 0 0 auto;
   width: 48px;
@@ -3712,7 +3782,7 @@ html[data-ambient='off'] .mem.fresh::after {
   cursor: default;
 }
 
-/* Ask-Nimi chat sheet */
+/* Ask-Mikan chat sheet */
 .chat-sheet {
   height: 74%;
   max-height: 74%;
@@ -4167,6 +4237,15 @@ html[data-ambient='off'] .mem.fresh::after {
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--hairline);
 }
+.plan-seg button.on-auto {
+  background: var(--accent);
+  color: #0a0a0b;
+}
+.plan-seg button.on-ask {
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
 
 /* ───────────────────────── misc ───────────────────────── */
 .empty-note {
@@ -4371,7 +4450,8 @@ html[data-density='compact'] .mem {
   .nm-mote,
   .ctx-orb,
   .draft-badge svg,
-  .pool-cloud .pc {
+  .pool-cloud .pc,
+  .gcard-orb-ring {
     animation: none !important;
   }
   .view,
@@ -4380,8 +4460,10 @@ html[data-density='compact'] .mem {
   .mem,
   .sheet,
   .push,
-  .draft {
+  .draft,
+  .gcard-body {
     animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -4851,4 +4933,448 @@ html[data-density='compact'] .mem {
   font-size: 12px;
   line-height: 1.5;
   color: var(--ink-3);
+}
+
+/* ── Growing card (Group 07) ───────────────────────────────────────────────── */
+/* One stable header (avatar · title · orb) over a body that morphs through
+   collapsed → searching → running → reasoning → summary → complete, driven by
+   the `data-render` attribute. The body height is state-keyed rather than
+   measured, so it stays a plain CSS transition — tallest at reasoning. */
+.gcard {
+  position: relative;
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    transform 0.18s var(--ease-out);
+}
+.gcard:hover {
+  border-color: var(--hairline-strong);
+  transform: translateY(-2px);
+}
+.gcard-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 15px;
+}
+.gcard-avatar {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-3);
+  color: var(--ink-2);
+  border: 1px solid var(--hairline);
+}
+.gcard-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15.5px;
+  font-weight: 550;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-wrap: pretty;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the orb — one element carries the whole state machine */
+.gcard-orb {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+}
+.gcard-orb-track {
+  fill: none;
+  stroke: var(--hairline-strong);
+  stroke-width: 2;
+}
+.gcard-orb-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.35s var(--ease-out);
+}
+.gcard-orb.state-searching .gcard-orb-ring,
+.gcard-orb.state-running .gcard-orb-ring,
+.gcard-orb.state-reasoning .gcard-orb-ring {
+  animation: gcard-orb-pulse 2.4s var(--ease-out) infinite;
+}
+@keyframes gcard-orb-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+html[data-ambient='off'] .gcard-orb-ring {
+  animation: none;
+}
+.gcard-orb.done {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #0a0a0b;
+}
+
+/* morphing body — state-keyed max-height, not measured */
+.gcard-body {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 0.42s var(--ease-out),
+    opacity 0.3s var(--ease-out);
+}
+.gcard[data-render='searching'] .gcard-body {
+  max-height: 90px;
+  opacity: 1;
+}
+.gcard[data-render='running'] .gcard-body {
+  max-height: 280px;
+  opacity: 1;
+}
+.gcard[data-render='reasoning'] .gcard-body {
+  max-height: 360px;
+  opacity: 1;
+}
+.gcard[data-render='summary'] .gcard-body {
+  max-height: 170px;
+  opacity: 1;
+}
+.gcard[data-render='complete'] .gcard-body {
+  max-height: 130px;
+  opacity: 1;
+}
+
+.gcard-searching {
+  padding: 0 15px 16px;
+}
+
+.gcard-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 15px 14px;
+}
+.gcard-step-wrap.editable {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.gcard-step-wrap.editable:hover {
+  background: var(--surface-2);
+}
+.gcard-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.gcard-step:last-child {
+  border-bottom: none;
+}
+.gcard-step.status-done {
+  color: var(--ink);
+}
+.gcard-step-ico {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.4px solid var(--hairline-strong);
+  color: var(--ink-3);
+}
+.gcard-step.status-done .gcard-step-ico {
+  background: var(--accent);
+  border-color: transparent;
+  color: #0a0a0b;
+}
+.gcard-step.status-blocked .gcard-step-ico {
+  border-color: var(--rose);
+  color: var(--rose);
+}
+.gcard-step-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.gcard-step.status-running .gcard-step-dot {
+  background: var(--accent);
+  animation: nm-pulse 1.6s var(--ease-out) infinite;
+}
+html[data-ambient='off'] .gcard-step.status-running .gcard-step-dot {
+  animation: none;
+}
+.gcard-step-t {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcard-step-tool,
+.gcard-step-run {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.gcard-empty {
+  padding: 6px 0 2px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.gcard-reasoning {
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+}
+
+.gcard-gate {
+  padding: 0 15px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcard-gate-t {
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.gcard-gate-acts {
+  display: flex;
+  gap: 8px;
+}
+
+.gcard-complete {
+  padding: 0 15px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.gcard-receipt {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.gcard-save {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-faint);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.gcard-save:hover {
+  background: var(--accent-soft);
+}
+
+/* Group 03 auto mode: the resting "run this" trigger + the in-flight pause */
+.gcard-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 15px 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-faint);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.gcard-run:hover {
+  background: var(--accent-soft);
+}
+.gcard-pause {
+  align-self: flex-start;
+  margin: 2px 0 0;
+}
+
+/* ─────────── task workspace: reasoning / sources / dock / stepper / refine (Group 02) ─────────── */
+.sources-label {
+  font-size: 10px;
+  color: var(--ink-3);
+  margin: 4px 2px 6px;
+}
+.reasoning-steps {
+  padding: 0 0 4px;
+  margin-bottom: 4px;
+}
+
+/* a small icon+label pill — shared by the dock and chat citation rows */
+.chip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  max-width: 100%;
+  overflow: hidden;
+}
+.chip-pill svg {
+  flex: 0 0 auto;
+  color: var(--ink-3);
+}
+
+.dock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 2px 2px 16px;
+}
+
+/* guided stepper — gathered → your voice → drafting → approve & send */
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 2px 2px 16px;
+}
+.stepper-step {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.stepper-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hairline-strong);
+  border: 1px solid var(--hairline-strong);
+}
+.stepper-step.done .stepper-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.stepper-step.active .stepper-dot {
+  border-color: var(--accent);
+  background: var(--accent-faint);
+  animation: nm-pulse 1.6s var(--ease-out) infinite;
+}
+html[data-ambient='off'] .stepper-step.active .stepper-dot {
+  animation: none;
+}
+.stepper-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.stepper-step.done .stepper-lbl,
+.stepper-step.active .stepper-lbl {
+  color: var(--ink-2);
+}
+
+/* tap-don't-type refine chips, shown alongside the editable draft */
+.refine-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0 14px 12px;
+}
+.refine-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-faint);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+.refine-chip:hover {
+  background: var(--accent-soft);
+}
+
+/* editable draft */
+.draft-edit {
+  margin: 0 14px;
+}
+.draft-edit-ta {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--hairline);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  font-family: inherit;
+  resize: vertical;
+}
+.draft-edit-ta:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+.draft-edit-acts {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 0 0;
+}
+
+/* Ask Mikan: replies carry the same citation parts as the workspace's Sources */
+.chat-msg-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.chat-cites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chat-cites .chip-pill {
+  font-size: 10.5px;
+  padding: 4px 9px;
 }

@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store'
 import { setToken, clearToken } from '@mikan/contract/api/token-store'
 
-const ACCESS_TOKEN_KEY = 'nimi_access_token'
+const ACCESS_TOKEN_KEY = 'mikan_access_token'
 
 /** Persist the access token to SecureStore and hydrate the API client. */
 export async function persistToken(token: string): Promise<void> {

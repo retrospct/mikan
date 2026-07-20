@@ -9,7 +9,7 @@
  * projects them to the view model (see
  * `apps/desktop/src/main/services/project.ts`).
  */
-import type { BacklogItem, FedItem, MatchHit, Memory, Task, UncoveredTodo } from './views'
+import type { BacklogItem, FedItem, MatchHit, Memory, Task, TaskMode, UncoveredTodo } from './views'
 
 export const IPC = {
   // Pipeline (on-device capture → extract → index → surface; runs in the worker)
@@ -31,6 +31,10 @@ export const IPC = {
   todoContextSearch: 'todo:context-search',
   todoContextPin: 'todo:context-pin',
   todoContextDismiss: 'todo:context-dismiss',
+  todoSetMode: 'todo:set-mode',
+  todoRun: 'todo:run',
+  todoApprove: 'todo:approve',
+  todoPause: 'todo:pause',
   // Auth (Logto OIDC flow lives in main; see src/main/auth/logto.ts)
   authLogin: 'auth:login',
   authLogout: 'auth:logout',
@@ -51,11 +55,18 @@ export const IPC = {
   connectorsGetStats: 'connectors:get-stats',
   // UI shell (tray/menu-bar window — see src/main/window/tray-window.ts)
   traySetBadge: 'tray:set-badge',
+  // Data lifecycle (main → renderer)
+  /** main → renderer push: the data worker was re-forked or reconfigured — the
+   *  renderer's in-memory today/backlog/archive are stale, refetch everything. */
+  dataInvalidated: 'data:invalidated',
   // Sync (cloud offload — ROADMAP #10; see docs/plans/sync-cloud-offload.plan.md)
   /** Query current sync status from the worker (request-response). */
   syncGetStatus: 'sync:get-status',
   /** Trigger an immediate sync; resolves when complete (request-response). */
   syncNow: 'sync:now',
+  /** Internal channel: main pushes a refreshed Turso token to the worker, which
+   *  swaps its replica client in place (no re-fork). See src/main/sync/sync-control.ts. */
+  syncSetAuth: 'sync:set-auth',
   /** Read the user-facing sync settings (pref + key presence + availability). main-owned. */
   syncGetSettings: 'sync:get-settings',
   /** Turn the cloud replica on/off; persists the pref + restarts the worker. main-owned. */
@@ -120,11 +131,24 @@ export interface AuthClaims {
   picture?: string
 }
 
+/**
+ * Why the last interactive sign-in attempt failed. Cleared the moment a new
+ * attempt starts, on success, and on logout — so it only ever reflects the
+ * most recent completed attempt, never a stale one.
+ */
+export interface AuthLoginError {
+  /** 'user_cancelled' — the user declined at the provider (?error=access_denied).
+   *  'login_failed' — anything else (network, exchange failure, timeout). */
+  code: 'user_cancelled' | 'login_failed'
+  message: string
+}
+
 /** Auth state surfaced to the renderer. `configured` is false until Logto env is set. */
 export interface AuthState {
   configured: boolean
   isAuthenticated: boolean
   claims: AuthClaims | null
+  lastError: AuthLoginError | null
 }
 
 export interface AuthApi {
@@ -152,6 +176,13 @@ export interface Todo {
   /** ISO date the todo lives on; null = backlog (unscheduled). */
   day: string | null
   position: number
+  /**
+   * Persisted per-task mode (Group 03 auto switch). Defaults to 'plan'. Reuses
+   * the view model's `TaskMode` rather than a parallel worker-internal alias —
+   * unlike `status` (which the projector transforms into the richer `TaskState`),
+   * `mode` passes straight through with no transformation, so one type suffices.
+   */
+  mode: TaskMode
   createdAt: Date
   completedAt: Date | null
 }
@@ -166,7 +197,7 @@ export interface ContextEntry {
   contentType: ContentType | null
   excerpt: string | null
   state: ContextState
-  /** AI-gap: why Nimi kept this beside the task. Populated by the drafter; null otherwise. */
+  /** AI-gap: why Mikan kept this beside the task. Populated by the drafter; null otherwise. */
   why: string | null
 }
 
@@ -194,6 +225,20 @@ export interface TodoApi {
   searchMoreContext: (id: string) => Promise<Task | null>
   pinContext: (id: string, itemId: string) => Promise<Task | null>
   dismissContext: (id: string, itemId: string) => Promise<Task | null>
+  /** Set a task's run mode (Group 03 auto switch, set on the list). */
+  setMode: (id: string, mode: TaskMode) => Promise<Task | null>
+  /**
+   * Run the task on device: gathers context + drafts (the current unit of
+   * AI-gap work), synchronously, to settlement — lands on `awaiting` (a draft
+   * is ready to approve) or `done` (nothing to gate on). No-op — returns the
+   * task unchanged — when the drafter is unconfigured.
+   */
+  run: (id: string) => Promise<Task | null>
+  /** Approve an awaiting run: closes the gate, settles the receipt. `receipt.sentAnything`
+   *  stays false — there is no outbound "send" integration yet. */
+  approve: (id: string) => Promise<Task | null>
+  /** Cancel an in-flight run. Reverts to `listed`; writes no receipt. No-op if nothing running. */
+  pause: (id: string) => Promise<Task | null>
 }
 
 /** Capture + surface, backed by the on-device pipeline in the worker. */
@@ -206,7 +251,7 @@ export interface PipelineApi {
   archive: () => Promise<Memory[]>
   /** The recent-capture feed (newest first). */
   feed: () => Promise<FedItem[]>
-  /** AI-gap: candidate to-dos Nimi infers from the recent feed. `[]` until the
+  /** AI-gap: candidate to-dos Mikan infers from the recent feed. `[]` until the
    *  drafter is configured (`NEEME_ANTHROPIC_KEY`); cached between feed changes. */
   uncoverTodos: () => Promise<UncoveredTodo[]>
   /** Rank archive memories for a typed task/query (the UI's `matchTask`). */
@@ -217,6 +262,17 @@ export interface PipelineApi {
 export interface UiApi {
   /** Set the "waiting" count shown on the tray icon + Dock badge (0 clears it). */
   setBadge: (count: number) => Promise<void>
+}
+
+/**
+ * Coarse data-lifecycle events. Today this is just the one signal the worker's
+ * re-fork points (sync toggle, recovery-key import, a future crash restart) all
+ * need: "the data you're holding may be stale, refetch it." No payload — the
+ * renderer already knows how to refetch today/backlog/archive from scratch.
+ */
+export interface DataEventsApi {
+  /** Subscribe; returns an unsubscribe fn. Fires with no payload — refetch all queries. */
+  onInvalidated: (cb: () => void) => () => void
 }
 
 // --- Connectors (Google OAuth + ingest — main-process concern) -----------
@@ -265,11 +321,13 @@ export interface MikanApi {
   sync: SyncApi
   ui: UiApi
   update: UpdateApi
+  data: DataEventsApi
 }
 
 // --- Auto-updater (ROADMAP #12 — electron-updater via GitHub Releases) ----
 
-export type UpdateStage = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
+export type UpdateStage =
+  'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error' | 'unavailable'
 
 /**
  * Snapshot of the auto-updater state pushed to the renderer via `update:changed`

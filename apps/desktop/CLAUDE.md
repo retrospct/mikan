@@ -29,7 +29,7 @@ Import the shared types/client from the **`@mikan/contract`** workspace package 
 a relative path into `packages/`:
 
 ```ts
-import { IPC, type NimiApi } from '@mikan/contract/ipc'
+import { IPC, type MikanApi } from '@mikan/contract/ipc'
 import type { Task, Memory } from '@mikan/contract/views'
 import { getHealth } from '@mikan/contract/api'
 ```

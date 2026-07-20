@@ -86,6 +86,7 @@ export const todos = sqliteTable('todos', {
   status: text('status').notNull().default('open'), // open | done
   day: text('day'), // ISO date; NULL = backlog
   position: integer('position').notNull().default(0),
+  mode: text('mode').notNull().default('plan'), // plan | auto (Group 03 auto switch)
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -94,6 +95,30 @@ export const todos = sqliteTable('todos', {
 
 export type Todo = typeof todos.$inferSelect
 export type NewTodo = typeof todos.$inferInsert
+
+/**
+ * `todo_run` — the persisted state of a task's Auto-mode run (Group 03), one row
+ * per todo, upserted on every `run()`/`approve()`/`pause()`. Mirrors `todoAi`'s
+ * settled-snapshot pattern: this holds the *run's* state (working/awaiting/done)
+ * and its `RunReceipt`, distinct from `todoAi`'s drafting content — a run may
+ * settle at `awaiting` with no draft accepted yet, or `done` with nothing to
+ * approve at all.
+ */
+export const todoRun = sqliteTable('todo_run', {
+  todoId: text('todo_id').primaryKey(),
+  state: text('state').notNull().default('listed'), // listed | working | awaiting | done
+  ranOnDevice: integer('ran_on_device', { mode: 'boolean' }).notNull().default(true),
+  durationMs: integer('duration_ms'),
+  touched: text('touched'), // JSON: string[] (context item ids the run read)
+  sentAnything: integer('sent_anything', { mode: 'boolean' }).notNull().default(false),
+  startedAt: integer('started_at', { mode: 'timestamp' }),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`)
+})
+
+export type TodoRunRow = typeof todoRun.$inferSelect
+export type NewTodoRunRow = typeof todoRun.$inferInsert
 
 /**
  * `todoContext` — each todo's persistent, additive pool of surfaced memories
@@ -108,7 +133,7 @@ export const todoContext = sqliteTable('todo_context', {
   contentType: text('content_type'),
   excerpt: text('excerpt'),
   state: text('state').notNull().default('surfaced'), // surfaced | pinned | dismissed
-  /** AI-gap: why Nimi kept this beside the task. Populated by the drafter; null otherwise. */
+  /** AI-gap: why Mikan kept this beside the task. Populated by the drafter; null otherwise. */
   why: text('why'),
   firstSurfacedAt: integer('first_surfaced_at', { mode: 'timestamp' })
     .notNull()

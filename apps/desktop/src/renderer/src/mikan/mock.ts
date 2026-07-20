@@ -1,7 +1,7 @@
 // mock.ts — the browser-preview seed + an in-memory `window.api` stand-in.
 //
-// Ported from the design bundle (nimi-data.jsx + the BACKLOG that lived in
-// nimi-plan.jsx). This is hand-authored placeholder content. The view-model
+// Ported from the design bundle (mikan-data.jsx + the BACKLOG that lived in
+// mikan-plan.jsx). This is hand-authored placeholder content. The view-model
 // types now live in `@mikan/contract/views` — this file only holds sample data
 // and `makeMockApi()`, the adapter `api.ts` falls back to when `window.api` is
 // absent (i.e. running in a plain browser, not Electron). It mutates module-local
@@ -14,17 +14,28 @@ import type {
   Memory,
   MemoryKind,
   Task,
+  TaskMode,
+  TaskState,
   UncoveredTodo
 } from '@mikan/contract/views'
 import { CAP_REACHED, type CaptureResult, type MikanApi, type Todo } from '@mikan/contract/ipc'
 
-type MockApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui' | 'update'>
+type MockApi = Pick<MikanApi, 'pipeline' | 'todos' | 'ui' | 'update' | 'data'>
 
 // The day's focus cap (mirrors MikanApp's CAP) — lets the mock raise CAP_REACHED
 // so the add-todo → backlog fallback is exercisable in the browser.
 const CAP = 5
 
-// ── the memory archive (what you've "fed" Nimi) ────────────────────────────
+// Mirrors the real projector's `toTask` (services/project.ts): the resting
+// state for a task with no in-flight run — `'done'` once completed, else the
+// idle `'listed'`. Seed tasks that showcase `planning`/`planned`/`working`/
+// `awaiting` set `state` explicitly (see SEED_TASKS below) rather than through
+// this helper, same as the real backend can't yet derive those (S4/S5-scope).
+function restingState(done: boolean): TaskState {
+  return done ? 'done' : 'listed'
+}
+
+// ── the memory archive (what you've "fed" Mikan) ────────────────────────────
 export const MEMORIES: Record<string, Memory> = {
   m_cabin_note: {
     id: 'm_cabin_note',
@@ -165,7 +176,13 @@ const SEED_TASKS: Task[] = [
     id: 't_cabin',
     title: 'Reply to Sarah about the cabin weekend',
     when: 'today',
-    status: 'drafted',
+    state: 'awaiting',
+    mode: 'plan',
+    steps: [
+      { id: 's1', title: 'Checked your calendar', run: 'auto', tool: 'CALENDAR', status: 'done' },
+      { id: 's2', title: "Read Sarah's email", run: 'auto', tool: 'MAIL', status: 'done' },
+      { id: 's3', title: 'Drafted the reply', run: 'ask', tool: null, status: 'done' }
+    ],
     done: false,
     noteKind: 'ready',
     note: "Draft's ready — it just needs your yes.",
@@ -189,7 +206,13 @@ const SEED_TASKS: Task[] = [
     id: 't_q3',
     title: 'Send Priya the Q3 one-pager',
     when: 'by Friday',
-    status: 'gathered',
+    state: 'planned',
+    mode: 'plan',
+    steps: [
+      { id: 's1', title: "Pulled Priya's ask", run: 'auto', tool: 'MAIL', status: 'done' },
+      { id: 's2', title: 'Checked the Q3 draft', run: 'auto', tool: null, status: 'pending' },
+      { id: 's3', title: 'Write the one-pager', run: 'ask', tool: null, status: 'pending' }
+    ],
     done: false,
     noteKind: 'wait',
     note: 'Waiting on the final numbers before I draft.',
@@ -204,7 +227,13 @@ const SEED_TASKS: Task[] = [
     id: 't_dinner',
     title: "Book mom's birthday dinner",
     when: 'this week',
-    status: 'gathered',
+    state: 'working',
+    mode: 'auto',
+    steps: [
+      { id: 's1', title: "Checked mom's favorite spots", run: 'auto', tool: null, status: 'done' },
+      { id: 's2', title: 'Looked up availability', run: 'auto', tool: 'MAPS', status: 'running' },
+      { id: 's3', title: 'Book the table', run: 'ask', tool: null, status: 'pending' }
+    ],
     done: false,
     noteKind: 'ask',
     note: 'One open question — which night works?',
@@ -260,7 +289,7 @@ const FED_RECENT: FedItem[] = [
   }
 ]
 
-// ── to-dos Nimi infers from the recent feed (AI-gap; real backend gates on a key) ──
+// ── to-dos Mikan infers from the recent feed (AI-gap; real backend gates on a key) ──
 const UNCOVERED: UncoveredTodo[] = [
   {
     id: 'unc_dentist',
@@ -319,7 +348,10 @@ function matchTask(text: string): MatchHit[] {
 
 // ── the mock window.api: shared mutable state behind the real surface ────────
 export function makeMockApi(): MockApi {
-  let tasks: Task[] = SEED_TASKS.map((t) => ({ ...t, relMap: REL[t.id] ?? {} }))
+  let tasks: Task[] = SEED_TASKS.map((t) => ({
+    ...t,
+    relMap: REL[t.id] ?? {}
+  }))
   let backlog: BacklogItem[] = BACKLOG.map((b) => ({ ...b }))
   let feed: FedItem[] = FED_RECENT.map((f) => ({ ...f }))
 
@@ -410,7 +442,8 @@ export function makeMockApi(): MockApi {
           id: uid('t_'),
           title,
           when: 'today',
-          status: 'gathered',
+          state: 'listed',
+          mode: 'plan',
           done: false,
           ctx: ctxIds,
           pinned: [],
@@ -433,14 +466,14 @@ export function makeMockApi(): MockApi {
         const t = find(id)
         if (!t) return null
         t.done = true
-        t.status = 'done'
+        t.state = restingState(t.done)
         return clone(t)
       },
       reopen: async (id: string): Promise<Task | null> => {
         const t = find(id)
         if (!t) return null
         t.done = false
-        t.status = 'gathered'
+        t.state = restingState(t.done)
         return clone(t)
       },
       plan: async (keep: string[]): Promise<Task[]> => {
@@ -470,7 +503,8 @@ export function makeMockApi(): MockApi {
           id: uid('t_'),
           title: b.title,
           when: 'today',
-          status: 'gathered',
+          state: 'listed',
+          mode: 'plan',
           done: false,
           ctx: [...(b.ctx ?? [])],
           pinned: [],
@@ -510,6 +544,39 @@ export function makeMockApi(): MockApi {
         t.ctx = t.ctx.filter((x) => x !== itemId)
         t.pinned = t.pinned.filter((x) => x !== itemId)
         return clone(t)
+      },
+      setMode: async (id: string, mode: TaskMode): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.mode = mode
+        return clone(t)
+      },
+      // Mock always behaves "configured" (no drafter to gate on) so the Auto-mode
+      // flow is exercisable in browser preview. A short delay keeps the caller's
+      // local "busy"/working display visible for a moment, mirroring the real
+      // run's transient working state without persisting an observable snapshot.
+      run: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        await new Promise((resolve) => setTimeout(resolve, 700))
+        t.state = 'awaiting'
+        t.receipt = { ranOnDevice: true, durationMs: 700, touched: [...t.ctx], sentAnything: false }
+        if (!t.draft) {
+          t.draft = ['Mock auto-run draft — wire to a live drafter to see the real thing.']
+        }
+        return clone(t)
+      },
+      approve: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.state = 'done'
+        return clone(t)
+      },
+      pause: async (id: string): Promise<Task | null> => {
+        const t = find(id)
+        if (!t) return null
+        t.state = 'listed'
+        return clone(t)
       }
     },
     ui: {
@@ -525,6 +592,9 @@ export function makeMockApi(): MockApi {
       quitAndInstall: async (): Promise<void> => {},
       checkNow: async (): Promise<void> => {},
       onChanged: () => () => {}
+    },
+    data: {
+      onInvalidated: () => () => {}
     }
   }
 }

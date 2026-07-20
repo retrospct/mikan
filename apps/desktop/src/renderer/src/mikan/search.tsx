@@ -1,4 +1,4 @@
-// search.tsx — "Dig deeper": a universal search across everything you've fed Nimi.
+// search.tsx — "Dig deeper": a universal search across everything you've fed Mikan.
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import { NIcon } from './icons'
@@ -28,7 +28,7 @@ export function SearchOverlay({
     inputRef.current && inputRef.current.focus()
   }, [])
 
-  // a beat of "Nimi is searching" when the query settles. We debounce the input
+  // a beat of "Mikan is searching" when the query settles. We debounce the input
   // into `settledQ` — the only setState lives inside the timeout, so it never fires
   // synchronously in the effect body — and derive `thinking` from the gap.
   useEffect(() => {

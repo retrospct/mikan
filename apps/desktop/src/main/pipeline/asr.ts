@@ -151,7 +151,7 @@ function detectHelper(): string | null {
 
 // ── singleton ─────────────────────────────────────────────────────────────
 
-const extMode = process.env.NEEME_EXTRACTOR
+const extMode = process.env.NEEME_EXTRACTOR?.trim()
 const helper = extMode === 'off' || extMode === 'portable' ? null : detectHelper()
 
 /**

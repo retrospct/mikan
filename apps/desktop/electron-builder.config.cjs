@@ -7,7 +7,7 @@ const identity = require('@mikan/brand/identity.json')
 
 const meta = identity.mikan
 
-// User-facing binary/artifact name. The internal namespace (nimi/neeme) stays
+// User-facing binary/artifact name. The internal namespace (mikan/neeme) stays
 // untouched elsewhere — brand lives only at the client edge.
 const slug = meta.scheme
 

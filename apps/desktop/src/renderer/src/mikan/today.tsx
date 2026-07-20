@@ -4,6 +4,7 @@ import type { Task } from '@mikan/contract/views'
 import type { JSX } from 'react'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { MemoryContext } from './api'
+import { GrowingCard } from './growing-card'
 import { kindIcon } from './iconKind'
 import { NIcon } from './icons'
 import { MikanMark, MikanNote } from './mark'
@@ -66,7 +67,7 @@ export function AppHeader({
   )
 }
 
-// The ambient "memory weather" banner. `count` is how many context items Nimi
+// The ambient "memory weather" banner. `count` is how many context items Mikan
 // surfaced beside today's tasks (real, from each task's ctx pool); `memoryCount`
 // + `lastFed` come from the live archive (newest-first). `userName` is the signed-
 // in identity (null in a local/unconfigured build → the greeting drops the name).
@@ -127,13 +128,21 @@ function TaskCard({
   index,
   layout,
   onOpen,
-  onToggle
+  onToggle,
+  onToggleMode,
+  onRun,
+  onApprove,
+  onPause
 }: {
   task: Task
   index: number
   layout: string
   onOpen: (id: string) => void
   onToggle: (id: string) => void
+  onToggleMode: (id: string) => void
+  onRun: (id: string) => Promise<void>
+  onApprove: (id: string) => Promise<void>
+  onPause: (id: string) => Promise<void>
 }): JSX.Element {
   const kept = (task.pinned || []).length
   const ctxN = (task.ctx || []).length
@@ -162,6 +171,12 @@ function TaskCard({
     return undefined
   }, [task.done])
 
+  // Group 03: local optimistic "running" flag for a real in-flight run() call
+  // — see GrowingCard's `busy` prop doc. Cleared via the returned promise
+  // (not a task-prop diff) since an unconfigured drafter resolves with the
+  // task UNCHANGED — a diff-based reset would never fire in that case.
+  const [running, setRunning] = useState(false)
+
   return (
     <div
       className={'task' + (task.done ? ' done-task' : '') + (pop ? ' pop' : '')}
@@ -173,6 +188,7 @@ function TaskCard({
         <button
           className="task-check"
           aria-label="Complete"
+          data-state={task.state ?? 'listed'}
           onClick={(e) => {
             e.stopPropagation()
             onToggle(task.id)
@@ -182,11 +198,30 @@ function TaskCard({
           {pop && <span className="check-burst" />}
         </button>
         <div className="task-main">
-          <div className="task-title">{task.title}</div>
-          {task.done ? (
-            <MikanNote kind="done">Done — nice work.</MikanNote>
-          ) : (
+          <GrowingCard
+            task={task}
+            busy={running}
+            onRun={() => {
+              setRunning(true)
+              void onRun(task.id).finally(() => setRunning(false))
+            }}
+            onApprove={() => onApprove(task.id)}
+            onPause={() => {
+              void onPause(task.id).finally(() => setRunning(false))
+            }}
+          />
+          {!task.done && (
             <>
+              <button
+                className={'mode-badge' + (task.mode === 'auto' ? ' auto' : '')}
+                aria-label={task.mode === 'auto' ? 'Switch to Plan mode' : 'Switch to Auto mode'}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleMode(task.id)
+                }}
+              >
+                {task.mode === 'auto' ? 'Auto' : 'Plan'}
+              </button>
               {task.note && <MikanNote kind={task.noteKind || 'gathered'}>{task.note}</MikanNote>}
               <div className="ctx-strip">
                 {ctxN > 0 && <CtxThumbs memIds={task.ctx} />}
@@ -235,6 +270,10 @@ interface TodayViewProps {
   lastFed: string | null
   onOpen: (id: string) => void
   onToggle: (id: string) => void
+  onToggleMode: (id: string) => void
+  onRun: (id: string) => Promise<void>
+  onApprove: (id: string) => Promise<void>
+  onPause: (id: string) => Promise<void>
   onAdd: () => void
   onPlan: () => void
   onTomorrow: () => void
@@ -257,6 +296,10 @@ export function TodayView({
   lastFed,
   onOpen,
   onToggle,
+  onToggleMode,
+  onRun,
+  onApprove,
+  onPause,
   onPlan,
   onTomorrow,
   onSearch,
@@ -267,6 +310,7 @@ export function TodayView({
   const brand = useBrand()
   const filled = tasks.length
   const open = Math.max(0, cap - filled)
+  const done = tasks.filter((t) => t.done).length
   const left = tasks.filter((t) => !t.done).length
 
   if (!planned) {
@@ -320,10 +364,10 @@ export function TodayView({
         )}
         <div className="today-top">
           <span className="today-cap">
-            Today · <b>{left}</b> of {cap}
+            <b>{done}</b> done · <b>{left}</b> left
           </span>
           <button className="today-link" onClick={onPlan}>
-            Plan
+            Plan my day
           </button>
         </div>
         <div className={'list casc'} data-layout={layout}>
@@ -335,6 +379,10 @@ export function TodayView({
               layout={layout}
               onOpen={onOpen}
               onToggle={onToggle}
+              onToggleMode={onToggleMode}
+              onRun={onRun}
+              onApprove={onApprove}
+              onPause={onPause}
             />
           ))}
           {Array.from({ length: open }).map((_, i) => (

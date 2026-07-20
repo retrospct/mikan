@@ -17,7 +17,7 @@ renderer (sandboxed, context-isolated, NO node)
   `sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`. The renderer has
   no Node and no direct Electron/DB access — only the typed `window.api.*` bridge.
 - **Heavy + native work is isolated** in a `utilityProcess` (`apps/desktop/src/main/worker/*`). Keeps
-  the main loop responsive (performance) *and* shrinks main's attack surface.
+  the main loop responsive (performance) _and_ shrinks main's attack surface.
 - **Main is a router.** It must not become a Node server: no business logic, no DB, no
   remote/network servers. New data capabilities go in the worker, exposed via IPC.
 
@@ -32,9 +32,10 @@ renderer (sandboxed, context-isolated, NO node)
 ## Permissions
 
 Browser-grade permissions are **denied by default** via `setPermissionRequestHandler`
-+ `setPermissionCheckHandler` on the default session (`apps/desktop/src/main/index.ts`).
-The handlers are an explicit **allowlist** (`ALLOWED`) — "deny by default, allow
-exactly what we use."
+
+- `setPermissionCheckHandler` on the default session (`apps/desktop/src/main/index.ts`).
+  The handlers are an explicit **allowlist** (`ALLOWED`) — "deny by default, allow
+  exactly what we use."
 
 Currently `ALLOWED` holds only `clipboard-sanitized-write` — the Settings
 recovery-key "Copy" button (`navigator.clipboard.writeText`). Everything else
@@ -81,7 +82,7 @@ in sync when changing the policy.
 
 ## Build-time hardening (packaged app)
 
-Runtime lockdown protects the *renderer*; these protect the *binary*, so a local
+Runtime lockdown protects the _renderer_; these protect the _binary_, so a local
 attacker can't sidestep all of the above by relaunching the signed app differently.
 
 - **Electron fuses** (`apps/desktop/electron-builder.config.cjs`, `electronFuses`).
@@ -102,13 +103,32 @@ attacker can't sidestep all of the above by relaunching the signed app different
 
 ## Secrets at rest
 
-- **Auth refresh token + display claims** are sealed with Electron `safeStorage`
-  (OS keychain: macOS Keychain / Windows Credential Manager / Linux Secret Service)
-  before being written under `userData` (`apps/desktop/src/main/auth/logto.ts`). The
-  short-lived **access token stays in memory only** — never persisted.
-  - **Linux caveat:** with no Secret Service / keyring available, `safeStorage`
-    falls back to writing the blob **unencrypted** (still inside `userData`). Document
-    this for Linux users; recommend a configured keyring before enabling sync/auth.
+- **One sealed secrets vault** holds every main-process secret under `userData`:
+  `neeme-secrets.bin` (`apps/desktop/src/main/secrets/store.ts`). It is sealed with
+  Electron `safeStorage` (macOS Keychain, Windows DPAPI, Linux Secret Service /
+  libsecret or kwallet when available).
+  - Slices in the vault are owned by their caller: `auth` for the Logto refresh token
+    - display claims, `connectors` for Google connector refresh tokens, `broker` for
+      the Turso broker token, and `syncKey` for the per-device 64-hex encryption key.
+  - `main/index.ts` calls `secrets.loadAll()` once before auth, broker, sync-key, and
+    connector startup. After that, `secrets.get()` is an in-memory read; a boot with a
+    warm vault does not keep asking the OS keychain for each feature.
+  - Add future at-rest secrets as a key on `SecretsShape`, not as another sealed file.
+    Multiple files mean multiple keychain decrypts and, on unsigned/ad-hoc dev builds,
+    multiple macOS prompts.
+  - **Legacy migration:** if the vault is absent, `store.ts` tries to import the old
+    `neeme-auth.bin`, `neeme-connectors.bin`, `neeme-sync-token.bin`, and
+    `neeme-sync-key.bin`, writes the vault once, then removes the legacy files. The
+    first launch after upgrading may still prompt for those legacy decrypts.
+  - **Linux caveat:** with no backing keyring available, `safeStorage` falls back to
+    writing the blob unencrypted (still inside `userData`). Document this for Linux
+    users; recommend a configured keyring before enabling sync/auth.
+- **Access tokens stay in memory only.** Logto and Google refresh tokens are persisted
+  in the vault, but short-lived access tokens are never written to disk.
+- **macOS prompts depend on signing.** `pnpm dev` is ad-hoc signed, so Keychain
+  "Always Allow" cannot persist reliably. A Developer-ID-signed, notarized release
+  should prompt once for the vault and then honor "Always Allow"; repeated prompts from
+  a packaged build usually mean the app is unsigned or signed with a changing identity.
 - **Synced content** is field-encrypted with **AES-256-GCM** (fresh 96-bit IV per
   value, 128-bit auth tag, 256-bit key from `crypto.randomBytes`) before it leaves the
   device, so the cloud primary only ever sees ciphertext
@@ -123,7 +143,7 @@ attacker can't sidestep all of the above by relaunching the signed app different
 - Never expose Node/`ipcRenderer` directly on `window` — only scoped methods via
   `contextBridge` in `apps/desktop/src/preload`; keep the preload free of Node
   built-ins (so the sandbox holds).
-- **IPC trust model:** the renderer is the *only*, sandboxed caller of `window.api.*`.
+- **IPC trust model:** the renderer is the _only_, sandboxed caller of `window.api.*`.
   Safety at the boundary rests on the type system + **parameterized DB queries**
   (Drizzle / `?`-bound libSQL) + content-hashed file paths — not blanket runtime
   validation. Add an explicit runtime check only where a value is security-relevant

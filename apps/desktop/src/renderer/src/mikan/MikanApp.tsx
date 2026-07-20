@@ -1,6 +1,6 @@
-// MikanApp.tsx — the Nimi desktop surface: state, navigation, screens.
+// MikanApp.tsx — the Mikan desktop surface: state, navigation, screens.
 //
-// Ported from the design bundle's nimi-app.jsx. Two deliberate changes from the
+// Ported from the design bundle's mikan-app.jsx. Two deliberate changes from the
 // prototype, per the implementation brief:
 //   1. The desktop fills the real Electron window — the prototype's simulated macOS
 //      menu bar + tray popover are dropped (the OS provides real chrome; real
@@ -8,13 +8,13 @@
 //      is a single centred column on the matcha wallpaper, "the same size as mobile".
 //   2. The design-time TweaksPanel (a variation explorer) is dropped. Its chosen
 //      defaults — dark / matcha / stack / cozy / ambient-on — are applied to <html>.
-//      Accent (primary color) is now user-configurable in Settings (nimi/theme.ts);
+//      Accent (primary color) is now user-configurable in Settings (mikan/theme.ts);
 //      the header's "Plan tomorrow" button still triggers the new-day ritual.
 //   3. The prototype's menu-bar/tray search + badge live on the header here: the
 //      "waiting" badge sits on the header mark, and global search replaces the (then
 //      meaningless) "On device" pill.
 //
-// Data comes from the `data` seam (apps/.../nimi/api.ts): the real `window.api`
+// Data comes from the `data` seam (apps/.../mikan/api.ts): the real `window.api`
 // in Electron, an in-memory mock in the browser preview. AI-only fields come back
 // null until the drafting layer lands (docs/INTEGRATION.md).
 import type { BacklogItem, Memory, Task } from '@mikan/contract/views'
@@ -29,7 +29,7 @@ import { FeedView } from './feed'
 import { NIcon } from './icons'
 import { Dots, MikanMark } from './mark'
 import './mikan.css'
-import { PlanRitual } from './plan'
+import { PlanRitual, PlanReview } from './plan'
 import { SearchOverlay } from './search'
 import { SettingsView } from './settings'
 import { TaskDetail } from './task'
@@ -39,7 +39,7 @@ import type { MikanMarkState } from './types'
 const CAP = 5
 
 // The product defaults the design landed on (formerly the TweaksPanel defaults).
-// Accent (primary color) is user-configurable in Settings; see nimi/theme.ts.
+// Accent (primary color) is user-configurable in Settings; see mikan/theme.ts.
 const TWEAKS = {
   theme: 'dark',
   todayLayout: 'stack',
@@ -149,6 +149,11 @@ export default function MikanApp(): JSX.Element {
     }
   }, [reloadKey])
 
+  // The worker re-forked (sync toggle, recovery-key import) — its in-memory
+  // view is fresh (e.g. a newly-pulled replica) and no longer matches what's
+  // rendered here. Bump reloadKey to re-run the load above.
+  useEffect(() => data.data.onInvalidated(() => setReloadKey((k) => k + 1)), [])
+
   // archive → id-keyed lookup the screens read via MemoryContext (no prop drilling).
   const memMap = useMemo(
     () => Object.fromEntries(archive.map((m) => [m.id, m])) as Record<string, Memory>,
@@ -181,6 +186,40 @@ export default function MikanApp(): JSX.Element {
 
   const updateTask = (id: string, patch: Partial<Task>): void =>
     setTasks((ts) => ts.map((x) => (x.id === id ? { ...x, ...patch } : x)))
+
+  // Group 03 auto switch: optimistic flip, reconciled against the persisted
+  // value once setMode() resolves (mirrors toggleTask's optimistic pattern).
+  const toggleMode = (id: string): void => {
+    const cur = tasks.find((x) => x.id === id)
+    if (!cur) return
+    const next = cur.mode === 'auto' ? 'plan' : 'auto'
+    const prevMode = cur.mode
+    updateTask(id, { mode: next })
+    void data.todos.setMode(id, next).then((updated) => {
+      if (updated) updateTask(id, { mode: updated.mode })
+      else updateTask(id, { mode: prevMode })
+    })
+  }
+
+  // Group 03 run loop: run()/approve()/pause() each resolve to the settled task
+  // (state + receipt, and possibly a draft once a run lands one) — drop it
+  // straight into state, same pattern as every other todos.* mutator here.
+  // Returns the promise (rather than fire-and-forget) so callers with a local
+  // "busy" flag (e.g. the Today-list card) can clear it deterministically —
+  // an unconfigured drafter resolves to the task UNCHANGED, so a prop-diff-based
+  // reset wouldn't fire in that case.
+  const runTask = (id: string): Promise<void> =>
+    data.todos.run(id).then((updated) => {
+      if (updated) updateTask(id, updated)
+    })
+  const approveTask = (id: string): Promise<void> =>
+    data.todos.approve(id).then((updated) => {
+      if (updated) updateTask(id, updated)
+    })
+  const pauseTask = (id: string): Promise<void> =>
+    data.todos.pause(id).then((updated) => {
+      if (updated) updateTask(id, updated)
+    })
 
   // a new to-do (typed, or accepted from indexing) → today if there's room, else
   // the backlog. The contract has no "add to backlog", so a full day (CAP_REACHED)
@@ -297,7 +336,7 @@ export default function MikanApp(): JSX.Element {
 
   // things waiting on you: drafts ready to act + freshly-uncovered backlog to-dos
   const waiting =
-    tasks.filter((x) => !x.done && x.status === 'drafted').length +
+    tasks.filter((x) => !x.done && x.state === 'awaiting').length +
     backlog.filter((b) => b.fresh).length
 
   // Mirror the waiting count onto the tray/Dock badge. The mock no-ops; only the
@@ -329,7 +368,9 @@ export default function MikanApp(): JSX.Element {
     return (
       <div className="desk">
         <div className="desk-wall" />
-        <div className="app-frame">{authReady ? <AuthGate onLogin={login} /> : <AuthSplash />}</div>
+        <div className="app-frame">
+          {authReady ? <AuthGate onLogin={login} error={auth.lastError} /> : <AuthSplash />}
+        </div>
       </div>
     )
   }
@@ -366,6 +407,10 @@ export default function MikanApp(): JSX.Element {
                     lastFed={archive[0]?.when ?? null}
                     onOpen={setOpenId}
                     onToggle={toggleTask}
+                    onToggleMode={toggleMode}
+                    onRun={runTask}
+                    onApprove={approveTask}
+                    onPause={pauseTask}
                     onAdd={() => setOverlay('add')}
                     onPlan={() => setOverlay('plan')}
                     onTomorrow={beginNewDay}
@@ -388,17 +433,24 @@ export default function MikanApp(): JSX.Element {
                   />
                 )}
 
-                {openTask && (
-                  <TaskDetail
-                    task={openTask}
-                    index={openIndex}
-                    onBack={() => setOpenId(null)}
-                    onToggle={toggleTask}
-                    onUpdate={updateTask}
-                    onDig={openTaskSearch}
-                    onSearch={openGlobalSearch}
-                  />
-                )}
+                {openTask &&
+                  (openTask.state === 'planned' ? (
+                    <PlanReview
+                      task={openTask}
+                      onBack={() => setOpenId(null)}
+                      onUpdate={updateTask}
+                    />
+                  ) : (
+                    <TaskDetail
+                      task={openTask}
+                      index={openIndex}
+                      onBack={() => setOpenId(null)}
+                      onToggle={toggleTask}
+                      onUpdate={updateTask}
+                      onDig={openTaskSearch}
+                      onSearch={openGlobalSearch}
+                    />
+                  ))}
 
                 {overlay === 'add' && (
                   <AddSheet

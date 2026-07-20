@@ -1,4 +1,4 @@
-// mark.tsx — the Nimi mark: a monoline rounded-diamond node whose dot-grid
+// mark.tsx — the Mikan mark: a monoline rounded-diamond node whose dot-grid
 // fills in as it thinks; the frame rotates subtly while it's working.
 // states: idle | thinking | gathering | drafting | happy | done
 import { useEffect, useState } from 'react'
@@ -81,7 +81,7 @@ export function MikanMark({
   )
 }
 
-// A small "Nimi is thinking…" status line with the mark + animated copy.
+// A small "Mikan is thinking…" status line with the mark + animated copy.
 export function MikanSay({
   state = 'thinking',
   size = 22,
@@ -99,7 +99,7 @@ export function MikanSay({
   )
 }
 
-// A quiet line in Nimi's voice: ready / open question / waiting on content.
+// A quiet line in Mikan's voice: ready / open question / waiting on content.
 // kind: ready | ask | wait | gathered | done
 export function MikanNote({
   kind = 'gathered',

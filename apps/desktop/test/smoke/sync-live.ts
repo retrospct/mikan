@@ -160,15 +160,15 @@ async function orchestrate(): Promise<void> {
     return
   }
 
-  const dirA = mkdtempSync(join(tmpdir(), 'nimi-sync-a-'))
-  const dirB = mkdtempSync(join(tmpdir(), 'nimi-sync-b-'))
+  const dirA = mkdtempSync(join(tmpdir(), 'mikan-sync-a-'))
+  const dirB = mkdtempSync(join(tmpdir(), 'mikan-sync-b-'))
   let todoId: string | undefined
   try {
     console.log('\n-- Device A: capture + push --')
     const outA = runChild('a', dirA)
     todoId = /\[A\] todoId=([\w-]+)/.exec(outA)?.[1]
     console.log('\n-- Remote primary: at-rest check --')
-    runChild('primary', mkdtempSync(join(tmpdir(), 'nimi-sync-p-')))
+    runChild('primary', mkdtempSync(join(tmpdir(), 'mikan-sync-p-')))
     console.log('\n-- Device B: pull + decrypt + search --')
     runChild('b', dirB)
     console.log('\n✓ PASS — encrypted note + todo synced A → primary (ciphertext) → B (decrypted).')

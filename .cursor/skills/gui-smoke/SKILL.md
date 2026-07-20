@@ -1,7 +1,7 @@
 ---
 name: gui-smoke
 description: >-
-  Smoke-test a nimi desktop (Electron) feature end-to-end and produce
+  Smoke-test a mikan desktop (Electron) feature end-to-end and produce
   reviewable artifacts (screenshot + short video) plus a pass/fail report. Use
   when asked to "smoke test", "follow the runbook", "verify this PR in the UI",
   or to test any GUI-facing change in apps/desktop. Encodes the standing SOP so
@@ -11,7 +11,7 @@ paths:
   - docs/testing/**
 ---
 
-# GUI smoke (nimi desktop)
+# GUI smoke (mikan desktop)
 
 The SOP for verifying a GUI-facing change in the Electron app and returning
 consistent evidence. Two tiers: a deterministic tier that just passes/fails,

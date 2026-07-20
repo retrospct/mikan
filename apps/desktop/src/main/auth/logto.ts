@@ -21,13 +21,15 @@
  * trust boundary that verifies it (still deferred — no backend yet).
  */
 import { brand } from '@mikan/brand'
-import type { AuthClaims, AuthState } from '@mikan/contract/ipc'
-import { shell } from 'electron'
+import type { AuthClaims, AuthLoginError, AuthState } from '@mikan/contract/ipc'
+import { app, shell } from 'electron'
 import { createRemoteJWKSet } from 'jose'
 import * as secrets from '../secrets/store'
+import { DEV_LOOPBACK_PORT, startDevCallbackServer } from './dev-loopback'
 import {
   buildAuthorizeUrl,
   claimsFromPayload,
+  parseCallbackParams,
   pkceChallenge,
   randomNonce,
   randomState,
@@ -35,8 +37,20 @@ import {
   verifyIdToken
 } from './oidc'
 
-const REDIRECT_URI = `${brand.scheme}://callback`
+const SCHEME_REDIRECT_URI = `${brand.scheme}://callback`
 const SCOPE = 'openid profile email offline_access'
+
+/**
+ * The packaged app registers `<scheme>://callback` in its Info.plist, so the
+ * OS routes the browser hand-off straight back to the app. In `pnpm dev` on
+ * macOS that registration instead resolves to a freshly-launched vanilla
+ * Electron.app (the dev binary), so dev uses an RFC 8252 loopback redirect
+ * the running process is already listening on. See dev-loopback.ts and the
+ * amendment in docs/adr/0002-authentication.md.
+ */
+function currentRedirectUri(): string {
+  return app.isPackaged ? SCHEME_REDIRECT_URI : `http://127.0.0.1:${DEV_LOOPBACK_PORT}/callback`
+}
 
 type Listener = (state: AuthState, accessToken?: string) => void
 type JwksResolver = ReturnType<typeof createRemoteJWKSet>
@@ -68,8 +82,11 @@ const resource = import.meta.env.MAIN_VITE_LOGTO_RESOURCE || undefined
 let discovery: OidcConfig | null = null
 let jwks: JwksResolver | null = null
 let session: Session | null = null
-let pending: { verifier: string; state: string; nonce: string } | null = null
+let pending: { verifier: string; state: string; nonce: string; redirectUri: string } | null = null
 let listener: Listener | null = null
+/** Why the last interactive sign-in attempt failed. Null once cleared (new
+ *  attempt, success, or logout) — see AuthLoginError in the contract. */
+let lastError: AuthLoginError | null = null
 
 export function isConfigured(): boolean {
   return Boolean(endpoint && appId)
@@ -176,46 +193,112 @@ export async function startLogin(): Promise<void> {
       'Logto is not configured (set MAIN_VITE_LOGTO_ENDPOINT and MAIN_VITE_LOGTO_APP_ID).'
     )
   }
-  const cfg = await discover()
-  const verifier = randomVerifier()
-  const state = randomState()
-  const nonce = randomNonce()
-  pending = { verifier, state, nonce }
+  // Clear any error from a prior attempt the moment a retry starts, so the
+  // gate doesn't keep showing a stale failure while this attempt is in flight.
+  lastError = null
+  emit()
 
-  const url = buildAuthorizeUrl({
-    authorizationEndpoint: cfg.authorization_endpoint,
-    clientId: appId,
-    redirectUri: REDIRECT_URI,
-    scope: SCOPE,
-    challenge: pkceChallenge(verifier),
-    state,
-    nonce,
-    resource
-  })
-  await shell.openExternal(url)
+  try {
+    const cfg = await discover()
+    const verifier = randomVerifier()
+    const state = randomState()
+    const nonce = randomNonce()
+    const redirectUri = currentRedirectUri()
+    console.log(
+      `[auth] starting login — app.isPackaged=${app.isPackaged}, redirect_uri=${redirectUri}`
+    )
+    // Overwrites any pending flow from a prior click — the newest attempt wins,
+    // and a stale callback from the old one is ignored (see handleCallback).
+    pending = { verifier, state, nonce, redirectUri }
+
+    const url = buildAuthorizeUrl({
+      authorizationEndpoint: cfg.authorization_endpoint,
+      clientId: appId,
+      redirectUri,
+      scope: SCOPE,
+      challenge: pkceChallenge(verifier),
+      state,
+      nonce,
+      resource
+    })
+
+    if (!app.isPackaged) {
+      // The callback lands on this listener (not a deep link — see currentRedirectUri).
+      await startDevCallbackServer({
+        port: DEV_LOOPBACK_PORT,
+        onCallback: (callbackUrl) => {
+          void handleCallback(callbackUrl).catch((err) =>
+            console.error('[auth] dev callback failed', err)
+          )
+        },
+        onTimeout: () => {
+          if (!pending) return
+          pending = null
+          lastError = { code: 'login_failed', message: 'Sign-in timed out — try again.' }
+          emit()
+        }
+      })
+      console.log(`[auth] dev loopback listening on 127.0.0.1:${DEV_LOOPBACK_PORT}`)
+    }
+
+    console.log('[auth] opening system browser:', url)
+    await shell.openExternal(url)
+  } catch (err) {
+    pending = null
+    lastError = {
+      code: 'login_failed',
+      message: err instanceof Error ? err.message : String(err)
+    }
+    emit()
+    throw err
+  }
 }
 
-/** Handle the `<scheme>://callback?code=...&state=...` deep link from the browser. */
+/**
+ * Handle the OAuth callback — either the `<scheme>://callback` deep link
+ * (packaged) or the loopback `http://127.0.0.1:<port>/callback` request (dev).
+ */
 export async function handleCallback(callbackUrl: string): Promise<void> {
   if (!pending) return
-  const u = new URL(callbackUrl)
-  const code = u.searchParams.get('code')
-  const state = u.searchParams.get('state')
+  const p = parseCallbackParams(callbackUrl)
+
+  if (p.error) {
+    pending = null
+    lastError =
+      p.error === 'access_denied'
+        ? { code: 'user_cancelled', message: 'Sign-in was cancelled.' }
+        : { code: 'login_failed', message: p.errorDescription ?? `Sign-in failed (${p.error}).` }
+    emit()
+    return
+  }
+  if (!p.code || p.state !== pending.state) {
+    // A stale/foreign callback (e.g. a delayed link from a superseded flow).
+    // Keep `pending` untouched so a still-in-flight real callback can succeed.
+    console.warn('[auth] callback ignored: missing code or state mismatch')
+    return
+  }
+
   const expected = pending
   pending = null
-  if (!code || state !== expected.state) {
-    throw new Error('Logto callback: missing code or state mismatch')
+  try {
+    await exchange(
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: p.code,
+        redirect_uri: expected.redirectUri,
+        client_id: appId,
+        code_verifier: expected.verifier
+      }),
+      expected.nonce
+    )
+  } catch (err) {
+    lastError = {
+      code: 'login_failed',
+      message: err instanceof Error ? err.message : String(err)
+    }
+    emit()
+    throw err
   }
-  await exchange(
-    new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: REDIRECT_URI,
-      client_id: appId,
-      code_verifier: expected.verifier
-    }),
-    expected.nonce
-  )
 }
 
 /** Return a valid access token, refreshing if near expiry. `undefined` if signed out. */
@@ -240,6 +323,7 @@ export async function getAccessToken(): Promise<string | undefined> {
 
 export async function logout(): Promise<void> {
   session = null
+  lastError = null
   await persist()
   emit()
 }
@@ -248,7 +332,8 @@ export function getState(): AuthState {
   return {
     configured: isConfigured(),
     isAuthenticated: Boolean(session),
-    claims: session?.claims ?? null
+    claims: session?.claims ?? null,
+    lastError
   }
 }
 

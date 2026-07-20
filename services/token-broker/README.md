@@ -32,7 +32,7 @@ Authorization: Bearer <logto_access_token>
 | `LOGTO_AUDIENCE` | yes | Logto API resource or app-id |
 | `TURSO_PLATFORM_TOKEN` | yes | Turso org-admin token (never shipped to clients) |
 | `TURSO_ORG` | yes | Turso org slug |
-| `TURSO_GROUP` | yes | Turso group name, e.g. `nimi-primary` |
+| `TURSO_GROUP` | yes | Turso group name, e.g. `mikan-primary` |
 | `TOKEN_TTL_SECONDS` | no | DB token lifetime; default 3600 (1 h) |
 | `PORT` | no | Local dev port; default 3100 |
 
@@ -48,7 +48,7 @@ export LOGTO_ISSUER=https://your-logto-domain/oidc
 export LOGTO_AUDIENCE=your-api-resource
 export TURSO_PLATFORM_TOKEN=your-turso-token
 export TURSO_ORG=your-org-slug
-export TURSO_GROUP=nimi-primary
+export TURSO_GROUP=mikan-primary
 
 pnpm dev
 # → http://localhost:3100

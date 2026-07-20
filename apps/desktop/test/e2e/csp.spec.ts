@@ -58,7 +58,7 @@ let cleanupUserDataDir = (): void => {}
 const cspViolations: string[] = []
 
 test.beforeAll(async () => {
-  const launched = await launchBuiltApp('nimi-csp-e2e-')
+  const launched = await launchBuiltApp('mikan-csp-e2e-')
   app = launched.app
   page = launched.page
   cleanupUserDataDir = launched.cleanupUserDataDir

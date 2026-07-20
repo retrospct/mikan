@@ -17,7 +17,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-const tmpDir = mkdtempSync(join(tmpdir(), 'nimi-test-'))
+const tmpDir = mkdtempSync(join(tmpdir(), 'mikan-test-'))
 process.env.NEEME_USER_DATA = tmpDir
 process.env.NEEME_EMBEDDER = 'hash'
 process.env.NEEME_DRAFTER = 'off'

@@ -16,7 +16,7 @@ import { join } from 'node:path'
 
 // Must be set BEFORE importing the data layer (db/index.ts resolves the DB path
 // and embed.ts picks the embedder at module-init).
-process.env.NEEME_USER_DATA ??= mkdtempSync(join(tmpdir(), 'nimi-smoke-'))
+process.env.NEEME_USER_DATA ??= mkdtempSync(join(tmpdir(), 'mikan-smoke-'))
 process.env.NEEME_EMBEDDER ??= 'hash' // deterministic, offline — no model download
 process.env.NEEME_EXTRACTOR = 'off' // no background OCR/ASR → image stays `pending`
 
@@ -31,7 +31,7 @@ function check(label: string, ok: boolean): void {
 
 async function main(): Promise<void> {
   console.log(`[smoke] data dir: ${process.env.NEEME_USER_DATA}`)
-  const { client } = await import('../../src/main/db')
+  const { client, vecClient } = await import('../../src/main/db')
   const { initDb } = await import('../../src/main/db')
   const { pipelineService } = await import('../../src/main/services/pipeline-service')
 
@@ -45,8 +45,9 @@ async function main(): Promise<void> {
     const r = res.rows[0]
     return r ? { status: String(r.status), text: String(r.text) } : null
   }
+  // chunks live in neeme-vec.db (vecClient) since commit 00b72eb (#86)
   const chunkCount = async (id: string): Promise<number> => {
-    const res = await client.execute({
+    const res = await vecClient.execute({
       sql: 'SELECT count(*) AS n FROM chunks WHERE item_id = ?',
       args: [id]
     })

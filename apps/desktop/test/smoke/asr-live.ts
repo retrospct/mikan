@@ -1,7 +1,7 @@
 /**
  * Live ASR smoke — tests actual Whisper (transformers.js) extraction with a real WAV.
  *
- * The WAV fixture (sample.wav) contains "Hello Mikan smoke test audio transcription"
+ * The WAV fixture (sample.wav) contains "Hello Nimi smoke test audio transcription"
  * synthesised by macOS `say`. WhisperAsr downloads the Whisper-tiny ONNX model
  * (~75 MB) on first run; ffmpeg-static decodes the WAV to 16 kHz mono PCM for it.
  *
@@ -10,12 +10,12 @@
  * authorization. A bare CLI process crashes without an app bundle. Verify it manually
  * by running the Electron app and capturing a voice memo.
  *
- * Run: NEEME_USER_DATA=/tmp/nimi-smoke-asr pnpm --filter @mikan/desktop exec tsx test/smoke/asr-live.ts
+ * Run: NEEME_USER_DATA=/tmp/mikan-smoke-asr pnpm --filter @mikan/desktop exec tsx test/smoke/asr-live.ts
  */
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-process.env.NEEME_USER_DATA ??= '/tmp/nimi-smoke-asr'
+process.env.NEEME_USER_DATA ??= '/tmp/mikan-smoke-asr'
 process.env.NEEME_EMBEDDER ??= 'hash'
 process.env.NEEME_EXTRACTOR = 'portable' // force Whisper, not mac-speech
 

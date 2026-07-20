@@ -13,6 +13,7 @@ import { app, BrowserWindow, Tray, Menu, globalShortcut, screen, nativeImage } f
 import type { MenuItem, MenuItemConstructorOptions } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
+import { brand } from '@mikan/brand'
 import trayIconAsset from '../../../resources/trayTemplate.png?asset'
 import appIcon from '../../../resources/icon.png?asset'
 
@@ -156,10 +157,10 @@ export function initTrayWindow(): void {
   const img = nativeImage.createFromPath(trayIconAsset)
   if (process.platform === 'darwin') img.setTemplateImage(true)
   tray = new Tray(img)
-  tray.setToolTip('Mikan')
+  tray.setToolTip(brand.productName)
 
   const template: MenuItemConstructorOptions[] = [
-    { label: 'Show Mikan', click: () => showAnchored() },
+    { label: `Show ${brand.productName}`, click: () => showAnchored() },
     {
       label: 'Pin on top',
       type: 'checkbox',
@@ -181,7 +182,7 @@ export function initTrayWindow(): void {
   template.push(
     { type: 'separator' },
     {
-      label: 'Quit Mikan',
+      label: `Quit ${brand.productName}`,
       accelerator: 'CommandOrControl+Q',
       click: () => {
         quitting = true

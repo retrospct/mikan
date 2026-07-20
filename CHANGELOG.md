@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.6.0](https://github.com/retrospct/mikan/compare/v1.5.0...v1.6.0) (2026-07-20)
+
+
+### Features
+
+* **auto-mode:** real run loop + Auto/Plan toggle (RETRO-15, S5) ([#119](https://github.com/retrospct/mikan/issues/119)) ([84b3d0f](https://github.com/retrospct/mikan/commit/84b3d0f2f19cc80c8725cb9dc6d14cb9f0a6f6af))
+* **contract:** lifecycle integration — retire TaskStatus (RETRO-16, S6) ([#122](https://github.com/retrospct/mikan/issues/122)) ([6750d00](https://github.com/retrospct/mikan/commit/6750d0026b00a185f0ecbf2ad4db409e5ee3097d))
+* **contract:** Mikan Flows task lifecycle foundation (RETRO-10) ([#110](https://github.com/retrospct/mikan/issues/110)) ([ab67f46](https://github.com/retrospct/mikan/commit/ab67f4649170a3e2b34592f3a419db533db46f5f))
+* Nimi → Mikan rebrand + agent reference ([#137](https://github.com/retrospct/mikan/issues/137)) ([da56ef6](https://github.com/retrospct/mikan/commit/da56ef665483fc65fe51ed3513f44afa02bc26c0))
+* **renderer:** growing-card component (Group 07) ([#115](https://github.com/retrospct/mikan/issues/115)) ([2456870](https://github.com/retrospct/mikan/commit/245687009c9f6451a2990ebb5324db16e74e9452))
+* **renderer:** plan mode — the plan review/accept + auto/ask (Group 12, RETRO-14) ([#118](https://github.com/retrospct/mikan/issues/118)) ([a85295c](https://github.com/retrospct/mikan/commit/a85295c329086a965a010aa286f2c65827c987e2))
+* **renderer:** task expand → workspace (Group 02, RETRO-13) ([#116](https://github.com/retrospct/mikan/issues/116)) ([0b37c3d](https://github.com/retrospct/mikan/commit/0b37c3d90a969aa3ded10770b090a25ca33cf2be))
+* **renderer:** wire Today/Stack to the task lifecycle (RETRO-12, S2) ([#117](https://github.com/retrospct/mikan/issues/117)) ([d55bb8e](https://github.com/retrospct/mikan/commit/d55bb8ea4181e8ae156f651e474ad37363e62850))
+
+
+### Bug Fixes
+
+* **desktop:** brand tray tooltip + Show/Quit labels (Nimi → Mikan) ([#96](https://github.com/retrospct/mikan/issues/96)) ([dc5d57c](https://github.com/retrospct/mikan/commit/dc5d57c7147f232bdde8fadcfa68c93a7f2d6761))
+* **desktop:** dev-mode Logto login via loopback redirect + sync correctness ([#136](https://github.com/retrospct/mikan/issues/136)) ([7934e0b](https://github.com/retrospct/mikan/commit/7934e0b52a350d50e91a37902249ccb558a90b74))
+* inline feedback for Settings "Check for updates" (RETRO-7) ([#113](https://github.com/retrospct/mikan/issues/113)) ([22e0d94](https://github.com/retrospct/mikan/commit/22e0d94ef05ce2c727b250416bc809e2c00377df))
+* route chunks to vecClient, trim NEEME_* env flags (RETRO-6) ([#99](https://github.com/retrospct/mikan/issues/99)) ([c1504fa](https://github.com/retrospct/mikan/commit/c1504fadb96439fe87fdc23e9ddfc082eecc745a))
+* **test:** update broker-client tests for secrets-vault persistence ([#114](https://github.com/retrospct/mikan/issues/114)) ([ae44d11](https://github.com/retrospct/mikan/commit/ae44d11ccd3ccdb7c55884b22250d1003f23e77f))
+
 ## [1.5.0](https://github.com/retrospct/nimi/compare/v1.4.0...v1.5.0) (2026-06-25)
 
 

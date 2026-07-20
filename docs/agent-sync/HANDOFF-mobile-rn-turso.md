@@ -123,7 +123,7 @@ apps/mobile/
   src/db/{client,schema,bootstrap,index}.ts ← connect/exec/pull, broker→openDb bootstrap
 services/mastra/
   src/model.ts                ← AI Gateway model resolution
-  src/agents/nimi-agent.ts · src/tools/*  ← agent + (mock) tools
+  src/agents/mikan-agent.ts · src/tools/*  ← agent + (mock) tools
   src/inngest/functions/ingest-pipeline.ts · scripts/inngest-dev-server.ts
 docs/adr/0008 (broker) · 0009 (mobile RN+Turso)
 ```

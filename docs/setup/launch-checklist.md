@@ -77,7 +77,7 @@ it and retire the old project
   the `https://auth.getmikan.com/callback/<connector-id>` variant when the custom
   domain goes Active**, or Google sign-in breaks there.
 - Real 1024×1024 icons — **Mikan done** (`apps/desktop/assets/mikan/icon.{svg,png}`,
-  derived from the NimiMark on the teal field; regenerate platform sets from the SVG).
+  derived from the MikanMark on the teal field; regenerate platform sets from the SVG).
 - Branch protection — require the `commitlint` check on PRs once PRs resume.
 
 ## Already done (for reference)

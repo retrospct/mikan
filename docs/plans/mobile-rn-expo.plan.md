@@ -74,9 +74,9 @@ without a compile step.
 | `@mikan/contract/ipc` ([ipc.ts](../../packages/contract/src/ipc.ts)) | ❌ no runtime meaning | `window.api.*` is the Electron preload/IPC surface; RN has no preload. (Types could be imported, but the transport doesn't exist.) |
 
 The desktop UI surfaces mobile would mirror live in
-[`apps/desktop/src/renderer/src/nimi/`](../../apps/desktop/src/renderer/src/nimi/) — `NimiApp.tsx`
+[`apps/desktop/src/renderer/src/mikan/`](../../apps/desktop/src/renderer/src/mikan/) — `MikanApp.tsx`
 (shell/nav), `feed.tsx` (the recent-capture stream + quick capture), `today.tsx` (daily todos),
-`add.tsx` (capture sheet). The desktop seam pattern ([`api.ts`](../../apps/desktop/src/renderer/src/nimi/api.ts):
+`add.tsx` (capture sheet). The desktop seam pattern ([`api.ts`](../../apps/desktop/src/renderer/src/mikan/api.ts):
 `window.api` in Electron, mock in browser) is a good template for an analogous mobile `data` seam
 — except mobile's "real" backend is HTTP, not IPC.
 
@@ -131,7 +131,7 @@ turborepo). Key differences from a from-scratch approach are called out in each 
 
    **t3-turbo divergence — `tooling/typescript`.** t3-turbo has a dedicated `tooling/typescript`
    package (`@acme/tsconfig`) with `base.json` containing strict shared compiler options (`ES2022`,
-   `moduleResolution: Bundler`, `noUncheckedIndexedAccess`, etc.). Nimi doesn't have this yet —
+   `moduleResolution: Bundler`, `noUncheckedIndexedAccess`, etc.). Mikan doesn't have this yet —
    configs are per-app. Not blocking for the mobile scaffold, but flagged as a future improvement
    (a `tooling/tsconfig` package would let both `apps/desktop` and `apps/mobile` share strictness
    settings without duplication).
@@ -343,7 +343,7 @@ open:
 1. **Auth gate** — a Logto login screen / signed-out state; signed-in unlocks the tabs. (No-op /
    "configure auth" state when Logto env is unset, mirroring desktop's graceful degradation.)
 2. **Feed (read)** — list recent captures via `getRecent` → projected to `FedItem[]`; the read-only
-   analog of desktop [`feed.tsx`](../../apps/desktop/src/renderer/src/nimi/feed.tsx). `pending` vs
+   analog of desktop [`feed.tsx`](../../apps/desktop/src/renderer/src/mikan/feed.tsx). `pending` vs
    `done` status surfaced the same way.
 3. **Capture-a-note** — a text field → `addNote` (`POST /notes`); the smallest write that proves the
    round-trip (capture on phone, see it in the feed). File/photo/voice capture is **explicitly out

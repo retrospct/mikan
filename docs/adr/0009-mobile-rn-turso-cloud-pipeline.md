@@ -15,7 +15,7 @@ the mobile slot now scaffolded, we need to commit to three interrelated decision
 
 1. **Mobile data layer** — how does the mobile app store and retrieve captures?
 2. **Mobile AI pipeline** — who runs embedding / extraction / briefing for mobile captures?
-3. **Mobile agent layer** — how does conversational AI ("ask Nimi") work on mobile?
+3. **Mobile agent layer** — how does conversational AI ("ask Mikan") work on mobile?
 
 ### Why the original plan (thin FastAPI HTTP client) is wrong
 
@@ -104,7 +104,7 @@ iOS/Android app (apps/mobile)
   ├─ capture → fire memory/ingest ──► Inngest (services/mastra on Vercel)│
   │                                    extract → chunk → brief → libSQL  │
   │                                                                       │
-  └─ ask Nimi → POST /api/mastra ──► Mastra agent (services/mastra)      │
+  └─ ask Mikan → POST /api/mastra ──► Mastra agent (services/mastra)      │
                                       search-memories ──────────────────►│
                                       add-todo ───────────────────────── │
                                                                           ▼
@@ -140,7 +140,7 @@ iOS/Android app (apps/mobile)
 | Spike | File | What it validates |
 |---|---|---|
 | Turso offline sync | `apps/mobile/src/db/`, `app/(tabs)/_spike-db.tsx` | `@tursodatabase/sync-react-native` builds + links on iOS dev client; write → offline → sync round-trip works |
-| Mastra agent | `services/mastra/src/agents/nimi-agent.ts`, `src/tools/` | Tool-calling loop; agent instructions produce correct behavior |
+| Mastra agent | `services/mastra/src/agents/mikan-agent.ts`, `src/tools/` | Tool-calling loop; agent instructions produce correct behavior |
 | Inngest durable pipeline | `services/mastra/src/inngest/functions/ingest-pipeline.ts` | `step.ai.infer()` pauses between steps; retries are per-step, not whole-function |
 
 ## Phase 1 checklist (not yet done)

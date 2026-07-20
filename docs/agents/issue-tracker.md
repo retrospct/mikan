@@ -1,3 +1,5 @@
+> **Also see:** [`REFERENCE.md`](REFERENCE.md) — recommended Matt flow + full Linear setup (Triage inbox, labels, checklist).
+
 # Issue tracker: Linear
 
 Issues and PRDs for this repo live in **Linear**, not in GitHub Issues. Skills that

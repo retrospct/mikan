@@ -1,0 +1,7 @@
+flowchart TB
+    subgraph Desktop["Desktop — has a local store"]
+        d1["Retrieve on-device"] --> d2["Send query + snippets"] --> d3["Cloud agent reasons"]
+    end
+    subgraph Mobile["Mobile — no local store"]
+        m1["Send query"] --> m2["Agent searches the synced cloud DB"] --> m3["Cloud agent reasons"]
+    end

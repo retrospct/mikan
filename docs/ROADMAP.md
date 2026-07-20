@@ -1,4 +1,4 @@
-# Nimi roadmap
+# Mikan roadmap
 
 Shared punch list. **Baseline:** all 15 original items shipped. Lanes: **back** = `apps/desktop/src/main` + `packages/contract`; **front** = `apps/desktop/src/renderer`.
 
@@ -14,7 +14,7 @@ Shared punch list. **Baseline:** all 15 original items shipped. Lanes: **back** 
 - Scaffold: auth (Logto, inert until configured).
 - AI drafting layer: `Drafter` seam + `CloudDrafter` (Anthropic BYO-key via `NEEME_ANTHROPIC_KEY`). All AI-gap fields (`brief`/`draft`/`note`/`noteKind`/`gathering→drafted`/`BacklogItem.conf`/per-context `whyMap`) backed; degrade to null without a key. Override model with `NEEME_DRAFTER_MODEL`.
 - `captureFile` over IPC + capture UX (#4): `pipelineCaptureFile` channel, `Uint8Array` over structured-clone, content-hash dedup in the backend, feed maw drag-drop + hidden file picker, add-sheet paperclip/camera inputs, window-level nav guard, browser-preview mock parity (`capture-file.ts`).
-- Feed view + uncovered-todos (#6): the Feed tab streams real captures (`pipeline.feed()`) and surfaces to-dos Nimi infers from the recent feed (`Drafter.uncover()` → `pipeline.uncoverTodos()`), cached in `meta`, "Add to backlog" wired. Degrades to no suggestions without a key.
+- Feed view + uncovered-todos (#6): the Feed tab streams real captures (`pipeline.feed()`) and surfaces to-dos Mikan infers from the recent feed (`Drafter.uncover()` → `pipeline.uncoverTodos()`), cached in `meta`, "Add to backlog" wired. Degrades to no suggestions without a key.
 - Image + audio extraction (OCR / ASR): async background extraction via `ocr`/`asr` seams; tesseract.js + Whisper (portable), Vision+Speech Swift helper (macOS fast path). `NEEME_EXTRACTOR=off` parks as pending.
 
 ## Punch list
@@ -29,7 +29,7 @@ Shared punch list. **Baseline:** all 15 original items shipped. Lanes: **back** 
 | 3   | ~~AI drafting layer (LLM → `brief`/`draft`/`note`, `gathering→drafted`, backlog `conf`, the "why" strings)~~ ✅ | back         | every AI-gap field                               | L    | ✅ shipped  |
 | 4   | ~~`captureFile` over IPC + capture UX (drag-drop / picker)~~ ✅                                          | back + front | capturing PDFs/files, not just typed notes       | M    | ✅ shipped  |
 | 5   | ~~Image + audio extraction (OCR / transcription)~~ ✅                                                    | back         | screenshots & voice memos as memories            | M–L  | ✅ shipped  |
-| 6   | ~~Feed view + uncovered-todos (Nimi proposes todos from the feed)~~ ✅ **done**                            | back + front | the `FedItem` / `UncoveredTodo` surfaces         | M    | ✅ shipped  |
+| 6   | ~~Feed view + uncovered-todos (Mikan proposes todos from the feed)~~ ✅ **done**                            | back + front | the `FedItem` / `UncoveredTodo` surfaces         | M    | ✅ shipped  |
 | 7   | ~~**Worker-service tests (vitest)**~~ ✅ **done**                                                        | back         | guards pipeline/todo logic                       | M    | ✅ shipped  |
 | 8   | ~~**Connectors / ingest (email, calendar, …)**~~ ✅ **done**                                             | back         | automatic capture vs manual                      | L    | ✅ shipped  |
 | 9   | ~~Auth end-to-end (Logto **Native** app + PKCE, id_token JWKS-verified)~~ ✅ **done** (PR #35)            | back + front | real accounts                                    | M    | ✅ shipped  |
@@ -75,5 +75,5 @@ All 15 original items are shipped. The items below track work that emerged after
 ## Decisions gating work
 
 - **AI model (gates #3):** → [ADR 0004](adr/0004-ai-drafting-model.md) _(accepted: cloud BYO-key behind a `Drafter` seam)_
-- **OCR / ASR (gates #5):** → [ADR 0005](adr/0005-image-audio-extraction.md) _(accepted + shipped: tesseract.js OCR / Whisper ASR portable path; macOS Vision+Speech fast path via `resources/mac/nimi-extract` Swift helper)_
+- **OCR / ASR (gates #5):** → [ADR 0005](adr/0005-image-audio-extraction.md) _(accepted + shipped: tesseract.js OCR / Whisper ASR portable path; macOS Vision+Speech fast path via `resources/mac/mikan-extract` Swift helper)_
 - **Repo structure (gates #14):** → [ADR 0006](adr/0006-repo-structure.md) _(accepted: monorepo NOW — ✅ done)_

@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs'
-import { join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { userDataDir } from '../runtime/paths'
 
 /**
@@ -14,7 +14,7 @@ import { userDataDir } from '../runtime/paths'
  * Tesseract doesn't decode HEIC natively.
  *
  * Env vars:
- *   NEEME_MAC_HELPER  — path to the compiled nimi-extract binary (set by worker/client.ts)
+ *   NEEME_MAC_HELPER  — path to the compiled mikan-extract binary (set by worker/client.ts)
  *   NEEME_EXTRACTOR   — 'portable' forces TesseractOcr even on macOS
  *   NEEME_OCR_LANG    — Tesseract language code (default: 'eng')
  */
@@ -57,9 +57,7 @@ export class TesseractOcr implements Ocr {
 
   async extract(filePath: string, mime?: string): Promise<string> {
     const isHeic =
-      filePath.toLowerCase().endsWith('.heic') ||
-      mime === 'image/heic' ||
-      mime === 'image/heif'
+      filePath.toLowerCase().endsWith('.heic') || mime === 'image/heic' || mime === 'image/heif'
 
     let recognizePath = filePath
     let tempPath: string | null = null
@@ -89,7 +87,9 @@ export class TesseractOcr implements Ocr {
       if (tempPath) {
         try {
           unlinkSync(tempPath)
-        } catch {}
+        } catch {
+          // ignore: temp file may already be removed
+        }
       }
     }
   }
@@ -120,7 +120,7 @@ function spawnHelper(helperPath: string, command: string, filePath: string): Pro
       if (code !== 0) {
         reject(
           new Error(
-            `[nimi-extract] ${command} exited ${code}: ${Buffer.concat(err).toString().trim()}`
+            `[mikan-extract] ${command} exited ${code}: ${Buffer.concat(err).toString().trim()}`
           )
         )
         return
@@ -148,7 +148,7 @@ const extMode = process.env.NEEME_EXTRACTOR?.trim()
 const helper = extMode === 'off' || extMode === 'portable' ? null : detectHelper()
 
 /**
- * The active OCR impl. On macOS with the nimi-extract helper present, Vision is
+ * The active OCR impl. On macOS with the mikan-extract helper present, Vision is
  * used; otherwise Tesseract (portable WASM). `NEEME_EXTRACTOR=portable` forces
  * Tesseract even on macOS. `NEEME_EXTRACTOR=off` is handled at the caller —
  * the singleton still resolves to Tesseract (but extraction won't be scheduled).

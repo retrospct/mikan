@@ -20,14 +20,14 @@ let ready: Promise<void> | null = null
 let seq = 0
 const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>()
 
-/** Resolve the nimi-extract Swift helper binary, or undefined if absent. */
+/** Resolve the mikan-extract Swift helper binary, or undefined if absent. */
 function macHelperPath(): string | undefined {
   if (process.platform !== 'darwin') return undefined
   // In a packaged app, resources are unpacked alongside the asar.
   // In dev, the binary lives next to the source resources directory.
   const candidates = [
-    join(process.resourcesPath ?? '', 'mac', 'nimi-extract'),
-    join(__dirname, '../../resources/mac/nimi-extract')
+    join(process.resourcesPath ?? '', 'mac', 'mikan-extract'),
+    join(__dirname, '../../resources/mac/mikan-extract')
   ]
   return candidates.find((p) => existsSync(p))
 }

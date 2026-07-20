@@ -1,7 +1,7 @@
 # Runbook: Uncovered Todos — GUI Test
 
 This runbook covers the full end-to-end GUI verification for the **uncovered-todos** feature:
-Nimi infers candidate to-dos from the recent capture feed via the Claude API, displays them
+Mikan infers candidate to-dos from the recent capture feed via the Claude API, displays them
 in the Feed tab with confidence rings, and lets the user add them to backlog.
 
 ---
@@ -39,7 +39,7 @@ only part that requires a cloud agent with an X11 display and an Anthropic key.
 ## 1. Checkout and install
 
 ```bash
-git clone https://github.com/retrospct/nimi.git   # skip if already cloned
+git clone https://github.com/retrospct/mikan.git   # skip if already cloned
 cd nimi
 git checkout claude/strange-bassi-9974c1
 pnpm install
@@ -231,7 +231,7 @@ Review the layout of the Feed tab:
 - [ ] "Added" state (button disabled, check icon) is visually distinct from "Backlog" state.
 
 > If the cards look cramped, adjust `.unc` and `.fed-list` padding in
-> `apps/desktop/src/renderer/src/nimi/nimi.css`.
+> `apps/desktop/src/renderer/src/mikan/mikan.css`.
 
 ---
 

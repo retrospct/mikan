@@ -79,7 +79,7 @@ test('picker: choosing a PDF captures + extracts it (renderer → IPC → worker
   // Ground truth: the row persisted in the archive…
   await waitForArchiveSrc('sample.pdf')
   // …and the UI surfaces the extracted PDF text (a PDF's feed title is its text).
-  await expect(page.locator('.fed-list')).toContainText('Hello Nimi smoke test')
+  await expect(page.locator('.fed-list')).toContainText('Hello smoke test')
 })
 
 test('drag-drop: dropping a file on the maw captures it', async () => {

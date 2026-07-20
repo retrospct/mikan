@@ -65,7 +65,10 @@ async function main(): Promise<void> {
   check("memory.kind === 'pdf'", pdf.memory.kind === 'pdf')
   const pdfRow = await rowOf(pdf.memory.id)
   check("items.status === 'extracted'", pdfRow?.status === 'extracted')
-  check('extracted text is non-empty', !!pdfRow && pdfRow.text.trim().length > 0)
+  check(
+    'extracted text contains fixture phrase',
+    !!pdfRow && pdfRow.text.includes('Hello smoke test')
+  )
   check('chunks indexed (> 0)', (await chunkCount(pdf.memory.id)) > 0)
 
   // ── PDF idempotency: same bytes → same id, not re-created ──────────────────
@@ -83,7 +86,7 @@ async function main(): Promise<void> {
   const txt = await pipelineService.captureFile(bytesOf('sample.txt'), 'sample.txt', 'text/plain')
   const txtRow = await rowOf(txt.memory.id)
   check("items.status === 'extracted'", txtRow?.status === 'extracted')
-  check('text contains fixture phrase', !!txtRow && txtRow.text.includes('Hello Nimi smoke test'))
+  check('text contains fixture phrase', !!txtRow && txtRow.text.includes('Hello smoke test'))
   check('chunks indexed (> 0)', (await chunkCount(txt.memory.id)) > 0)
 
   // ── Image (PNG): stored, parked as pending (no extractor) ────────────────

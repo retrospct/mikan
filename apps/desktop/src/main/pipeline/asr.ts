@@ -6,13 +6,13 @@ import { userDataDir } from '../runtime/paths'
 /**
  * ASR (automatic speech recognition) seam — mirrors the embedder/drafter pattern.
  *
- * On macOS with the nimi-extract helper, Speech framework is used (fast, on-device,
+ * On macOS with the mikan-extract helper, Speech framework is used (fast, on-device,
  * no model download). On all other platforms, WhisperAsr decodes the audio via
  * ffmpeg (→ 16kHz mono f32le PCM), then runs Xenova/whisper-tiny via
  * transformers.js / onnxruntime (the same runtime already used for MiniLM).
  *
  * Env vars:
- *   NEEME_MAC_HELPER     — path to the compiled nimi-extract binary (set by worker/client.ts)
+ *   NEEME_MAC_HELPER     — path to the compiled mikan-extract binary (set by worker/client.ts)
  *   NEEME_EXTRACTOR      — 'portable' forces WhisperAsr even on macOS
  *   NEEME_WHISPER_MODEL  — override the Whisper model (default: Xenova/whisper-tiny)
  */
@@ -127,7 +127,7 @@ function spawnHelper(helperPath: string, command: string, filePath: string): Pro
       if (code !== 0) {
         reject(
           new Error(
-            `[nimi-extract] ${command} exited ${code}: ${Buffer.concat(err).toString().trim()}`
+            `[mikan-extract] ${command} exited ${code}: ${Buffer.concat(err).toString().trim()}`
           )
         )
         return
@@ -155,7 +155,7 @@ const extMode = process.env.NEEME_EXTRACTOR?.trim()
 const helper = extMode === 'off' || extMode === 'portable' ? null : detectHelper()
 
 /**
- * The active ASR impl. On macOS with nimi-extract present, Speech framework is
+ * The active ASR impl. On macOS with mikan-extract present, Speech framework is
  * used; otherwise WhisperAsr (portable). `NEEME_EXTRACTOR=portable` forces
  * WhisperAsr. `NEEME_EXTRACTOR=off` is handled at the caller.
  */

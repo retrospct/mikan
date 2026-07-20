@@ -156,3 +156,7 @@ fields are served for real; AI-driven transitions (planning/drafting/working) st
 - Delivery plan + slices: [`docs/plans/mikan-flows.prd.md`](docs/plans/mikan-flows.prd.md)
 - Contract: [`packages/contract/src/views.ts`](packages/contract/src/views.ts) · [`docs/INTEGRATION.md`](docs/INTEGRATION.md)
 - Design source: the *Mikan Flows* handoff bundle (`Mikan Flows.dc.html` + `_ds/.../tokens.css`)
+
+## Issue tracker
+
+Work for this product lives in Linear: workspace [retrospct](https://linear.app/retrospct), team **retrospct** (`RETRO-…`), project **Mikan**. Agent flow: [`docs/agents/REFERENCE.md`](docs/agents/REFERENCE.md).

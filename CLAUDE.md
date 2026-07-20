@@ -85,14 +85,10 @@ pnpm lint        # eslint over the workspace; your changed files must be clean
 
 ## Agent skills
 
-### Issue tracker
+**Single reference:** [`docs/agents/REFERENCE.md`](docs/agents/REFERENCE.md) — recommended Matt flow (grill → PRD → issues → implement ± tdd), Linear (team **retrospct**, project **Mikan**), triage labels, domain docs, privacy diagrams.
 
-Issues live in **Linear** (via the `productivity:linear` MCP); external PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
+Matt skills that hardcode `docs/agents/issue-tracker.md`, `triage-labels.md`, or `domain.md` still resolve (those files are stubs pointing at the reference).
 
-### Triage labels
-
-Canonical vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: `CONTEXT.md` (not yet created) + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+- **Issue tracker:** Linear workspace **retrospct**, team **retrospct** (`RETRO-…`), project **Mikan**; PRs are not a triage surface.
+- **Triage labels:** `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
+- **Domain docs:** single-context — `CONTEXT.md` + `docs/adr/`.

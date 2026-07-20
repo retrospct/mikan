@@ -1,6 +1,6 @@
 {
   "name": "mikan",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "mikan — a privacy-first, local-first personal memory app (monorepo root)",
   "private": true,
   "packageManager": "pnpm@11.14.0",

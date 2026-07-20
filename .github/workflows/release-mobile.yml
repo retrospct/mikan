@@ -57,7 +57,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: ${{ env.EXPO_TOKEN != '' }}
         with:
           node-version: '24'

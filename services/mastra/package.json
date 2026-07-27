@@ -11,17 +11,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.16",
+    "@ai-sdk/anthropic": "^4.0.21",
     "@inngest/ai": "^0.1.7",
-    "@mastra/core": "^1.51.0",
-    "@mastra/deployer-vercel": "^1.2.7",
-    "ai": "^7.0.31",
+    "@mastra/core": "^1.53.0",
+    "@mastra/deployer-vercel": "^1.2.10",
+    "ai": "^7.0.37",
     "inngest": "^4.13.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
-    "mastra": "^1.19.0",
+    "@types/node": "^26.1.2",
+    "mastra": "^1.20.2",
     "tsx": "^4.23.1",
     "typescript": "^6.0.3"
   }

@@ -12,31 +12,31 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~57.0.6",
+    "@expo/metro-runtime": "~57.0.8",
     "@mikan/brand": "workspace:*",
     "@mikan/contract": "workspace:*",
     "@noble/ciphers": "^2.2.0",
-    "@tursodatabase/sync-react-native": "^0.7.0",
-    "expo": "^57.0.7",
-    "expo-auth-session": "^57.0.4",
+    "@tursodatabase/sync-react-native": "^0.7.2",
+    "expo": "^57.0.9",
+    "expo-auth-session": "^57.0.5",
     "expo-camera": "~57.0.3",
-    "expo-constants": "^57.0.6",
+    "expo-constants": "^57.0.8",
     "expo-crypto": "~57.0.1",
-    "expo-dev-client": "^57.0.7",
-    "expo-linking": "^57.0.3",
-    "expo-router": "^57.0.7",
+    "expo-dev-client": "^57.0.10",
+    "expo-linking": "^57.0.4",
+    "expo-router": "^57.0.9",
     "expo-secure-store": "^57.0.1",
     "expo-status-bar": "^57.0.1",
-    "expo-web-browser": "^57.0.1",
-    "react": "19.2.3",
-    "react-native": "^0.86.0",
-    "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.2"
+    "expo-web-browser": "^57.0.2",
+    "react": "19.2.8",
+    "react-native": "^0.86.2",
+    "react-native-safe-area-context": "~5.8.0",
+    "react-native-screens": "4.26.2"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
-    "@types/node": "^26.1.1",
-    "@types/react": "^19.2.17",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
     "typescript": "^6.0.3"
   }
 }

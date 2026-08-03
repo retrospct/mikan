@@ -52,7 +52,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@v6.0.9
         if: ${{ env.EXPO_TOKEN != '' }}
         with:
           run_install: false

@@ -63,7 +63,7 @@ jobs:
           # on a bare dispatch → checks out the workflow's default branch.
           ref: ${{ inputs.ref }}
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@v6.0.9
         with:
           run_install: false
 
@@ -105,7 +105,7 @@ jobs:
   #     - uses: actions/checkout@v7
   #       with:
   #         ref: ${{ inputs.ref }}
-  #     - uses: pnpm/action-setup@v6
+  #     - uses: pnpm/action-setup@v6.0.9
   #       with:
   #         run_install: false
   #     - uses: actions/setup-node@v6

@@ -31,8 +31,8 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
-    "@fontsource/hanken-grotesk": "^5.2.8",
-    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/hanken-grotesk": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@huggingface/transformers": "^4.2.0",
     "@libsql/client": "^0.17.4",
     "@mikan/brand": "workspace:*",
@@ -41,28 +41,28 @@
     "electron-updater": "^6.8.9",
     "ffmpeg-static": "^5.3.0",
     "heic-convert": "^2.1.0",
-    "jose": "^6.2.3",
+    "jose": "^6.2.9",
     "qrcode.react": "^4.2.0",
     "tesseract.js": "^7.0.0",
-    "unpdf": "^1.6.2"
+    "unpdf": "^1.8.1"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^2.0.0",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.1.1",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
     "drizzle-kit": "^0.31.10",
-    "electron": "^43.1.1",
+    "electron": "^43.4.1",
     "electron-builder": "^26.15.3",
     "electron-vite": "^6.0.0-beta.1",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
-    "vite": "^8.1.5",
-    "vitest": "^4.1.10"
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   }
 }
